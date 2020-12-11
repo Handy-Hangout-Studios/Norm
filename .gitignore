@@ -338,6 +338,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
-/HandyHansel/Properties/launchSettings.json
-/HandyHansel/config.json
-/HandyHansel/database.sql
+.gitsecret/keys/random_seed
+!*.secret
+config.json

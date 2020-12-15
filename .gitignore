@@ -341,3 +341,4 @@ healthchecksdb
 .gitsecret/keys/random_seed
 !*.secret
 config.json
+bin

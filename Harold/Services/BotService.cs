@@ -100,7 +100,7 @@ namespace Harold.Services
             {
                 DiscordGuild botDevGuild = await client.GetGuildAsync(this.config.DevGuildId);
                 this.botDeveloper = await botDevGuild.GetMemberAsync(this.config.DevId);
-                RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "*/15 * * * *");
+                RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "0/15 * * * *");
                 await this.botDeveloper.SendMessageAsync("Announcements have been started");
             });
         }

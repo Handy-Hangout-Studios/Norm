@@ -37,10 +37,11 @@ namespace Harold
 
         public static void ConfigureSerilog(HostBuilderContext context, IServiceProvider services, LoggerConfiguration configuration)
         {
+            // TODO: switch from hardcoded log file path to configuration based log file path
             configuration
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
-                .WriteTo.File(formatter: new JsonFormatter(renderMessage: true), "log-.txt", rollingInterval: RollingInterval.Day)
+                .WriteTo.File(formatter: new JsonFormatter(renderMessage: true), "../../logs/Harold/log-.txt", rollingInterval: RollingInterval.Day)
                 .WriteTo.Console(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information);
         }
 

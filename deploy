@@ -1,8 +1,9 @@
 #!/bin/bash
 
-cd ~/Bots/Harold
+cd ~/bots/repos/Harold
 git pull
 git secret reveal -p $1;
-dotnet build -c Release -o ./bin -p:PublishReadyToRun=true -p:PublishTrimmed=true --source=https://api.nuget.org/v3/index.json --source=https://nuget.emzi0767.com/api/v3/index.json;
-cp config.json ./bin/config.json;
-./bin/Harold
+dotnet build -c Release -o ../../bin/Harold -p:PublishReadyToRun=true -p:PublishTrimmed=true --source=https://api.nuget.org/v3/index.json --source=https://nuget.emzi0767.com/api/v3/index.json;
+cp config.json ../../bin/Harold/config.json;
+cd ~/bots/bin/Harold;
+./Harold;

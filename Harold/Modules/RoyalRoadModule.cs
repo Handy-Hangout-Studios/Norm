@@ -35,6 +35,7 @@ namespace Harold.Modules
         [Command("register")]
         [Aliases("r")]
         [Description("Register a channel for update announcements from a RoyalRoad webnovel for specified role, if a role isn't specified this will ping `@everyone`")]
+        [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
         public async Task RegisterRoyalRoadFictionAsync(
             CommandContext context, 
             [Description("The channel to announce updates in")]
@@ -88,6 +89,7 @@ namespace Harold.Modules
         }
 
         [Command("register")]
+        [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
         public async Task RegisterRoyalRoadFictionForEveryoneAsync(
             CommandContext context,
             [Description("The channel to announce updates in")]
@@ -102,6 +104,7 @@ namespace Harold.Modules
         [Command("unregister")]
         [Aliases("ur")]
         [Description("Unregister a RoyalRoad webnovel from announcing")]
+        [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
         public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
         {
             GuildNovelRegistration[] allRegisteredFictions = await psqlContext.GuildNovelRegistrations.Where(register => register.GuildId == context.Guild.Id).ToArrayAsync();

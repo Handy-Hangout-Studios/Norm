@@ -2,6 +2,9 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Enums;
+using DSharpPlus.Interactivity.Extensions;
 using Hangfire;
 using Harold.Configuration;
 using Harold.Modules;
@@ -21,6 +24,7 @@ namespace Harold.Services
         // Client and Extensions
         public DiscordShardedClient ShardedClient { get; private set; }
         private IReadOnlyDictionary<int, CommandsNextExtension> commandsDict;
+        private IReadOnlyDictionary<int, InteractivityExtension> interactivityDict;
 
         // Shared between events
         private DiscordMember botDeveloper;
@@ -29,6 +33,7 @@ namespace Harold.Services
         private readonly BotConfig config;
         private readonly DiscordConfiguration clientConfig;
         private readonly CommandsNextConfiguration commandsConfig;
+        private readonly InteractivityConfiguration interactivityConfig;
 
         // Public properties
         public bool Started { get; private set; }
@@ -62,6 +67,16 @@ namespace Harold.Services
             else
                 this.commandsConfig.StringPrefixes = this.config.Prefixes;
             #endregion
+
+            #region Interactivity Module Config
+            this.interactivityConfig = new InteractivityConfiguration
+            {
+                PaginationBehaviour = PaginationBehaviour.Ignore,
+                PaginationDeletion = PaginationDeletion.DeleteMessage,
+                PollBehaviour = PollBehaviour.DeleteEmojis,
+                Timeout = TimeSpan.FromMinutes(5),
+            };
+            #endregion
         }
 
         public async Task StartAsync()
@@ -69,6 +84,8 @@ namespace Harold.Services
             this.ShardedClient = new DiscordShardedClient(clientConfig);
 
             this.commandsDict = await this.ShardedClient.UseCommandsNextAsync(this.commandsConfig);
+
+            this.interactivityDict = await this.ShardedClient.UseInteractivityAsync(this.interactivityConfig);
 
             foreach (CommandsNextExtension commands in this.commandsDict.Values)
             {
@@ -94,7 +111,9 @@ namespace Harold.Services
             await this.ShardedClient.UpdateStatusAsync(new DiscordActivity("RoyalRoad for updates", ActivityType.Watching));
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously which isn't a problem in this case
         private async Task ShardedClient_GuildDownloadCompleted(DiscordClient client, GuildDownloadCompletedEventArgs args)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             _ = Task.Run(async () =>
             {

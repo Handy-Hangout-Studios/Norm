@@ -30,21 +30,32 @@ namespace Harold.Services
             if (!this.bot.Started)
                 return;
 
-            Dictionary<int, ChapterUpdateBucket> buckets = await GetUpdatedChapterBucketDictionary();
-            await foreach (GuildNovelRegistration registered in dbContext.GuildNovelRegistrations.AsAsyncEnumerable())
+            try
             {
-                if (buckets.ContainsKey(registered.NovelInfoId))
+                Dictionary<int, ChapterUpdateBucket> buckets = await GetUpdatedChapterBucketDictionary();
+                await foreach (GuildNovelRegistration registered in dbContext.GuildNovelRegistrations.AsAsyncEnumerable())
                 {
-                    DiscordClient client = this.bot.ShardedClient.GetShard(registered.GuildId);
-                    DiscordGuild guild = await client.GetGuildAsync(registered.GuildId);
-                    DiscordChannel channel = guild.GetChannel(registered.AnnouncementChannelId);
-                    DiscordRole role = registered.RoleId == null ? null : guild.Roles[(ulong)registered.RoleId];
-                    string mentionString = $"{role?.Mention ?? "@everyone"}";
-                    await channel.SendMessageAsync(content: mentionString, embed: buckets[registered.NovelInfoId].AnnouncementEmbed);
+                    if (buckets.ContainsKey(registered.NovelInfoId))
+                    {
+                        DiscordClient client = this.bot.ShardedClient.GetShard(registered.GuildId);
+                        DiscordGuild guild = await client.GetGuildAsync(registered.GuildId);
+                        DiscordChannel channel = guild.GetChannel(registered.AnnouncementChannelId);
+                        DiscordRole role = registered.RoleId == null ? null : guild.Roles[(ulong)registered.RoleId];
+                        string mentionString = $"{role?.Mention ?? "@everyone"}";
+                        await channel.SendMessageAsync(content: mentionString, embed: buckets[registered.NovelInfoId].AnnouncementEmbed);
+                    }
                 }
-            }
 
-            await UpdateAllNovelInfos(buckets);
+                await UpdateAllNovelInfos(buckets);
+            }
+            catch (Exception e)
+            {
+                await bot.BotDeveloper.SendMessageAsync(embed: new DiscordEmbedBuilder()
+                    .WithTitle("Exception occured in Announcement Service")
+                    .WithDescription(e.Message)
+                    .AddField("Stack Trace", e.StackTrace.Substring(0, e.StackTrace.Length < 500 ? e.StackTrace.Length : 500))
+                );
+            }
         }
 
         private async Task UpdateAllNovelInfos(Dictionary<int, ChapterUpdateBucket> buckets)

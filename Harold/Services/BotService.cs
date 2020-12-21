@@ -27,7 +27,7 @@ namespace Harold.Services
         private IReadOnlyDictionary<int, InteractivityExtension> interactivityDict;
 
         // Shared between events
-        private DiscordMember botDeveloper;
+        public DiscordMember BotDeveloper { get; set; }
 
         // Configurations
         private readonly BotConfig config;
@@ -91,12 +91,29 @@ namespace Harold.Services
             {
                 commands.RegisterCommands<GeneralModule>();
                 commands.RegisterCommands<RoyalRoadModule>();
+                commands.CommandErrored += this.Commands_CommandErrored;
             }
 
             this.ShardedClient.Ready += ShardedClient_UpdateStatus;
             this.ShardedClient.GuildDownloadCompleted += ShardedClient_GuildDownloadCompleted;
 
             await this.ShardedClient.StartAsync();
+        }
+
+        private async Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+        {
+            try
+            {
+                await BotDeveloper.SendMessageAsync(embed: new DiscordEmbedBuilder()
+                        .WithTitle("Exception occured in Announcement Service")
+                        .WithDescription(e.Exception.Message)
+                        .AddField("Stack Trace", e.Exception.StackTrace.Substring(0, e.Exception.StackTrace.Length < 500 ? e.Exception.StackTrace.Length : 500))
+                    );
+            }
+            catch
+            {
+                this.ShardedClient.Logger.Log(LogLevel.Error, "Error in sending exception message to bot developer");
+            }
         }
 
         public async Task StopAsync()
@@ -118,9 +135,9 @@ namespace Harold.Services
             _ = Task.Run(async () =>
             {
                 DiscordGuild botDevGuild = await client.GetGuildAsync(this.config.DevGuildId);
-                this.botDeveloper = await botDevGuild.GetMemberAsync(this.config.DevId);
+                this.BotDeveloper = await botDevGuild.GetMemberAsync(this.config.DevId);
                 RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "0/15 * * * *");
-                await this.botDeveloper.SendMessageAsync("Announcements have been started");
+                await this.BotDeveloper.SendMessageAsync("Announcements have been started");
             });
         }
 

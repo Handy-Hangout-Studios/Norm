@@ -1,6 +1,8 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
 using Harold.Database;
 using Harold.Database.Entities;
 using Harold.Services;
@@ -10,6 +12,7 @@ using Microsoft.SyndicationFeed;
 using Microsoft.SyndicationFeed.Rss;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -94,6 +97,39 @@ namespace Harold.Modules
             string royalroadURL)
         {
             await this.RegisterRoyalRoadFictionAsync(context, announcementChannel, null, royalroadURL);
+        }
+
+        [Command("unregister")]
+        [Aliases("ur")]
+        [Description("Unregister a RoyalRoad webnovel from announcing")]
+        public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
+        {
+            GuildNovelRegistration[] allRegisteredFictions = await psqlContext.GuildNovelRegistrations.Where(register => register.GuildId == context.Guild.Id).ToArrayAsync();
+            Dictionary<int, NovelInfo> novelInfoDict = await psqlContext.AllNovelInfo.ToDictionaryAsync(info => info.Id);
+
+            StringBuilder pageString = new StringBuilder();
+            for (int i = 0; i < allRegisteredFictions.Length; i++)
+            {
+                pageString.AppendLine($"{i + 1}. {novelInfoDict[allRegisteredFictions[i].NovelInfoId].Name}");
+            }
+
+            DiscordEmbedBuilder builder = new DiscordEmbedBuilder().WithTitle("Select the fiction by typing the number of the fiction");
+
+            InteractivityExtension interactivity = context.Client.GetInteractivity();
+            IEnumerable<Page> pages = interactivity.GeneratePagesInEmbed(pageString.ToString(), DSharpPlus.Interactivity.Enums.SplitType.Line);
+
+            _ = interactivity.SendPaginatedMessageAsync(context.Channel, context.User, pages);
+
+            InteractivityResult<DiscordMessage> result = await interactivity.WaitForMessageAsync(message => int.TryParse(message.Content, out _));
+
+            if (!result.TimedOut)
+            {
+                int index = int.Parse(result.Result.Content) - 1;
+                NovelInfo delete = novelInfoDict[allRegisteredFictions[index].NovelInfoId];
+                this.psqlContext.GuildNovelRegistrations.Remove(allRegisteredFictions[index]);
+                await this.psqlContext.SaveChangesAsync();
+                await context.RespondAsync($"Unregistered {delete.Name}");
+            }
         }
 
         private static async Task<ulong> GetMostRecentChapterId(string syndicationUri)

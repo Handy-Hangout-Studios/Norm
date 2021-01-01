@@ -13,6 +13,8 @@ namespace Harold.Database.EntityConfigurations
     {
         public void Configure(EntityTypeBuilder<NovelInfo> builder)
         {
+            builder.ToTable("novel_info");
+
             builder.HasKey(n => n.Id)
                 .HasName("id");
 
@@ -35,6 +37,10 @@ namespace Harold.Database.EntityConfigurations
             builder.Property(n => n.MostRecentChapterId)
                 .HasColumnName("most_recent_chapter_id")
                 .IsRequired();
+
+            builder.HasMany(n => n.AssociatedGuildNovelRegistrations)
+                .WithOne(g => g.NovelInfo)
+                .HasForeignKey(g => g.NovelInfoId);
         }
     }
 }

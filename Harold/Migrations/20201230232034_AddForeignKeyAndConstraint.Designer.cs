@@ -2,15 +2,17 @@
 using Harold.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Harold.Migrations
 {
     [DbContext(typeof(BotPsqlContext))]
-    partial class BotPsqlContextModelSnapshot : ModelSnapshot
+    [Migration("20201230232034_AddForeignKeyAndConstraint")]
+    partial class AddForeignKeyAndConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,7 +50,7 @@ namespace Harold.Migrations
 
                     b.HasIndex("NovelInfoId");
 
-                    b.ToTable("guild_novel_registration");
+                    b.ToTable("GuildNovelRegistrations");
                 });
 
             modelBuilder.Entity("Harold.Database.Entities.NovelInfo", b =>
@@ -84,7 +86,7 @@ namespace Harold.Migrations
                     b.HasKey("Id")
                         .HasName("id");
 
-                    b.ToTable("novel_info");
+                    b.ToTable("AllNovelInfo");
                 });
 
             modelBuilder.Entity("Harold.Database.Entities.GuildNovelRegistration", b =>

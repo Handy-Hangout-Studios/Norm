@@ -7,6 +7,7 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using Hangfire;
 using Harold.Configuration;
+using Harold.Database;
 using Harold.Modules;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -19,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Harold.Services
 {
-    public class BotService : IBotService
+    public partial class BotService : IBotService
     {
         // Client and Extensions
         public DiscordShardedClient ShardedClient { get; private set; }
@@ -31,6 +32,7 @@ namespace Harold.Services
 
         // Configurations
         private readonly BotConfig config;
+        private readonly BotPsqlContext botPsqlContext;
         private readonly DiscordConfiguration clientConfig;
         private readonly CommandsNextConfiguration commandsConfig;
         private readonly InteractivityConfiguration interactivityConfig;
@@ -38,10 +40,11 @@ namespace Harold.Services
         // Public properties
         public bool Started { get; private set; }
 
-        public BotService(IOptions<BotConfig> options, ILoggerFactory factory, IServiceProvider provider)
+        public BotService(IOptions<BotConfig> options, ILoggerFactory factory, BotPsqlContext botPsqlContext, IServiceProvider provider)
         {
             this.Started = false;
             this.config = options.Value;
+            this.botPsqlContext = botPsqlContext;
 
             #region Client Config
             this.clientConfig = new DiscordConfiguration
@@ -72,7 +75,7 @@ namespace Harold.Services
             this.interactivityConfig = new InteractivityConfiguration
             {
                 PaginationBehaviour = PaginationBehaviour.Ignore,
-                PaginationDeletion = PaginationDeletion.DeleteMessage,
+                PaginationDeletion = PaginationDeletion.KeepEmojis,
                 PollBehaviour = PollBehaviour.DeleteEmojis,
                 Timeout = TimeSpan.FromMinutes(5),
             };
@@ -96,6 +99,8 @@ namespace Harold.Services
 
             this.ShardedClient.Ready += ShardedClient_UpdateStatus;
             this.ShardedClient.GuildDownloadCompleted += ShardedClient_GuildDownloadCompleted;
+            //this.ShardedClient.MessageReactionAdded += ShardedClient_ReactionRoleAdd;
+            //this.ShardedClient.MessageReactionRemoved += ShardedClient_ReactionRoleRemove;
 
             await this.ShardedClient.StartAsync();
         }
@@ -137,6 +142,7 @@ namespace Harold.Services
                 DiscordGuild botDevGuild = await client.GetGuildAsync(this.config.DevGuildId);
                 this.BotDeveloper = await botDevGuild.GetMemberAsync(this.config.DevId);
                 RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "0/15 * * * *");
+
                 await this.BotDeveloper.SendMessageAsync("Announcements have been started");
             });
         }

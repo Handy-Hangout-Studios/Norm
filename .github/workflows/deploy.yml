@@ -23,7 +23,7 @@ jobs:
         uses: garygrossgarten/github-action-ssh@v0.6.3
         with:
             # Command to execute on the remote server.
-            command: cd ~/bots/repos/Harold && git pull && (exec ./deploy '${{ secrets.PASSWORD }}' &> /dev/null &);
+            command: cd ~/bots/repos/Harold && git reset --hard && git pull && (exec ./deploy '${{ secrets.PASSWORD }}' &> /dev/null &);
             # Hostname or IP address of the server.
             host: ${{ secrets.HOST }}
             # Username for authentication.

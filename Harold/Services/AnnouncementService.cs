@@ -4,6 +4,7 @@ using HandyHangoutStudios.Common.ExtensionMethods;
 using Harold.Database;
 using Harold.Database.Entities;
 using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.SyndicationFeed;
 using Microsoft.SyndicationFeed.Rss;
 using System;
@@ -32,17 +33,21 @@ namespace Harold.Services
 
             try
             {
-                Dictionary<int, ChapterUpdateBucket> buckets = await GetUpdatedChapterBucketDictionary();
-                await foreach (GuildNovelRegistration registered in dbContext.GuildNovelRegistrations.AsAsyncEnumerable())
+                List<ChapterUpdateBucket> buckets = await GetUpdatedChapterBucketList();
+
+                foreach (ChapterUpdateBucket bucket in buckets)
                 {
-                    if (buckets.ContainsKey(registered.NovelInfoId))
+                    if (bucket.Novel.AssociatedGuildNovelRegistrations.Any())
                     {
-                        DiscordClient client = this.bot.ShardedClient.GetShard(registered.GuildId);
-                        DiscordGuild guild = await client.GetGuildAsync(registered.GuildId);
-                        DiscordChannel channel = guild.GetChannel(registered.AnnouncementChannelId);
-                        DiscordRole role = registered.RoleId == null ? null : guild.Roles[(ulong)registered.RoleId];
-                        string mentionString = $"{role?.Mention ?? "@everyone"}";
-                        await channel.SendMessageAsync(content: mentionString, embed: buckets[registered.NovelInfoId].AnnouncementEmbed);
+                        foreach (GuildNovelRegistration registration in bucket.Novel.AssociatedGuildNovelRegistrations)
+                        {
+                            DiscordClient client = this.bot.ShardedClient.GetShard(registration.GuildId);
+                            DiscordGuild guild = await client.GetGuildAsync(registration.GuildId);
+                            DiscordChannel channel = guild.GetChannel(registration.AnnouncementChannelId);
+                            DiscordRole role = registration.RoleId == null ? null : guild.Roles[(ulong)registration.RoleId];
+                            string mentionString = GenerateMentionString(registration, role);
+                            await channel.SendMessageAsync(content: mentionString, embed: bucket.AnnouncementEmbed);
+                        }
                     }
                 }
 
@@ -58,11 +63,23 @@ namespace Harold.Services
             }
         }
 
-        private async Task UpdateAllNovelInfos(Dictionary<int, ChapterUpdateBucket> buckets)
+        private static string GenerateMentionString(GuildNovelRegistration registration, DiscordRole role)
+        {
+            string mentionString;
+            if (registration.PingNoOne)
+                mentionString = null;
+            else if (registration.PingEveryone)
+                mentionString = "@everyone";
+            else
+                mentionString = $"{role.Mention ?? "@everyone"}";
+            return mentionString;
+        }
+
+        private async Task UpdateAllNovelInfos(List<ChapterUpdateBucket> buckets)
         {
             if (!buckets.Any()) return;
 
-            foreach ( (int _, ChapterUpdateBucket bucket) in buckets)
+            foreach (ChapterUpdateBucket bucket in buckets)
             {
                 if (bucket.NewTitle is not null)
                 {
@@ -74,14 +91,13 @@ namespace Harold.Services
             await this.dbContext.SaveChangesAsync();
         }
 
-        private async Task<Dictionary<int, ChapterUpdateBucket>> GetUpdatedChapterBucketDictionary()
+        private async Task<List<ChapterUpdateBucket>> GetUpdatedChapterBucketList()
         {
-            Dictionary<int, ChapterUpdateBucket> allUpdatedChapterBuckets = new Dictionary<int, ChapterUpdateBucket>();
+            List<ChapterUpdateBucket> allUpdatedChapterBuckets = new List<ChapterUpdateBucket>();
 
             // Retrieve all updated chapters
-            await foreach (NovelInfo novelInfo in this.dbContext.AllNovelInfo.AsAsyncEnumerable())
+            await foreach (NovelInfo novelInfo in this.dbContext.AllNovelInfo.Include(n => n.AssociatedGuildNovelRegistrations).AsAsyncEnumerable())
             {
-
                 ChapterUpdateBucket temp = new ChapterUpdateBucket
                 {
                     Novel = novelInfo
@@ -114,7 +130,7 @@ namespace Harold.Services
                 }
                 if (temp.ChapterUpdateItems.Any())
                 {
-                    allUpdatedChapterBuckets.Add(temp.Novel.Id, temp);
+                    allUpdatedChapterBuckets.Add(temp);
                 }
             }
 

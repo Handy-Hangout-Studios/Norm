@@ -342,3 +342,4 @@ healthchecksdb
 !*.secret
 config.json
 bin
+config.test.json

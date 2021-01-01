@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Harold.Database.Entities
 {
@@ -14,5 +10,7 @@ namespace Harold.Database.Entities
         public string SyndicationUri { get; set; }
         public string FictionUri { get; set; }
         public ulong MostRecentChapterId { get; set; }
+
+        public ICollection<GuildNovelRegistration> AssociatedGuildNovelRegistrations { get; set; }
     }
 }

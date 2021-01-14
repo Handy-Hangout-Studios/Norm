@@ -46,7 +46,7 @@ namespace Harold.Services
                             DiscordChannel channel = guild.GetChannel(registration.AnnouncementChannelId);
                             DiscordRole role = registration.RoleId == null ? null : guild.Roles[(ulong)registration.RoleId];
                             string mentionString = GenerateMentionString(registration, role);
-                            await channel.SendMessageAsync(content: mentionString, embed: bucket.AnnouncementEmbed);
+                            try { await channel.SendMessageAsync(content: mentionString, embed: bucket.AnnouncementEmbed); } catch { }
                         }
                     }
                 }

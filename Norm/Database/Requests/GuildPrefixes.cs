@@ -1,0 +1,107 @@
+﻿using DSharpPlus.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Norm.Database.Contexts;
+using Norm.Database.Entities;
+using Norm.Database.Requests.BaseClasses;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Norm.Database.Requests
+{
+    public class GuildPrefixes
+    {
+        public class Add : DbRequest<GuildPrefix>
+        {
+            public Add(ulong guildId, string prefix)
+            {
+                this.Prefix = new GuildPrefix
+                {
+                    GuildId = guildId,
+                    Prefix = prefix,
+                };
+            }
+
+            public GuildPrefix Prefix { get; }
+        }
+
+        public class AddHandler : DbRequestHandler<Add, GuildPrefix>
+        {
+            public AddHandler(IDbContext context) : base(context) { }
+
+            public override async Task<DbResult<GuildPrefix>> Handle(Add request, CancellationToken cancellationToken)
+            {
+                EntityEntry<GuildPrefix> entity = await this.DbContext.GuildPrefixes.AddAsync(request.Prefix, cancellationToken);
+                DbResult<GuildPrefix> result = new()
+                {
+                    Success = entity.State.Equals(EntityState.Added),
+                    Value = entity.Entity,
+                };
+                await this.DbContext.Context.SaveChangesAsync(cancellationToken);
+                return result;
+            }
+        }
+
+        public class Delete : DbRequest
+        {
+            public Delete(GuildPrefix prefix)
+            {
+                this.Prefix = prefix;
+            }
+
+            public GuildPrefix Prefix { get; }
+        }
+
+        public class DeleteHandler : DbRequestHandler<Delete>
+        {
+            public DeleteHandler(IDbContext context) : base(context) { }
+
+            public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
+            {
+                EntityEntry<GuildPrefix> entity = this.DbContext.GuildPrefixes.Remove(request.Prefix);
+                DbResult result = new DbResult
+                {
+                    Success = entity.State.Equals(EntityState.Deleted),
+                };
+                await this.DbContext.Context.SaveChangesAsync(cancellationToken);
+                return result;
+            }
+        }
+
+        public class GetGuildsPrefixes : DbRequest<IEnumerable<GuildPrefix>>
+        {
+            public GetGuildsPrefixes(DiscordGuild guild) : this(guild.Id) { }
+
+            public GetGuildsPrefixes(ulong guildId) 
+            {
+                this.GuildId = guildId;
+            }
+
+            public ulong GuildId { get; }
+        }
+
+        public class GetGuildsPrefixesHandler : DbRequestHandler<GetGuildsPrefixes, IEnumerable<GuildPrefix>>
+        {
+            public GetGuildsPrefixesHandler(IDbContext context) : base(context) { }
+
+            public override async Task<DbResult<IEnumerable<GuildPrefix>>> Handle(GetGuildsPrefixes request, CancellationToken cancellationToken)
+            {
+                List<GuildPrefix> result =
+                    await this.DbContext.GuildPrefixes
+                    .Where(p => p.GuildId == request.GuildId)
+                    .OrderBy(p => p.Prefix.Length)
+                    .ToListAsync(cancellationToken: cancellationToken);
+
+                return new DbResult<IEnumerable<GuildPrefix>>
+                {
+                    Success = true,
+                    Value = result,
+                };
+            }
+        }
+    }
+}

@@ -15,6 +15,7 @@ using DSharpPlus;
 
 namespace Norm.Modules
 {
+    [BotCategory("General")]
     public class GeneralModule : BaseCommandModule
     {
         [Command("invite")]
@@ -37,7 +38,6 @@ namespace Norm.Modules
 
         [Command("hi")]
         [Description("A basic \"Hello, World!\" command for D#+")]
-        [BotCategory("General")]
 #pragma warning disable CA1822 // Mark members as static
         public async Task Hi(CommandContext context)
 #pragma warning restore CA1822 // Mark members as static

@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using MediatR;
 using Norm.Database.Requests;
+using Norm.Attributes;
 
 namespace Norm.Modules
 {
@@ -24,6 +25,7 @@ namespace Norm.Modules
     [Aliases("rr")]
     [Description("Commands associated with RoyalRoad web novels")]
     [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
+    [BotCategory("Events and Announcements")]
     public class RoyalRoadModule : BaseCommandModule
     {
         private readonly IMediator mediator; 

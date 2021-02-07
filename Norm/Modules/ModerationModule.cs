@@ -543,6 +543,7 @@ namespace Norm.Modules
         [Group("log")]
         [Description("Commands to manage the moderation logging channel")]
         [BotCategory("Moderation")]
+        [RequireUserPermissions(Permissions.ViewAuditLog)]
         public class LogCommands : BaseCommandModule
         {
             private readonly IMediator mediator;

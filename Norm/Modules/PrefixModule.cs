@@ -6,6 +6,7 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using MediatR;
+using Norm.Attributes;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
 using Norm.Services;
@@ -19,6 +20,7 @@ using System.Threading.Tasks;
 namespace Norm.Modules
 {
     [Group("prefix")]
+    [BotCategory("Configuration and Information")]
     [Description("All functionalities associated with prefixes in Handy Hansel.\n\nWhen used alone, show all guild's prefixes separated by spaces")]
     public class PrefixModule : BaseCommandModule
     {

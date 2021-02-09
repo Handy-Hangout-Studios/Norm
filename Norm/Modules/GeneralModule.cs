@@ -54,15 +54,19 @@ namespace Norm.Modules
             }
         }
 
+        [Command("tutorial")]
+        [Description("A general high-level overview of my functionalites will be DM-ed to you.")]
+        [BotCategory("General")]
         public async Task Tutorial(CommandContext context)
         {
             DiscordEmbed tutorial = new DiscordEmbedBuilder()
                 .WithTitle("Tutorial")
-                .WithDescription($"Hi, my name is {context.Client.CurrentUser.Username}! I'm a userful bot with multiple features. If you'd like to see all of them you can do `help` in DMs or `@Norm help`.")
-                .AddField("Time Zone Conversions", "If you react to any message that has a time in it with the :clock: emoji, I will DM you a time zone conversion from their time to your time. Of course, this requires that both you and they have your timezone set up with you can do by saying `time init` here in the DMs or `@Norm time init` in any server.")
-                .AddField("Custom Prefixes", "Any server can set up to 5 custom prefixes for their server, you can see your server's prefixes by typing `@Norm prefix` in the server where I can see the command.\n\nTo see the requirements for the prefixes use `help prefix add` or `@Norm help prefix add`.")
+                .WithDescription($"Hi, my name is {context.Client.CurrentUser.Username}! I'm a userful bot with multiple features. If you'd like to see all of them you can do `help` in DMs or `@Norm help`.\n\nYou can see all my most directly useful or hardest to find features below. :smile:")
+                .AddField("Time Zone Conversions", "If you react to any message that has a time in it with the :clock: emoji, I will DM you a time zone conversion from their time to your time. Of course, this does require that both you and they have your timezone set up with me. You can do so by saying `time init` here in the DMs or `@Norm time init` in any server.")
+                .AddField("Custom Prefixes", "Any server can set up to 5 custom prefixes for their server, you can see your server's prefixes by typing `@Norm prefix` in your server.\n\nTo see the requirements for the prefixes use `help prefix add` or `@Norm help prefix add`.")
                 .AddField("There's More!", "To see all the rest of my features, just type `help` in the DM or `@Norm help` in any server I'm in.")
-                .WithFooter("Note: Any place where it says you can say `@Norm <command>` you can replace `@Norm` with any of your server's prefixes.");
+                .WithFooter("Note: Any place where it says you can say `@Norm <command>` you can replace `@Norm` with any of your server's prefixes.")
+                .WithColor(DiscordColor.Cyan);
 
             if (context.Channel.Guild == null) 
                 await context.RespondAsync(tutorial);

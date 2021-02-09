@@ -14,7 +14,7 @@ namespace Norm.Services
         private async Task SendWelcomeMessage(DiscordClient sender, GuildMemberAddEventArgs e)
         {
             DiscordMember bot = await e.Guild.GetMemberAsync(sender.CurrentUser.Id);
-            await e.Guild.SystemChannel.SendMessageAsync($"Hi {e.Member.DisplayName}, I'm {bot.Mention}! Glad that you are here, if you'd like learn more about me, you can do `{bot.Mention} tutorial` or DM me `tutorial` and I'll send you a DM with more info.");
+            await e.Guild.SystemChannel.SendMessageAsync($"Hi {e.Member.DisplayName}, I'm {bot.Mention}! Glad that you are here! If you'd like learn more about me, you can do `@{bot.DisplayName} tutorial` or DM me `tutorial` and I'll send you a DM with more info.");
         }
     }
 }

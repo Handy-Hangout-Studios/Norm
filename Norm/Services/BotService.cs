@@ -73,7 +73,7 @@ namespace Norm.Services
                 TokenType = TokenType.Bot,
                 MinimumLogLevel = LogLevel.Information,
                 LoggerFactory = factory,
-                Intents = DiscordIntents.AllUnprivileged,
+                Intents = DiscordIntents.All,
             };
             #endregion
 

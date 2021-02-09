@@ -21,7 +21,7 @@ namespace Norm.Formatters
         {
             this._embed = new DiscordEmbedBuilder()
                 .WithTitle("Help")
-                .WithColor(this.Context.Member.Color);
+                .WithColor(this.Context.Member?.Color ?? DiscordColor.Cyan);
         }
 
         public override CommandHelpMessage Build()

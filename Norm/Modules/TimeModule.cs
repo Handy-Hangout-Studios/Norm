@@ -16,8 +16,7 @@ using System.Threading.Tasks;
 namespace Norm.Modules
 {
     [Group("time")]
-    [Description(
-        "All commands associated with current time functionality.\n\nWhen used alone, outputs the time of the user mentioned.")]
+    [Description("All commands associated with current time functionality.\n\nWhen used alone, outputs the time of the user mentioned.")]
     public class TimeModule : BaseCommandModule
     {
         private readonly IMediator mediator;

@@ -15,7 +15,7 @@ namespace Norm.Database.Requests
     {
         public class Add : DbRequest<GuildNovelRegistration>
         {
-            public Add(ulong guildId, ulong announcementChannelId, bool pingEveryone, bool pingNoOne, ulong? roleId, int novelInfoId)
+            public Add(ulong guildId, ulong announcementChannelId, bool pingEveryone, bool pingNoOne, ulong? roleId, int novelInfoId, ulong? memberId, bool isDm)
             {
                 this.NovelRegistration = new GuildNovelRegistration
                 {
@@ -23,6 +23,8 @@ namespace Norm.Database.Requests
                     AnnouncementChannelId = announcementChannelId,
                     PingEveryone = pingEveryone,
                     PingNoOne = pingNoOne,
+                    MemberId = memberId,
+                    IsDm = isDm,
                     RoleId = roleId,
                     NovelInfoId = novelInfoId,
                 };
@@ -93,6 +95,36 @@ namespace Norm.Database.Requests
             {
                 IEnumerable<GuildNovelRegistration> result = await this.DbContext.GuildNovelRegistrations
                     .Where(r => r.GuildId == request.GuildId)
+                    .Include(r => r.NovelInfo)
+                    .ToListAsync(cancellationToken: cancellationToken);
+
+                return new DbResult<IEnumerable<GuildNovelRegistration>>
+                {
+                    Success = true,
+                    Value = result,
+                };
+            }
+        }
+
+        public class GetMemberNovelRegistrations : DbRequest<IEnumerable<GuildNovelRegistration>>
+        {
+            public GetMemberNovelRegistrations(DiscordMember member) : this(member.Id) { }
+            public GetMemberNovelRegistrations(ulong memberId)
+            {
+                this.MemberId = memberId;
+            }
+
+            public ulong MemberId { get; }
+        }
+
+        public class GetMemberNovelRegistrationsHandler : DbRequestHandler<GetMemberNovelRegistrations, IEnumerable<GuildNovelRegistration>>
+        {
+            public GetMemberNovelRegistrationsHandler(IDbContext dbContext) : base(dbContext) { }
+
+            public override async Task<DbResult<IEnumerable<GuildNovelRegistration>>> Handle(GetMemberNovelRegistrations request, CancellationToken cancellationToken)
+            {
+                IEnumerable<GuildNovelRegistration> result = await this.DbContext.GuildNovelRegistrations
+                    .Where(r => r.MemberId == request.MemberId && r.MemberId != null)
                     .Include(r => r.NovelInfo)
                     .ToListAsync(cancellationToken: cancellationToken);
 

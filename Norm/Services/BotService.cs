@@ -73,7 +73,7 @@ namespace Norm.Services
                 TokenType = TokenType.Bot,
                 MinimumLogLevel = LogLevel.Information,
                 LoggerFactory = factory,
-                Intents = DiscordIntents.AllUnprivileged,
+                Intents = DiscordIntents.All,
             };
             #endregion
 
@@ -86,7 +86,7 @@ namespace Norm.Services
             };
 
             if (this.config.EnablePrefixResolver)
-                this.commandsConfig.PrefixResolver = PrefixResolver;
+                this.commandsConfig.PrefixResolver = CheckForPrefix;
             else
                 this.commandsConfig.StringPrefixes = this.config.Prefixes;
             #endregion
@@ -131,8 +131,10 @@ namespace Norm.Services
             this.ShardedClient.Ready += ShardedClient_UpdateStatus;
             this.ShardedClient.GuildDownloadCompleted += ShardedClient_GuildDownloadCompleted;
 
-            this.ShardedClient.MessageCreated += this.CheckForDate;
+            //this.ShardedClient.MessageCreated += this.CheckForDate;
             this.ShardedClient.MessageReactionAdded += this.SendAdjustedDate;
+
+            this.ShardedClient.GuildMemberAdded += this.SendWelcomeMessage;
 
             await this.ShardedClient.StartAsync();
         }
@@ -158,14 +160,32 @@ namespace Norm.Services
                 DiscordGuild botDevGuild = await client.GetGuildAsync(this.config.DevGuildId);
                 this.BotDeveloper = await botDevGuild.GetMemberAsync(this.config.DevId);
                 this.ClockEmoji = DiscordEmoji.FromName(client, ":clock:");
-                RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "0/1 * * * *");
+                RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "0/15 * * * *");
                 
 
                 await this.BotDeveloper.SendMessageAsync("Announcements have been started");
             });
         }
 
-        private async Task<int> PrefixResolver(DiscordMessage msg)
+        private async Task<int> CheckForPrefix(DiscordMessage msg)
+        {
+            bool isDm = msg.Channel.Guild is null;
+            int prefixPos;
+            if (!isDm)
+            {
+                prefixPos = await CheckGuildPrefixes(msg);
+                if (prefixPos != -1)
+                    return prefixPos;
+            }
+
+            prefixPos = msg.GetStringPrefixLength("^");
+            if (prefixPos != -1)
+                return prefixPos;
+
+            return isDm ? 0 : -1;
+        }
+
+        private async Task<int> CheckGuildPrefixes(DiscordMessage msg)
         {
             if (!PrefixCache.TryGetValue(msg.Channel.Guild.Id, out GuildPrefix[] guildPrefixes))
             {
@@ -180,17 +200,12 @@ namespace Norm.Services
                 PrefixCache.Set(msg.Channel.Guild.Id, guildPrefixes, entryOpts);
             }
 
-            if (!guildPrefixes.Any())
-            {
-                return msg.GetStringPrefixLength("^");
-            }
-
             foreach (GuildPrefix prefix in guildPrefixes)
             {
-                var length = msg.GetStringPrefixLength(prefix.Prefix);
-                if (length != -1)
+                var prefixPos = msg.GetStringPrefixLength(prefix.Prefix);
+                if (prefixPos != -1)
                 {
-                    return length;
+                    return prefixPos;
                 }
             }
 

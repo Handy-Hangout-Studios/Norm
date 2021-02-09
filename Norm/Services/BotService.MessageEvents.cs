@@ -9,6 +9,7 @@ using Microsoft.Recognizers.Text;
 using Microsoft.Recognizers.Text.DateTime;
 using NodaTime;
 using Norm.Database.Requests;
+using Norm.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,8 +32,8 @@ namespace Norm.Services
 
             _ = Task.Run(async () =>
             {
-                IEnumerable<DateTimeV2ModelResult> parserList = DateTimeRecognizer.RecognizeDateTime(e.Message.Content, culture: Culture.English)
-                .Select(x => x.ToDateTimeV2ModelResult()).Where(x => x.TypeName is DateTimeV2Type.Time or DateTimeV2Type.DateTime);
+                
+                IEnumerable<DateTimeV2ModelResult> parserList = Recognizers.RecognizeDateTime(e.Message.Content, DateTimeV2Type.Time, DateTimeV2Type.DateTime);
 
                 if (parserList.Any())
                 {
@@ -72,8 +73,7 @@ namespace Norm.Services
                         ZonedDateTime zonedMessageDateTime = ZonedDateTime.FromDateTimeOffset(msg.CreationTimestamp);
                         DateTime opRefTime = zonedMessageDateTime.WithZone(opTimeZone).ToDateTimeOffset().DateTime;
 
-                        IEnumerable<DateTimeV2ModelResult> parserList = DateTimeRecognizer.RecognizeDateTime(msg.Content, culture: Culture.English, refTime: opRefTime)
-                            .Select(x => x.ToDateTimeV2ModelResult()).Where(x => x.TypeName is DateTimeV2Type.Time or DateTimeV2Type.DateTime);
+                        IEnumerable<DateTimeV2ModelResult> parserList = Recognizers.RecognizeDateTime(e.Message.Content, opRefTime, DateTimeV2Type.Time, DateTimeV2Type.DateTime);
 
                         if (!parserList.Any())
                         {

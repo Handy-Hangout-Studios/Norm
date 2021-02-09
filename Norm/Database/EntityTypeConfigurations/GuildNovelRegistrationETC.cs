@@ -15,7 +15,8 @@ namespace Norm.Database.EntityTypeConfigurations
         {
             builder.ToTable("guild_novel_registration");
 
-            builder.HasKey(g => new { g.GuildId, g.NovelInfoId, g.AnnouncementChannelId });
+            builder.HasKey(g => new { g.GuildId, g.NovelInfoId, g.AnnouncementChannelId })
+                .HasName("guild_novel_registration_id");
 
             builder.Property(g => g.GuildId)
                 .IsRequired()
@@ -32,6 +33,15 @@ namespace Norm.Database.EntityTypeConfigurations
             builder.Property(g => g.PingNoOne)
                 .IsRequired()
                 .HasColumnName("ping_no_one");
+
+            builder.Property(g => g.MemberId)
+                .HasDefaultValue(null)
+                .HasColumnName("member_id");
+
+            builder.Property(g => g.IsDm)
+                .IsRequired()
+                .HasDefaultValue(false)
+                .HasColumnName("is_dm");
 
             builder.Property(g => g.RoleId)
                 .HasColumnName("role_id");

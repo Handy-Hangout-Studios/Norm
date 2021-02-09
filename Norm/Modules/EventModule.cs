@@ -27,6 +27,7 @@ namespace Norm.Modules
     [Group("event")]
     [Description("The event functionality's submodule.")]
     [BotCategory("Events and Announcements")]
+    [RequireGuild]
     public class EventModule : BaseCommandModule
     {
         private static readonly Random Random = new Random();

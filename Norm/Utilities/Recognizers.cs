@@ -12,12 +12,17 @@ namespace Norm.Utilities
 {
     public static class Recognizers
     {
-        public static IEnumerable<DateTimeV2ModelResult> RecognizeDateTime(string content, params DateTimeV2Type[] types)
+        public static IEnumerable<DateTimeV2ModelResult> RecognizeDateTime(string content, DateTime? refTime, params DateTimeV2Type[] types)
         {
             return DateTimeRecognizer
-                .RecognizeDateTime(content, culture: Culture.English)
+                .RecognizeDateTime(content, culture: Culture.English, refTime: refTime)
                 .Select(model => model.ToDateTimeV2ModelResult())
                 .Where(result => types.Contains(result.TypeName));
+        }
+
+        public static IEnumerable<DateTimeV2ModelResult> RecognizeDateTime(string content, params DateTimeV2Type[] types)
+        {
+            return RecognizeDateTime(content, null, types);
         }
     }
 }

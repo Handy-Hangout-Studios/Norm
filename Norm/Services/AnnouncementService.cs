@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using MediatR;
 using Norm.Database.Requests;
+using DSharpPlus.Exceptions;
 
 namespace Norm.Services
 {
@@ -45,11 +46,24 @@ namespace Norm.Services
                             DiscordGuild guild = await client.GetGuildAsync(registration.GuildId);
                             DiscordMember clientMember = await guild.GetMemberAsync(client.CurrentUser.Id);
                             DiscordChannel channel = guild.GetChannel(registration.AnnouncementChannelId);
-                            Permissions perms = channel.PermissionsFor(clientMember);
-                            bool test = perms.HasFlag(Permissions.SendMessages) && perms.HasFlag(Permissions.EmbedLinks);
                             DiscordRole role = registration.RoleId == null ? null : guild.Roles[(ulong)registration.RoleId];
                             string mentionString = GenerateMentionString(registration, role);
-                            try { await channel.SendMessageAsync(content: mentionString, embed: bucket.AnnouncementEmbed); } catch { }
+                            try 
+                            { 
+                                if (!registration.IsDm)
+                                {
+                                    await channel.SendMessageAsync(content: mentionString, embed: bucket.AnnouncementEmbed); 
+                                }
+                                else
+                                {
+                                    DiscordMember member = await guild.GetMemberAsync((ulong)registration.MemberId);
+                                    await member.SendMessageAsync(embed: bucket.AnnouncementEmbed);
+                                }
+                            }
+                            catch(ServerErrorException) 
+                            {
+                                await this.mediator.Send(new GuildNovelRegistrations.Delete(registration));
+                            }
                         }
                     }
                 }
@@ -58,11 +72,15 @@ namespace Norm.Services
             }
             catch (Exception e)
             {
-                await bot.BotDeveloper.SendMessageAsync(embed: new DiscordEmbedBuilder()
-                    .WithTitle("Exception occured in Announcement Service")
-                    .WithDescription(e.Message)
-                    .AddField("Stack Trace", e.StackTrace.Substring(0, e.StackTrace.Length < 500 ? e.StackTrace.Length : 500))
-                );
+                DiscordEmbedBuilder embedException = new DiscordEmbedBuilder()
+                    .WithTitle("Exception occured in Announcement Service");
+
+                if (e.Message is not null)
+                    embedException.WithDescription(e.Message);
+
+                if (e.StackTrace is not null)
+                    embedException.AddField("Stack Trace", e.StackTrace.Substring(0, e.StackTrace.Length < 500 ? e.StackTrace.Length : 500));
+                await bot.BotDeveloper.SendMessageAsync(embed: embedException);
             }
         }
 

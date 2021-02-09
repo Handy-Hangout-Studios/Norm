@@ -39,6 +39,14 @@ namespace Norm.Services
                     {
                         return "this command can only be used by the Bot's owner";
                     }
+                    if (failedChecks.Any(x => x is RequireGuildAttribute))
+                    {
+                        return "this command must be used in a server that I'm also in";
+                    }
+                    if (failedChecks.Any(x => x is RequireDirectMessageAttribute))
+                    {
+                        return "this command must be used in the direct messages";
+                    }
 
                     return "The check failed is unknown";
                 }

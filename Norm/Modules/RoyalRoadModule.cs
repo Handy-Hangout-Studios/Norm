@@ -18,6 +18,7 @@ using System.Xml;
 using MediatR;
 using Norm.Database.Requests;
 using Norm.Attributes;
+using DSharpPlus.Exceptions;
 
 namespace Norm.Modules
 {
@@ -37,6 +38,7 @@ namespace Norm.Modules
         [Command("register")]
         [Aliases("r")]
         [Description("Register a channel for update announcements from a RoyalRoad webnovel for specified role, if a role isn't specified this will ping `@everyone`")]
+        [RequireGuild]
         public async Task RegisterRoyalRoadFictionWithDiscordRoleAsync(
             CommandContext context, 
             [Description("The channel to announce updates in")]
@@ -72,16 +74,56 @@ namespace Norm.Modules
                 return;
             }
 
-            // Get fiction id
+            NovelInfo fictionInfo = await this.GetNovelInfoFromUrl(context, royalroadUrl);
+
+            // Register the channel and role 
+            var registerResult = await this.mediator.Send(
+                new GuildNovelRegistrations.Add(
+                    context.Guild.Id,
+                    announcementChannel.Id,
+                    pingEveryone,
+                    pingNoOne,
+                    announcementRole?.Id,
+                    fictionInfo.Id,
+                    null,
+                    false
+                )
+            );
+
+            string content = new StringBuilder()
+                .Append($"I have registered  \"{fictionInfo.Name}\" updates to be output in {announcementChannel.Mention} ")
+                .Append(registerResult.Value.PingEveryone ? "for @everyone" : "")
+                .Append(registerResult.Value.PingNoOne ? "for everyone but without any ping" : "")
+                .Append(registerResult.Value.RoleId != null ? $"for members with the {announcementRole.Mention} role" : "")
+                .ToString();
+
+            await new DiscordMessageBuilder()
+                .WithContent(content)
+                .WithAllowedMentions(Mentions.None)
+                .SendAsync(context.Channel);
+        }
+
+        private async Task<NovelInfo> GetNovelInfoFromUrl(CommandContext context, string url)
+        {
+            ulong fictionId = await GetFictionId(context, url);
+
+            return await this.GetOrCreateNovelInfo(fictionId);
+        }
+
+        private static async Task<ulong> GetFictionId(CommandContext context, string royalroadUrl)
+        {
             Regex fictionIdRegex = new Regex("https://www.royalroad.com/fiction/(?<fictionId>.*)/.*");
             Match fictionIdMatch = fictionIdRegex.Match(royalroadUrl);
             if (!fictionIdMatch.Success)
             {
                 await context.RespondAsync($"{context.Member.Mention}, the URL provided doesn't match a royalroad fiction URL.");
-                return;
+                throw new Exception();
             }
-            ulong fictionId = ulong.Parse(fictionIdMatch.Groups["fictionId"].Value);
+            return ulong.Parse(fictionIdMatch.Groups["fictionId"].Value);
+        }
 
+        private async Task<NovelInfo> GetOrCreateNovelInfo(ulong fictionId)
+        {
             // Get or create fiction info
             var fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
             NovelInfo fictionInfo = fictionInfoResult.Success ? fictionInfoResult.Value : throw new Exception("Error using NovelInfos.GetNovelInfo(fictionId)");
@@ -101,35 +143,13 @@ namespace Norm.Modules
                 )).Value;
             }
 
-            // Register the channel and role 
-            var registerResult = await this.mediator.Send(
-                new GuildNovelRegistrations.Add(
-                    context.Guild.Id,
-                    announcementChannel.Id,
-                    pingEveryone,
-                    pingNoOne,
-                    announcementRole?.Id,
-                    fictionInfo.Id
-                )
-            );
-
-
-
-            string content = new StringBuilder()
-                .Append($"I have registered  \"{fictionInfo.Name}\" updates to be output in {announcementChannel.Mention} ")
-                .Append(registerResult.Value.PingEveryone ? "for @everyone" : "")
-                .Append(registerResult.Value.PingNoOne ? "for everyone but without any ping" : "")
-                .Append(registerResult.Value.RoleId != null ? $"for members with the {announcementRole.Mention} role" : "")
-                .ToString();
-
-            await context.RespondAsync(
-                content: content,
-                mentions: Mentions.None);
+            return fictionInfo;
         }
 
         [Command("deregister")]
         [Aliases("dr")]
         [Description("Begin the interactive deregistration process to remove a RoyalRoad webnovel announcement from your guild")]
+        [RequireGuild]
         public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
         {
             var getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetGuildsNovelRegistrations(context.Guild));
@@ -161,6 +181,129 @@ namespace Norm.Modules
                 NovelInfo delete = allRegisteredFictions[index].NovelInfo;
                 await this.mediator.Send(new GuildNovelRegistrations.Delete(allRegisteredFictions[index]));
                 await context.RespondAsync($"Unregistered {delete.Name}");
+            }
+        }
+
+        [Group("dm")]
+        [Description("The command module for DM based announcements. You must register the novel in a guild in which you are a member. However, you can deregister inside DMs.")]
+        public class DM : BaseCommandModule
+        {
+            private readonly IMediator mediator;
+            public DM(IMediator mediator)
+            {
+                this.mediator = mediator;
+            }
+
+            [Command("deregister")]
+            [Aliases("dr")]
+            [Description("Begin the interactive deregistration process to remove a RoyalRoad webnovel announcement from your DMs")]
+            public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
+            {
+                var getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetMemberNovelRegistrations(context.Member));
+                if (!getNovelRegistrationsResult.Success)
+                {
+                    await context.RespondAsync("There was an error getting your Novel Registrations. An error report has been sent to the developer. DM any extra details to the developer that you might find relevant.");
+                    throw new Exception("error using GetGuildNovelRegistration");
+                }
+                GuildNovelRegistration[] allRegisteredFictions = getNovelRegistrationsResult.Value.ToArray();
+
+                StringBuilder pageString = new StringBuilder();
+                for (int i = 0; i < allRegisteredFictions.Length; i++)
+                {
+                    pageString.AppendLine($"{i + 1}. {allRegisteredFictions[i].NovelInfo.Name}");
+                }
+
+                DiscordEmbedBuilder builder = new DiscordEmbedBuilder().WithTitle("Select the fiction to deregister by typing the number of the fiction");
+
+                InteractivityExtension interactivity = context.Client.GetInteractivity();
+                IEnumerable<Page> pages = interactivity.GeneratePagesInEmbed(pageString.ToString(), DSharpPlus.Interactivity.Enums.SplitType.Line, embedbase: builder);
+
+                _ = interactivity.SendPaginatedMessageAsync(context.Channel, context.User, pages);
+
+                InteractivityResult<DiscordMessage> result = await interactivity.WaitForMessageAsync(message => int.TryParse(message.Content, out _));
+
+                if (!result.TimedOut)
+                {
+                    int index = int.Parse(result.Result.Content) - 1;
+                    NovelInfo delete = allRegisteredFictions[index].NovelInfo;
+                    await this.mediator.Send(new GuildNovelRegistrations.Delete(allRegisteredFictions[index]));
+                    await context.RespondAsync($"Unregistered {delete.Name}");
+                }
+            }
+
+            [Command("register")]
+            [Aliases("r")]
+            [RequireGuild]
+            [Description("Register to receive updates about a RoyalRoad novel in your DM's from me")]
+            public async Task RegisterRoyalRoadFictionAsync(CommandContext context, [Description("The royalroad url for the novel you'd like to register")][RemainingText] string royalroadUrl)
+            {
+                NovelInfo fictionInfo = await this.GetNovelInfoFromUrl(context, royalroadUrl);
+
+                try
+                {
+                    await context.Member.SendMessageAsync($"I have registered  \"{fictionInfo.Name}\" updates to be sent to your DMs!");
+                }
+                catch (UnauthorizedException)
+                {
+                    await context.RespondAsync("I'm sorry, but you seem to have your DM's closed on this server, I can't seem to send you a message.");
+                    return;
+                }
+                // Register the channel and role 
+                await this.mediator.Send(
+                    new GuildNovelRegistrations.Add(
+                        context.Guild.Id,
+                        context.Channel.Id,
+                        false,
+                        false,
+                        null,
+                        fictionInfo.Id,
+                        context.Member.Id,
+                        true
+                    )
+                );
+            }
+
+            private async Task<NovelInfo> GetNovelInfoFromUrl(CommandContext context, string url)
+            {
+                ulong fictionId = await GetFictionId(context, url);
+
+                return await this.GetOrCreateNovelInfo(fictionId);
+            }
+
+            private static async Task<ulong> GetFictionId(CommandContext context, string royalroadUrl)
+            {
+                Regex fictionIdRegex = new Regex("https://www.royalroad.com/fiction/(?<fictionId>.*)/.*");
+                Match fictionIdMatch = fictionIdRegex.Match(royalroadUrl);
+                if (!fictionIdMatch.Success)
+                {
+                    await context.RespondAsync($"{context.Member.Mention}, the URL provided doesn't match a royalroad fiction URL.");
+                    throw new Exception();
+                }
+                return ulong.Parse(fictionIdMatch.Groups["fictionId"].Value);
+            }
+
+            private async Task<NovelInfo> GetOrCreateNovelInfo(ulong fictionId)
+            {
+                // Get or create fiction info
+                var fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
+                NovelInfo fictionInfo = fictionInfoResult.Success ? fictionInfoResult.Value : throw new Exception("Error using NovelInfos.GetNovelInfo(fictionId)");
+                if (fictionInfo is null)
+                {
+                    string fictionUri = $"https://www.royalroad.com/fiction/{fictionId}";
+                    string synUri = $"https://www.royalroad.com/fiction/{fictionId}";
+                    fictionInfo.MostRecentChapterId = await GetMostRecentChapterId(synUri);
+                    fictionInfo = (await this.mediator.Send(
+                        new NovelInfos.Add(
+                            fictionId,
+                            GetFictionName(fictionInfo.FictionUri).WithHtmlDecoded(),
+                            fictionUri,
+                            synUri,
+                            await GetMostRecentChapterId(synUri)
+                         )
+                    )).Value;
+                }
+
+                return fictionInfo;
             }
         }
 

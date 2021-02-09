@@ -41,6 +41,7 @@ namespace Norm.Modules
         [BotCategory("Moderation")]
         [Description("Warn a member and add a record to the guild moderation audit log with the reason for the warning.")]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
+        [RequireGuild]
         public async Task WarnMemberAsync(CommandContext context,
             [Description("Guild Member to Warn")]
             DiscordMember member,
@@ -76,6 +77,7 @@ namespace Norm.Modules
         [BotCategory("Moderation")]
         [Description("Permanently ban a member from the guild")]
         [RequirePermissions(Permissions.BanMembers)]
+        [RequireGuild]
         public async Task BanMemberAsync(CommandContext context,
             [Description("Guild Member to Ban")]
             DiscordMember member,
@@ -127,6 +129,7 @@ namespace Norm.Modules
         [Command("tempban")]
         [BotCategory("Moderation")]
         [RequirePermissions(Permissions.BanMembers)]
+        [RequireGuild]
         public async Task TempBanMemberAsync(CommandContext context,
             DiscordMember member,
             int numDays = 0,
@@ -196,6 +199,7 @@ namespace Norm.Modules
         [BotCategory("Moderation")]
         [Description("Kick a member from the server and send a message explaining why if possible.")]
         [RequirePermissions(Permissions.KickMembers)]
+        [RequireGuild]
         public async Task KickMemberAsync(CommandContext context,
             [Description("The member to kick")]
             DiscordMember member,
@@ -241,6 +245,7 @@ namespace Norm.Modules
         [Description("Mute a member in the server using the `Muted` role and send them a message explaining why if possible. \nCreates the `Muted` role if it doesn't exist.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
+        [RequireGuild]
         public async Task MuteMemberAsync(CommandContext context,
             [Description("The member to mute")]
             DiscordMember member,
@@ -288,6 +293,7 @@ namespace Norm.Modules
         [Description("Temporarily mute a member in the server using the `Muted` role and send them a message explaining why if possible. \n\nCreates the `Muted` role if it doesn't exist.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
+        [RequireGuild]
         public async Task TempMuteMemberAsync(CommandContext context,
             [Description("The member to mute")]
             DiscordMember member,
@@ -358,6 +364,7 @@ namespace Norm.Modules
         [Description("Unmute a member in the server and send them a message making them aware of the unmute if possible.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
+        [RequireGuild]
         public async Task UnmuteMemberAsync(CommandContext context,
             [Description("The member to unmute")]
             DiscordMember member)
@@ -384,6 +391,7 @@ namespace Norm.Modules
         [BotCategory("Moderation")]
         [Description("View the audit log filtered on the information given")]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
+        [RequireGuild]
         public async Task ShowAuditLogVersionOne(CommandContext context,
             [Description("The moderator who took action to filter on.")]
             DiscordUser moderator = null,
@@ -544,6 +552,7 @@ namespace Norm.Modules
         [Description("Commands to manage the moderation logging channel")]
         [BotCategory("Moderation")]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
+        [RequireGuild]
         public class LogCommands : BaseCommandModule
         {
             private readonly IMediator mediator;

@@ -1,4 +1,5 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -37,21 +38,31 @@ namespace Norm.Modules
         public async Task ExecuteGroupAsync(CommandContext context)
         {
             string prefixString;
-            List<GuildPrefix> guildPrefixes = (await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).Value.ToList();
-            if (!guildPrefixes.Any())
+            if (context.Channel.Guild != null)
             {
-                prefixString = "^";
+                List<GuildPrefix> guildPrefixes = (await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).Value.ToList();
+                if (!guildPrefixes.Any())
+                {
+                    prefixString = "My prefix is ^";
+                }
+                else
+                {
+                    prefixString = $"My prefixes are: {string.Join(", ", guildPrefixes.Select(p => Formatter.InlineCode(p.Prefix)))}";
+                }
             }
             else
             {
-                prefixString = string.Join(", ", guildPrefixes.Select(p => p.Prefix));
+                prefixString = $"You don't need to use a prefix here but you can always start with `^` if you'd like";
             }
-
-            await context.RespondAsync($"{context.User.Mention}, the prefixes are: {prefixString}");
+            DiscordMessageBuilder msg = new DiscordMessageBuilder()
+                .WithContent(prefixString)
+                .WithReply(context.Message.Id);
+            await context.RespondAsync(msg);
         }
 
-        [Command("add"), Description("Add prefix to guild's prefixes")]
-        [RequireUserPermissions(DSharpPlus.Permissions.ManageGuild)]
+        [Command("add"), Description("Add prefix to guild's prefixes\n\nRequirements:\n1. Must be at least one character and at most twenty characters.\n2. You can't use the prefix \",\" as that is used as a separator ")]
+        [RequireUserPermissions(Permissions.ManageGuild)]
+        [RequireGuild]
         public async Task AddPrefix(
             CommandContext context,
             [Description("The new prefix that you want to add to the guild's prefixes. Must be at least one character")]
@@ -100,6 +111,7 @@ namespace Norm.Modules
         [Command("remove")]
         [Description("Remove a prefix from the guild's prefixes")]
         [RequireUserPermissions(DSharpPlus.Permissions.ManageGuild)]
+        [RequireGuild]
         public async Task RemovePrefix(
             CommandContext context,
             [Description("The specific string prefix to remove from the guild's prefixes.")]
@@ -125,6 +137,7 @@ namespace Norm.Modules
         [Command("iremove")]
         [Description("Starts an interactive removal process allowing you to choose which prefix to remove")]
         [RequireUserPermissions(DSharpPlus.Permissions.ManageGuild)]
+        [RequireGuild]
         public async Task InteractiveRemovePrefix(CommandContext context)
         {
 

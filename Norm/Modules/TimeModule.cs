@@ -145,5 +145,13 @@ namespace Norm.Modules
                     "You waited too long to respond. Try again by typing `time update`.");
             }
         }
+
+        [Command("unregister")]
+        public async Task UnregisterTimeZone(CommandContext context)
+        {
+            UserTimeZone timeZone = (await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User))).Value;
+            await this.mediator.Send(new UserTimeZones.Delete(timeZone));
+            await context.RespondAsync("Ok, I've unregistered your timezone from my databases. This means that it has been completely deleted.");
+        }
     }
 }

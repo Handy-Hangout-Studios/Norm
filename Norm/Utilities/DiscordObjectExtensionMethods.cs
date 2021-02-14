@@ -4,11 +4,6 @@ using NodaTime;
 using NodaTime.TimeZones;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Norm.Utilities

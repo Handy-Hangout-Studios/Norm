@@ -1,14 +1,14 @@
-﻿using Norm.Database.Contexts;
+﻿using DSharpPlus.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using NodaTime;
+using Norm.Database.Contexts;
 using Norm.Database.Entities;
 using Norm.Database.Requests.BaseClasses;
-using NodaTime;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using DSharpPlus.Entities;
-using System.Linq;
 
 namespace Norm.Database.Requests
 {
@@ -18,7 +18,7 @@ namespace Norm.Database.Requests
         {
             public Add(string hangfireJobId, ulong guildId, string jobName, Instant scheduledTime, GuildJobType guildJobType)
             {
-                Job = new GuildBackgroundJob
+                this.Job = new GuildBackgroundJob
                 {
                     HangfireJobId = hangfireJobId,
                     GuildId = guildId,
@@ -36,7 +36,7 @@ namespace Norm.Database.Requests
             public AddHandler(IDbContext db) : base(db) { }
             public override async Task<DbResult<GuildBackgroundJob>> Handle(Add request, CancellationToken cancellationToken)
             {
-                EntityEntry<GuildBackgroundJob> entity = await this.DbContext.GuildBackgroundJobs.AddAsync(request.Job, cancellationToken);
+                EntityEntry<GuildBackgroundJob> entity = this.DbContext.GuildBackgroundJobs.Add(request.Job);
                 DbResult<GuildBackgroundJob> result = new DbResult<GuildBackgroundJob>
                 {
                     Success = entity.State.Equals(EntityState.Added),
@@ -88,18 +88,18 @@ namespace Norm.Database.Requests
 
         public class GetGuildJobsHandler : DbRequestHandler<GetGuildJobs, IEnumerable<GuildBackgroundJob>>
         {
-            public GetGuildJobsHandler(IDbContext dbContext, IClock clock) : base(dbContext) 
+            public GetGuildJobsHandler(IDbContext dbContext, IClock clock) : base(dbContext)
             {
                 this.Clock = clock;
             }
 
             public override async Task<DbResult<IEnumerable<GuildBackgroundJob>>> Handle(GetGuildJobs request, CancellationToken cancellationToken)
             {
-                List<GuildBackgroundJob> result = 
+                List<GuildBackgroundJob> result =
                     await this.DbContext.GuildBackgroundJobs
                     .Where(x => x.GuildId == request.GuildId && x.ScheduledTime > this.Clock.GetCurrentInstant())
                     .ToListAsync(cancellationToken: cancellationToken);
-                
+
                 return new DbResult<IEnumerable<GuildBackgroundJob>>
                 {
                     Success = true,

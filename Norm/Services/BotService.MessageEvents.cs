@@ -5,8 +5,6 @@ using HandyHangoutStudios.Parsers;
 using HandyHangoutStudios.Parsers.Models;
 using HandyHangoutStudios.Parsers.Resolutions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Recognizers.Text;
-using Microsoft.Recognizers.Text.DateTime;
 using NodaTime;
 using Norm.Database.Requests;
 using Norm.Utilities;
@@ -32,7 +30,7 @@ namespace Norm.Services
 
             _ = Task.Run(async () =>
             {
-                
+
                 IEnumerable<DateTimeV2ModelResult> parserList = Recognizers.RecognizeDateTime(e.Message.Content, DateTimeV2Type.Time, DateTimeV2Type.DateTime);
 
                 if (parserList.Any())

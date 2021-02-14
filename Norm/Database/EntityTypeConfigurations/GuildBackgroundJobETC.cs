@@ -1,10 +1,10 @@
-﻿using Norm.Database.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Norm.Database.Entities;
 
 namespace Norm.Database.EntityTypeConfigurations
 {
-    class GuildBackgroundJobETC : IEntityTypeConfiguration<GuildBackgroundJob>
+    internal class GuildBackgroundJobETC : IEntityTypeConfiguration<GuildBackgroundJob>
     {
         public void Configure(EntityTypeBuilder<GuildBackgroundJob> builder)
         {

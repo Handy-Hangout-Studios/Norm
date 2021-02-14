@@ -4,10 +4,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Norm.Database.Contexts;
 using Norm.Database.Entities;
 using Norm.Database.Requests.BaseClasses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,12 +26,13 @@ namespace Norm.Database.Requests
             public UpsertHandler(IDbContext db) : base(db) { }
             public override async Task<DbResult<GuildLogChannel>> Handle(Upsert request, CancellationToken cancellationToken)
             {
-                GuildLogChannel logChannel = this.DbContext.GuildLogChannels.FirstOrDefault(channel => channel.GuildId == request.LogChannel.GuildId);
+                GuildLogChannel logChannel = await this.DbContext.GuildLogChannels.FirstOrDefaultAsync(channel => channel.GuildId == request.LogChannel.GuildId, cancellationToken: cancellationToken);
                 EntityEntry<GuildLogChannel> entity;
                 DbResult<GuildLogChannel> result;
                 if (logChannel is not null)
                 {
-                    entity = this.DbContext.GuildLogChannels.Update(request.LogChannel);
+                    logChannel.ChannelId = request.LogChannel.ChannelId;
+                    entity = this.DbContext.GuildLogChannels.Update(logChannel);
                     result = new DbResult<GuildLogChannel>
                     {
                         Success = entity.State.Equals(EntityState.Modified),
@@ -44,7 +41,7 @@ namespace Norm.Database.Requests
                 }
                 else
                 {
-                    entity = await this.DbContext.GuildLogChannels.AddAsync(request.LogChannel, cancellationToken); 
+                    entity = this.DbContext.GuildLogChannels.Add(request.LogChannel);
                     result = new DbResult<GuildLogChannel>
                     {
                         Success = entity.State.Equals(EntityState.Added),
@@ -76,7 +73,7 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
-                GuildLogChannel logChannel = this.DbContext.GuildLogChannels.FirstOrDefault(channel => channel.GuildId == request.GuildId);
+                GuildLogChannel logChannel = await this.DbContext.GuildLogChannels.FirstOrDefaultAsync(channel => channel.GuildId == request.GuildId, cancellationToken: cancellationToken);
                 if (logChannel == null)
                 {
                     return new DbResult
@@ -84,7 +81,7 @@ namespace Norm.Database.Requests
                         Success = true,
                     };
                 }
-                
+
                 EntityEntry<GuildLogChannel> entity = this.DbContext.GuildLogChannels.Remove(logChannel);
                 DbResult result = new DbResult
                 {

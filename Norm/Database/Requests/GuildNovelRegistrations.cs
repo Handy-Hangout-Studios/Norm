@@ -39,7 +39,7 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult<GuildNovelRegistration>> Handle(Add request, CancellationToken cancellationToken)
             {
-                EntityEntry<GuildNovelRegistration> entity = await this.DbContext.GuildNovelRegistrations.AddAsync(request.NovelRegistration, cancellationToken);
+                EntityEntry<GuildNovelRegistration> entity = this.DbContext.GuildNovelRegistrations.Add(request.NovelRegistration);
                 DbResult<GuildNovelRegistration> result = new DbResult<GuildNovelRegistration>
                 {
                     Success = entity.State.Equals(EntityState.Added),

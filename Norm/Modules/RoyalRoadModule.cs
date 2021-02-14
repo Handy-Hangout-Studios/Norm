@@ -1,13 +1,17 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using Norm.Database.Entities;
-using Norm.Services;
 using HtmlAgilityPack;
+using MediatR;
 using Microsoft.SyndicationFeed;
 using Microsoft.SyndicationFeed.Rss;
+using Norm.Attributes;
+using Norm.Database.Entities;
+using Norm.Database.Requests;
+using Norm.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +19,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
-using MediatR;
-using Norm.Database.Requests;
-using Norm.Attributes;
-using DSharpPlus.Exceptions;
 
 namespace Norm.Modules
 {
@@ -29,7 +29,7 @@ namespace Norm.Modules
     [BotCategory("Events and Announcements")]
     public class RoyalRoadModule : BaseCommandModule
     {
-        private readonly IMediator mediator; 
+        private readonly IMediator mediator;
         public RoyalRoadModule(IMediator mediator)
         {
             this.mediator = mediator;
@@ -40,7 +40,7 @@ namespace Norm.Modules
         [Description("Register a channel for update announcements from a RoyalRoad webnovel for specified role, if a role isn't specified this will ping `@everyone`")]
         [RequireGuild]
         public async Task RegisterRoyalRoadFictionWithDiscordRoleAsync(
-            CommandContext context, 
+            CommandContext context,
             [Description("The channel to announce updates in")]
             DiscordChannel announcementChannel,
             [Description("The role to mention")]
@@ -58,7 +58,7 @@ namespace Norm.Modules
             DiscordChannel announcementChannel,
             [Description("Whether to ping everyone or no one. Use everyone to ping everyone or none to ping no one.")]
             string whoToPing,
-            [RemainingText] 
+            [RemainingText]
             [Description("The RoyalRoad URL")]
             string royalroadURL)
         {
@@ -77,7 +77,7 @@ namespace Norm.Modules
             NovelInfo fictionInfo = await this.GetNovelInfoFromUrl(context, royalroadUrl);
 
             // Register the channel and role 
-            var registerResult = await this.mediator.Send(
+            DbResult<GuildNovelRegistration> registerResult = await this.mediator.Send(
                 new GuildNovelRegistrations.Add(
                     context.Guild.Id,
                     announcementChannel.Id,
@@ -125,7 +125,7 @@ namespace Norm.Modules
         private async Task<NovelInfo> GetOrCreateNovelInfo(ulong fictionId)
         {
             // Get or create fiction info
-            var fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
+            DbResult<NovelInfo> fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
             NovelInfo fictionInfo = fictionInfoResult.Success ? fictionInfoResult.Value : throw new Exception("Error using NovelInfos.GetNovelInfo(fictionId)");
             if (fictionInfo is null)
             {
@@ -152,7 +152,7 @@ namespace Norm.Modules
         [RequireGuild]
         public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
         {
-            var getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetGuildsNovelRegistrations(context.Guild));
+            DbResult<IEnumerable<GuildNovelRegistration>> getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetGuildsNovelRegistrations(context.Guild));
             if (!getNovelRegistrationsResult.Success)
             {
                 await context.RespondAsync("There was an error getting the Guild's Novel Registrations. An error report has been sent to the developer. DM any extra details that you might find relevant.");
@@ -199,7 +199,7 @@ namespace Norm.Modules
             [Description("Begin the interactive deregistration process to remove a RoyalRoad webnovel announcement from your DMs")]
             public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
             {
-                var getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetMemberNovelRegistrations(context.Member));
+                DbResult<IEnumerable<GuildNovelRegistration>> getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetMemberNovelRegistrations(context.Member));
                 if (!getNovelRegistrationsResult.Success)
                 {
                     await context.RespondAsync("There was an error getting your Novel Registrations. An error report has been sent to the developer. DM any extra details to the developer that you might find relevant.");
@@ -285,7 +285,7 @@ namespace Norm.Modules
             private async Task<NovelInfo> GetOrCreateNovelInfo(ulong fictionId)
             {
                 // Get or create fiction info
-                var fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
+                DbResult<NovelInfo> fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
                 NovelInfo fictionInfo = fictionInfoResult.Success ? fictionInfoResult.Value : throw new Exception("Error using NovelInfos.GetNovelInfo(fictionId)");
                 if (fictionInfo is null)
                 {

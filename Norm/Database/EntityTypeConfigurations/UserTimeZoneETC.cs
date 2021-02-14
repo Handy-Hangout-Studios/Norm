@@ -1,10 +1,10 @@
-﻿using Norm.Database.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Norm.Database.Entities;
 
 namespace Norm.Database.EntityTypeConfigurations
 {
-    class UserTimeZoneETC : IEntityTypeConfiguration<UserTimeZone>
+    internal class UserTimeZoneETC : IEntityTypeConfiguration<UserTimeZone>
     {
         public void Configure(EntityTypeBuilder<UserTimeZone> builder)
         {

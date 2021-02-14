@@ -4,10 +4,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Norm.Database.Contexts;
 using Norm.Database.Entities;
 using Norm.Database.Requests.BaseClasses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,8 +33,8 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult<UserTimeZone>> Handle(Add request, CancellationToken cancellationToken)
             {
-                EntityEntry<UserTimeZone> entity = await this.DbContext.UserTimeZones
-                    .AddAsync(new UserTimeZone { UserId = (ulong) request.UserTimeZone.UserId, TimeZoneId = request.UserTimeZone.TimeZoneId }, cancellationToken);
+                EntityEntry<UserTimeZone> entity = this.DbContext.UserTimeZones
+                    .Add(new UserTimeZone { UserId = (ulong)request.UserTimeZone.UserId, TimeZoneId = request.UserTimeZone.TimeZoneId });
                 DbResult<UserTimeZone> result = new()
                 {
                     Success = entity.State.Equals(EntityState.Added),
@@ -122,7 +118,7 @@ namespace Norm.Database.Requests
             public ulong UserId { get; }
         }
 
-        public class GetUsersTimeZoneHandler: DbRequestHandler<GetUsersTimeZone, UserTimeZone>
+        public class GetUsersTimeZoneHandler : DbRequestHandler<GetUsersTimeZone, UserTimeZone>
         {
             public GetUsersTimeZoneHandler(IDbContext context) : base(context) { }
 

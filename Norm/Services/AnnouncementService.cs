@@ -1,18 +1,18 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using HandyHangoutStudios.Common.ExtensionMethods;
-using Norm.Database.Entities;
 using HtmlAgilityPack;
+using MediatR;
 using Microsoft.SyndicationFeed;
 using Microsoft.SyndicationFeed.Rss;
+using Norm.Database.Entities;
+using Norm.Database.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
-using MediatR;
-using Norm.Database.Requests;
-using DSharpPlus.Exceptions;
 
 namespace Norm.Services
 {
@@ -30,11 +30,13 @@ namespace Norm.Services
         public async Task AnnounceUpdates()
         {
             if (!this.bot.Started)
+            {
                 return;
+            }
 
             try
             {
-                List<ChapterUpdateBucket> buckets = await GetUpdatedChapterBucketList();
+                List<ChapterUpdateBucket> buckets = await this.GetUpdatedChapterBucketList();
 
                 foreach (ChapterUpdateBucket bucket in buckets)
                 {
@@ -48,11 +50,11 @@ namespace Norm.Services
                             DiscordChannel channel = guild.GetChannel(registration.AnnouncementChannelId);
                             DiscordRole role = registration.RoleId == null ? null : guild.Roles[(ulong)registration.RoleId];
                             string mentionString = GenerateMentionString(registration, role);
-                            try 
-                            { 
+                            try
+                            {
                                 if (!registration.IsDm)
                                 {
-                                    await channel.SendMessageAsync(content: mentionString, embed: bucket.AnnouncementEmbed); 
+                                    await channel.SendMessageAsync(content: mentionString, embed: bucket.AnnouncementEmbed);
                                 }
                                 else
                                 {
@@ -60,7 +62,7 @@ namespace Norm.Services
                                     await member.SendMessageAsync(embed: bucket.AnnouncementEmbed);
                                 }
                             }
-                            catch(ServerErrorException) 
+                            catch (ServerErrorException)
                             {
                                 await this.mediator.Send(new GuildNovelRegistrations.Delete(registration));
                             }
@@ -68,7 +70,7 @@ namespace Norm.Services
                     }
                 }
 
-                await UpdateAllNovelInfos(buckets);
+                await this.UpdateAllNovelInfos(buckets);
             }
             catch (Exception e)
             {
@@ -76,11 +78,16 @@ namespace Norm.Services
                     .WithTitle("Exception occured in Announcement Service");
 
                 if (e.Message is not null)
+                {
                     embedException.WithDescription(e.Message);
+                }
 
                 if (e.StackTrace is not null)
+                {
                     embedException.AddField("Stack Trace", e.StackTrace.Substring(0, e.StackTrace.Length < 500 ? e.StackTrace.Length : 500));
-                await bot.BotDeveloper.SendMessageAsync(embed: embedException);
+                }
+
+                await this.bot.BotDeveloper.SendMessageAsync(embed: embedException);
             }
         }
 
@@ -88,17 +95,27 @@ namespace Norm.Services
         {
             string mentionString;
             if (registration.PingNoOne)
+            {
                 mentionString = null;
+            }
             else if (registration.PingEveryone)
+            {
                 mentionString = "@everyone";
+            }
             else
+            {
                 mentionString = $"{role.Mention ?? "@everyone"}";
+            }
+
             return mentionString;
         }
 
         private async Task UpdateAllNovelInfos(List<ChapterUpdateBucket> buckets)
         {
-            if (!buckets.Any()) return;
+            if (!buckets.Any())
+            {
+                return;
+            }
 
             foreach (ChapterUpdateBucket bucket in buckets)
             {
@@ -107,7 +124,7 @@ namespace Norm.Services
                     bucket.Novel.Name = bucket.NewTitle;
                 }
                 bucket.Novel.MostRecentChapterId = bucket.NewMostRecentChapter;
-                await mediator.Send(new NovelInfos.Update(bucket.Novel));
+                await this.mediator.Send(new NovelInfos.Update(bucket.Novel));
             }
         }
 
@@ -115,7 +132,7 @@ namespace Norm.Services
         {
             List<ChapterUpdateBucket> allUpdatedChapterBuckets = new List<ChapterUpdateBucket>();
 
-            var result = await this.mediator.Send(new NovelInfos.GetAllNovelsInfo());
+            DbResult<IEnumerable<NovelInfo>> result = await this.mediator.Send(new NovelInfos.GetAllNovelsInfo());
 
             if (!result.Success)
             {
@@ -143,7 +160,7 @@ namespace Norm.Services
                         {
                             break;
                         }
-                            chapterUpdateItem.Description = chapterUpdateItem.Description.FromHtmlToDiscordMarkdown();
+                        chapterUpdateItem.Description = chapterUpdateItem.Description.FromHtmlToDiscordMarkdown();
                         temp.ChapterUpdateItems.Add(chapterUpdateItem);
                     }
                     else if (feedReader.ElementType == SyndicationElementType.Content)
@@ -168,27 +185,26 @@ namespace Norm.Services
     public class ChapterUpdateBucket
     {
         public NovelInfo Novel { get; set; }
-        public List<ChapterUpdateItem> ChapterUpdateItems
-        {
-            get => this.chapterUpdateItems ??= new List<ChapterUpdateItem>();
-        }
+        public List<ChapterUpdateItem> ChapterUpdateItems => this.chapterUpdateItems ??= new List<ChapterUpdateItem>();
         public string NewTitle { get; set; }
-        public ulong NewMostRecentChapter 
-        { 
+        public ulong NewMostRecentChapter
+        {
             get
             {
                 if (!this.populated)
-                    PopulateFiction();
+                {
+                    this.PopulateFiction();
+                }
 
-                return newMostRecentChapter;
+                return this.newMostRecentChapter;
             }
         }
-        public string FictionCoverUri 
+        public string FictionCoverUri
         {
             get
             {
-                this.PopulateFiction(); 
-                return fictionCoverUri;
+                this.PopulateFiction();
+                return this.fictionCoverUri;
             }
         }
         public DiscordEmbed AnnouncementEmbed
@@ -196,7 +212,7 @@ namespace Norm.Services
             get
             {
                 this.PopulateFiction();
-                return announcementEmbed ??= this.GetAnnouncementEmbed();
+                return this.announcementEmbed ??= this.GetAnnouncementEmbed();
             }
         }
 
@@ -212,22 +228,27 @@ namespace Norm.Services
                 .WithTitle($"{(this.NewTitle ?? this.Novel.Name)} just released {(this.ChapterUpdateItems.Count > 1 ? "new chapters!" : "a new chapter!")}");
 
             if (this.FictionCoverUri != null)
+            {
                 announcementEmbedBuilder.WithThumbnail(url: this.FictionCoverUri);
+            }
 
             foreach (ChapterUpdateItem item in this.ChapterUpdateItems.OrderBy(item => item.PublishDate))
             {
                 announcementEmbedBuilder.AddField(
-                    name: $"{item.Title[((this.NewTitle ?? this.Novel.Name).Length + 3)..]}", 
+                    name: $"{item.Title[((this.NewTitle ?? this.Novel.Name).Length + 3)..]}",
                     value: $"{item.Description.Substring(0, Math.Min(500, item.Description.Length))}{(item.Description.Length > 50 ? "..." : "")}\n[Link to Chapter]({item.Link})"
                 );
             }
-            
+
             return announcementEmbedBuilder;
         }
 
         private void PopulateFiction()
         {
-            if (this.populated) return;
+            if (this.populated)
+            {
+                return;
+            }
 
             HtmlWeb fictionGet = new HtmlWeb();
             HtmlDocument fictionPage = fictionGet.Load(this.Novel.FictionUri);
@@ -245,7 +266,7 @@ namespace Norm.Services
                         switch (nodeProperty.Value.ToLower())
                         {
                             case "og:image":
-                                fictionCoverUri = nodeContent.Value;
+                                this.fictionCoverUri = nodeContent.Value;
                                 break;
                         }
                     }
@@ -254,7 +275,7 @@ namespace Norm.Services
 
             this.newMostRecentChapter = this.ChapterUpdateItems.OrderByDescending(item => item.PublishDate).FirstOrDefault()?.Id ?? this.Novel.MostRecentChapterId;
 
-            populated = true;
+            this.populated = true;
         }
     }
 

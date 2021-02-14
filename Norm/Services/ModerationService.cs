@@ -1,6 +1,5 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;

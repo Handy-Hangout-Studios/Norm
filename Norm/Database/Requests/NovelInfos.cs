@@ -34,7 +34,7 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult<NovelInfo>> Handle(Add request, CancellationToken cancellationToken)
             {
-                EntityEntry<NovelInfo> entity = await this.DbContext.AllNovelInfo.AddAsync(request.Novel, cancellationToken);
+                EntityEntry<NovelInfo> entity = this.DbContext.AllNovelInfo.Add(request.Novel);
                 DbResult<NovelInfo> result = new DbResult<NovelInfo>
                 {
                     Success = entity.State.Equals(EntityState.Added),

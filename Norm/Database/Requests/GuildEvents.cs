@@ -28,7 +28,7 @@ namespace Norm.Database.Requests
             public AddHandler(IDbContext db) : base(db) { }
             public override async Task<DbResult<GuildEvent>> Handle(Add request, CancellationToken cancellationToken)
             {
-                EntityEntry<GuildEvent> entity = await this.DbContext.GuildEvents.AddAsync(request.Event, cancellationToken);
+                EntityEntry<GuildEvent> entity = this.DbContext.GuildEvents.Add(request.Event);
                 DbResult<GuildEvent> result = new DbResult<GuildEvent>
                 {
                     Success = entity.State.Equals(EntityState.Added),

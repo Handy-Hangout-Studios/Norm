@@ -1,10 +1,10 @@
-﻿using Norm.Database.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Norm.Database.Entities;
 
 namespace Norm.Database.EntityTypeConfigurations
 {
-    class GuildLogsChannelETC : IEntityTypeConfiguration<GuildLogChannel>
+    internal class GuildLogsChannelETC : IEntityTypeConfiguration<GuildLogChannel>
     {
         public void Configure(EntityTypeBuilder<GuildLogChannel> builder)
         {

@@ -21,7 +21,6 @@ using Norm.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Norm.Modules
@@ -54,7 +53,7 @@ namespace Norm.Modules
                 .AddField("Guild:", context.Guild.Name)
                 .AddField("Reason:", reason);
 
-            DiscordChannel logChannel = await SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
+            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
             await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.WARN, reason));
 
@@ -94,7 +93,7 @@ namespace Norm.Modules
                 messageEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
+            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
             await member.BanAsync(numDays, reason);
 
             await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.BAN, reason));
@@ -162,7 +161,7 @@ namespace Norm.Modules
                 messageEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
+            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
 
             await member.BanAsync(numDays, reason);
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
@@ -215,7 +214,7 @@ namespace Norm.Modules
                 successEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
+            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
             await member.RemoveAsync(reason);
 
@@ -263,7 +262,7 @@ namespace Norm.Modules
                 successEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
+            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
             await member.GrantRoleAsync(mutedRole, reason);
 
@@ -329,7 +328,7 @@ namespace Norm.Modules
                 successEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
+            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
             await member.GrantRoleAsync(mutedRole, reason);
 
@@ -377,7 +376,7 @@ namespace Norm.Modules
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
 
             // Add output message to logging channel
-            DiscordChannel logChannel = await GetGuildLogChannelAsync(context.Guild);
+            DiscordChannel logChannel = await this.GetGuildLogChannelAsync(context.Guild);
 
             if (logChannel == null)
             {
@@ -401,7 +400,7 @@ namespace Norm.Modules
             ModerationActionType action = ModerationActionType.NONE)
         {
 
-            var message = new GuildModerationAuditRecords.GetGuildModerationAuditRecords(context.Guild);
+            GuildModerationAuditRecords.GetGuildModerationAuditRecords message = new GuildModerationAuditRecords.GetGuildModerationAuditRecords(context.Guild);
 
             if (moderator != null)
             {

@@ -1,15 +1,9 @@
 ﻿using Hangfire;
 using Hangfire.Storage;
-using Norm.Database;
-using Microsoft.EntityFrameworkCore;
+using MediatR;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 
 namespace Norm.Services
 {
@@ -32,12 +26,12 @@ namespace Norm.Services
             {
                 RecurringJob.RemoveIfExists(rJob.Id);
             }
-            await bot.StartAsync();
+            await this.bot.StartAsync();
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await bot.StopAsync();
+            await this.bot.StopAsync();
         }
     }
 }

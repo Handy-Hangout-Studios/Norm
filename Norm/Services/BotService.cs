@@ -1,26 +1,26 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using Hangfire;
-using Norm.Configuration;
-using Norm.Modules;
+using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-using MediatR;
 using NodaTime;
-using Norm.Formatters;
-using DSharpPlus.CommandsNext.Converters;
+using Norm.Configuration;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
-using Microsoft.Extensions.Caching.Memory;
+using Norm.Formatters;
+using Norm.Modules;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Norm.Services
 {
@@ -48,9 +48,9 @@ namespace Norm.Services
         public bool Started { get; private set; }
 
         public BotService(
-            IOptions<BotOptions> options, 
-            ILoggerFactory factory, 
-            IServiceProvider provider, 
+            IOptions<BotOptions> options,
+            ILoggerFactory factory,
+            IServiceProvider provider,
             IMediator mediator,
             IDateTimeZoneProvider timeZoneProvider)
         {
@@ -86,9 +86,13 @@ namespace Norm.Services
             };
 
             if (this.config.EnablePrefixResolver)
-                this.commandsConfig.PrefixResolver = CheckForPrefix;
+            {
+                this.commandsConfig.PrefixResolver = this.CheckForPrefix;
+            }
             else
+            {
                 this.commandsConfig.StringPrefixes = this.config.Prefixes;
+            }
             #endregion
 
             #region Interactivity Module Config
@@ -104,7 +108,7 @@ namespace Norm.Services
 
         public async Task StartAsync()
         {
-            this.ShardedClient = new DiscordShardedClient(clientConfig);
+            this.ShardedClient = new DiscordShardedClient(this.clientConfig);
 
             this.commandsDict = await this.ShardedClient.UseCommandsNextAsync(this.commandsConfig);
 
@@ -118,6 +122,7 @@ namespace Norm.Services
                 commands.RegisterCommands<EventModule>();
                 commands.RegisterCommands<PrefixModule>();
                 commands.RegisterCommands<ModerationModule>();
+                commands.RegisterCommands<WelcomeMessageSettingsModule>();
 
                 commands.CommandErrored += ChecksFailedError;
                 commands.CommandErrored += this.CheckCommandExistsError;
@@ -128,8 +133,8 @@ namespace Norm.Services
                 commands.RegisterConverter(new EnumConverter<ModerationActionType>());
             }
 
-            this.ShardedClient.Ready += ShardedClient_UpdateStatus;
-            this.ShardedClient.GuildDownloadCompleted += ShardedClient_GuildDownloadCompleted;
+            this.ShardedClient.Ready += this.ShardedClient_UpdateStatus;
+            this.ShardedClient.GuildDownloadCompleted += this.ShardedClient_GuildDownloadCompleted;
 
             //this.ShardedClient.MessageCreated += this.CheckForDate;
             this.ShardedClient.MessageReactionAdded += this.SendAdjustedDate;
@@ -161,9 +166,9 @@ namespace Norm.Services
                 this.BotDeveloper = await botDevGuild.GetMemberAsync(this.config.DevId);
                 this.ClockEmoji = DiscordEmoji.FromName(client, ":clock:");
                 RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "0/15 * * * *");
-                
 
-                await this.BotDeveloper.SendMessageAsync("Announcements have been started");
+
+                await this.BotDeveloper.SendMessageAsync("I'm up and running Prof. :smile:");
             });
         }
 
@@ -173,21 +178,25 @@ namespace Norm.Services
             int prefixPos;
             if (!isDm)
             {
-                prefixPos = await CheckGuildPrefixes(msg);
+                prefixPos = await this.CheckGuildPrefixes(msg);
                 if (prefixPos != -1)
+                {
                     return prefixPos;
+                }
             }
 
             prefixPos = msg.GetStringPrefixLength("^");
             if (prefixPos != -1)
+            {
                 return prefixPos;
+            }
 
             return isDm ? 0 : -1;
         }
 
         private async Task<int> CheckGuildPrefixes(DiscordMessage msg)
         {
-            if (!PrefixCache.TryGetValue(msg.Channel.Guild.Id, out GuildPrefix[] guildPrefixes))
+            if (!this.PrefixCache.TryGetValue(msg.Channel.Guild.Id, out GuildPrefix[] guildPrefixes))
             {
                 guildPrefixes = (await this.Mediator.Send(new GuildPrefixes.GetGuildsPrefixes(msg.Channel.Guild))).Value.ToArray();
                 MemoryCacheEntryOptions entryOpts = new MemoryCacheEntryOptions()
@@ -197,12 +206,12 @@ namespace Norm.Services
                     Size = guildPrefixes.Length,
                 };
 
-                PrefixCache.Set(msg.Channel.Guild.Id, guildPrefixes, entryOpts);
+                this.PrefixCache.Set(msg.Channel.Guild.Id, guildPrefixes, entryOpts);
             }
 
             foreach (GuildPrefix prefix in guildPrefixes)
             {
-                var prefixPos = msg.GetStringPrefixLength(prefix.Prefix);
+                int prefixPos = msg.GetStringPrefixLength(prefix.Prefix);
                 if (prefixPos != -1)
                 {
                     return prefixPos;

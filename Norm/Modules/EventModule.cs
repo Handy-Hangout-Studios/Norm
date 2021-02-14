@@ -18,7 +18,6 @@ using Norm.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -66,13 +65,10 @@ namespace Norm.Modules
                 !interactivityResult.Result.Emoji.Equals(
                     DiscordEmoji.FromName(context.Client, ":regional_indicator_y:")))
             {
-                DiscordMessage snark = await context.RespondAsync($"{context.User.Mention}, well then why did you get my attention! Thanks for wasting my time. Now I have to clean up your mess.");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark, context.Message });
+                await context.RespondAsync($"{context.User.Mention}, well then why did you get my attention! Thanks for wasting my time.");
                 return;
             }
 
-            await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { context.Message, msg });
             List<GuildEvent> guildEvents = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.ToList();
             GuildEvent selectedEvent = guildEvents[Random.Next(guildEvents.Count)];
             DiscordEmbedBuilder eventEmbedBuilder = new DiscordEmbedBuilder();
@@ -129,7 +125,12 @@ namespace Norm.Modules
                 return;
             }
 
-            await this.AddGuildEventInteractive(context, interactivity, msg);
+            CustomResult<DiscordMessage> addResult = await this.AddGuildEventInteractive(context, interactivity, msg);
+
+            if (addResult.TimedOut || addResult.Cancelled)
+            {
+                return;
+            }
 
             GuildEvent selectedEvent = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.OrderByDescending(e => e.Id).First();
 
@@ -139,7 +140,9 @@ namespace Norm.Modules
                 .WithDescription(selectedEvent.EventDesc)
                 .WithTitle(selectedEvent.EventName)
                 .Build();
-            await msg.ModifyAsync($"You have scheduled the following event for {datetime:g} in your time zone to be output in the {announcementChannel.Mention} channel.", embed: embed);
+
+            await Task.Delay(2000);
+            await addResult.Result.ModifyAsync($"You have scheduled the following event for {datetime:g} in your time zone to be output in the {announcementChannel.Mention} channel.", embed: embed);
             await this.ScheduleEventsForRoleAsync(context, announcementChannel, selectedEvent, eventDateTime, role);
         }
 
@@ -201,7 +204,7 @@ namespace Norm.Modules
                 .WithTitle("Select an event by typing: <event number>")
                 .WithColor(context.Member.Color);
 
-            GuildEvent selectedEvent = await SelectPredefinedEvent(context, msg, interactivity, scheduleEmbedBase);
+            GuildEvent selectedEvent = await this.SelectPredefinedEvent(context, msg, interactivity, scheduleEmbedBase);
 
             Instant eventDateTime = datetime.InZoneStrictly(schedulerTimeZone).ToInstant();
             DiscordEmbed embed = new DiscordEmbedBuilder()
@@ -209,7 +212,7 @@ namespace Norm.Modules
                 .WithDescription(selectedEvent.EventDesc)
                 .WithTitle(selectedEvent.EventName)
                 .Build();
-            await msg.ModifyAsync($"You have scheduled the following event for {datetime:g} in your time zone to be output in the {announcementChannel.Mention} channel.", embed: embed);
+            await context.RespondAsync($"You have scheduled the following event for {datetime:g} in your time zone to be output in the {announcementChannel.Mention} channel.", embed: embed);
             await this.ScheduleEventsForRoleAsync(context, announcementChannel, selectedEvent, eventDateTime, role);
         }
 
@@ -257,9 +260,9 @@ namespace Norm.Modules
             await this.mediator.Send(new GuildBackgroundJobs.Add(scheduledJobId, context.Guild.Id, $"{selectedEvent.EventName} - 10 Min Announcement", eventDateTime - Duration.FromMinutes(10), GuildJobType.SCHEDULED_EVENT));
         }
 
-        private async Task<GuildEvent> SelectPredefinedEvent(CommandContext context,  DiscordMessage msg, InteractivityExtension interactivity, DiscordEmbedBuilder scheduleEmbedBase)
+        private async Task<GuildEvent> SelectPredefinedEvent(CommandContext context, DiscordMessage msg, InteractivityExtension interactivity, DiscordEmbedBuilder scheduleEmbedBase)
         {
-            
+
             List<GuildEvent> guildEvents = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.ToList();
             IEnumerable<Page> pages = GetGuildEventsPages(guildEvents, interactivity, scheduleEmbedBase);
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(pages,
@@ -268,9 +271,7 @@ namespace Norm.Modules
             );
             if (result.TimedOut || result.Cancelled)
             {
-                DiscordMessage snark = await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark });
+                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
                 return null;
             }
 
@@ -291,12 +292,11 @@ namespace Norm.Modules
 
             if (reaction != Reaction.Yes)
             {
+                await context.RespondAsync("Ok, I'll just go back to doing nothing then.");
                 return;
             }
 
-            await context.Message.DeleteAsync();
 
-            
             DateTimeZone memberTimeZone = this.timeZoneProvider[(await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User))).Value.TimeZoneId];
 
             List<GuildBackgroundJob> guildEventJobs = (await this.mediator.Send(new GuildBackgroundJobs.GetGuildJobs(context.Guild)))
@@ -311,21 +311,24 @@ namespace Norm.Modules
 
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(
                 GetScheduledEventsPages(guildEventJobs, memberTimeZone, interactivity, removeEventEmbed),
-                PaginationMessageFunction.CreateWaitForMessageWithIntInRange(context.User, context.Channel, 1, guildEventJobs.Count + 1),
-                msg: msg);
+                PaginationMessageFunction.CreateWaitForMessageWithIntInRange(context.User, context.Channel, 1, guildEventJobs.Count + 1));
 
             if (result.TimedOut || result.Cancelled)
             {
-                DiscordMessage snark = await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark });
+                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
                 return;
             }
 
             GuildBackgroundJob job = guildEventJobs[result.Result - 1];
 
-            msg = await msg.ModifyAsync($"{context.User.Mention}, are you sure you want to unschedule this event?", embed: null);
+            msg = await context.RespondAsync($"{context.User.Mention}, are you sure you want to unschedule this event?", embed: null);
             reaction = await interactivity.AddAndWaitForYesNoReaction(msg, context.User);
+
+            if (reaction != Reaction.Yes)
+            {
+                await context.RespondAsync("Ok, I'll just go back to doing nothing then.");
+                return;
+            }
 
             BackgroundJob.Delete(job.HangfireJobId);
             await this.mediator.Send(new GuildBackgroundJobs.Delete(job));
@@ -339,27 +342,19 @@ namespace Norm.Modules
         public async Task AddGuildEvent(CommandContext context)
         {
             DiscordMessage msg = await context.RespondAsync($":wave: Hi, {context.User.Mention}! You wanted to create a new event?");
-            await msg.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":regional_indicator_y:"));
-            await msg.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":regional_indicator_n:"));
             InteractivityExtension interactivity = context.Client.GetInteractivity();
+            Reaction result = await interactivity.AddAndWaitForYesNoReaction(msg, context.User);
 
-            InteractivityResult<MessageReactionAddEventArgs> interactivityResult = await interactivity.WaitForReactionAsync(msg, context.User);
-
-            if (interactivityResult.TimedOut ||
-                !interactivityResult.Result.Emoji.Equals(DiscordEmoji.FromName(context.Client, ":regional_indicator_y:")))
+            if (result != Reaction.Yes)
             {
-                DiscordMessage snark = await context.RespondAsync("Well, thanks for wasting my time. Have a good day.");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark, context.Message });
+                await context.RespondAsync("Well, thanks for wasting my time. Have a good day.");
                 return;
             }
 
-            await context.Message.DeleteAsync();
-            await msg.DeleteAllReactionsAsync();
             await this.AddGuildEventInteractive(context, interactivity, msg);
         }
 
-        private async Task AddGuildEventInteractive(CommandContext context, InteractivityExtension interactivity, DiscordMessage msg)
+        private async Task<CustomResult<DiscordMessage>> AddGuildEventInteractive(CommandContext context, InteractivityExtension interactivity, DiscordMessage msg)
         {
 
             if (msg == null)
@@ -377,28 +372,21 @@ namespace Norm.Modules
             {
                 DiscordMessage snark = await context.RespondAsync(
                     content: "You failed to provide a valid event title within the time limit, so thanks for wasting a minute of myyyy time. :triumph:");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, result.Result, snark });
-                return;
+                return new CustomResult<DiscordMessage>(timedOut: true);
             }
 
             string eventName = result.Result.Content;
-
-            await result.Result.DeleteAsync();
-            await msg.ModifyAsync("What do you want the event description to be?");
+            await context.RespondAsync("What do you want the event description to be?");
             result = await interactivity.WaitForMessageAsync(xm => xm.Author.Equals(context.User) && xm.Channel.Equals(context.Channel), timeoutoverride: TimeSpan.FromMinutes(3));
 
             if (result.TimedOut)
             {
                 DiscordMessage snark = await context.RespondAsync(
                     content: "You failed to provide a valid event description within the time limit, so thanks for wasting a minute of myyyy time. :triumph:");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, result.Result, snark });
-                return;
+                return new CustomResult<DiscordMessage>(timedOut: true);
             }
 
             string eventDesc = result.Result.Content;
-            await result.Result.DeleteAsync();
 
             await this.mediator.Send(new GuildEvents.Add(context.Guild.Id, eventName, eventDesc));
             DiscordEmbed embed = new DiscordEmbedBuilder()
@@ -407,7 +395,8 @@ namespace Norm.Modules
                 .WithTitle(eventName)
                 .Build();
 
-            await msg.ModifyAsync("You have added the following event to your guild:", embed: embed);
+            return new CustomResult<DiscordMessage>(await context.RespondAsync("You have added the following event to your guild:", embed: embed));
+
         }
 
         [Command("remove")]
@@ -429,8 +418,6 @@ namespace Norm.Modules
                     DiscordEmoji.FromName(context.Client, ":regional_indicator_y:")))
             {
                 DiscordMessage snark = await context.RespondAsync("Well, thanks for wasting my time. Have a good day.");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark, context.Message });
                 return;
             }
 
@@ -450,7 +437,7 @@ namespace Norm.Modules
                 }
             }
 
-            
+
             List<GuildEvent> guildEvents = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.ToList();
 
             await msg.DeleteAllReactionsAsync();
@@ -462,16 +449,14 @@ namespace Norm.Modules
 
             if (result.TimedOut || result.Cancelled)
             {
-                DiscordMessage snark = await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark });
+                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
                 return;
             }
 
             GuildEvent selectedEvent = guildEvents[result.Result - 1];
 
             await this.mediator.Send(new GuildEvents.Delete(selectedEvent));
-            await msg.ModifyAsync($"You have deleted the \"{selectedEvent.EventName}\" event from the guild", embed: null);
+            await context.RespondAsync($"You have deleted the \"{selectedEvent.EventName}\" event from the guild's event list.", embed: null);
         }
 
         [Command("show")]
@@ -481,7 +466,6 @@ namespace Norm.Modules
             await context.Client.GetInteractivity().SendPaginatedMessageAsync(context.Channel, context.User,
                 GetGuildEventsPages((await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value, context.Client.GetInteractivity()),
                 behaviour: PaginationBehaviour.WrapAround, deletion: PaginationDeletion.DeleteMessage, timeoutoverride: TimeSpan.FromMinutes(1));
-            await context.Message.DeleteAsync();
         }
 
         private static IEnumerable<Page> GetGuildEventsPages(IEnumerable<GuildEvent> guildEvents, InteractivityExtension interactivity, DiscordEmbedBuilder pageEmbedBase = null)

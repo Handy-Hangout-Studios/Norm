@@ -1,10 +1,10 @@
-﻿using Norm.Database.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Norm.Database.Entities;
 
 namespace Norm.Database.EntityTypeConfigurations
 {
-    class GuildPrefixETC : IEntityTypeConfiguration<GuildPrefix>
+    internal class GuildPrefixETC : IEntityTypeConfiguration<GuildPrefix>
     {
         public void Configure(EntityTypeBuilder<GuildPrefix> builder)
         {

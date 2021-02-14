@@ -1,9 +1,7 @@
-﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
+﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

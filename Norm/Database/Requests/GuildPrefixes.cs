@@ -4,10 +4,8 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Norm.Database.Contexts;
 using Norm.Database.Entities;
 using Norm.Database.Requests.BaseClasses;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,7 +33,7 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult<GuildPrefix>> Handle(Add request, CancellationToken cancellationToken)
             {
-                EntityEntry<GuildPrefix> entity = await this.DbContext.GuildPrefixes.AddAsync(request.Prefix, cancellationToken);
+                EntityEntry<GuildPrefix> entity = this.DbContext.GuildPrefixes.Add(request.Prefix);
                 DbResult<GuildPrefix> result = new()
                 {
                     Success = entity.State.Equals(EntityState.Added),
@@ -76,7 +74,7 @@ namespace Norm.Database.Requests
         {
             public GetGuildsPrefixes(DiscordGuild guild) : this(guild.Id) { }
 
-            public GetGuildsPrefixes(ulong guildId) 
+            public GetGuildsPrefixes(ulong guildId)
             {
                 this.GuildId = guildId;
             }

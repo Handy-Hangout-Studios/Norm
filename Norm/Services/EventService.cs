@@ -18,6 +18,11 @@ namespace Norm.Services
 
         public async Task SendEmbedWithMessageToChannelAsUser(ulong guildId, ulong userId, ulong channelId, string message, string title, string description)
         {
+            if (!this._bot.Started)
+            {
+                throw new Exception("Attempted to send embed before bot has started");
+            }
+
             try
             {
                 DiscordClient shardClient = this._bot.ShardedClient.GetShard(guildId);

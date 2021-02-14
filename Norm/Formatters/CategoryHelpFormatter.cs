@@ -4,15 +4,13 @@ using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Entities;
 using DSharpPlus.Entities;
 using Norm.Attributes;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Norm.Formatters
 {
-    class CategoryHelpFormatter : BaseHelpFormatter
+    internal class CategoryHelpFormatter : BaseHelpFormatter
     {
         private readonly DiscordEmbedBuilder _embed;
         private Command _command;

@@ -2,10 +2,6 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Norm.Utilities
@@ -23,9 +19,7 @@ namespace Norm.Utilities
 
             if (interactivityResult.TimedOut || interactivityResult.Result.Emoji.Equals(DiscordEmoji.FromName(client, ":regional_indicator_n:")))
             {
-                DiscordMessage snark = await interactivityResult.Result.Channel.SendMessageAsync($"{user.Mention}, well then why did you get my attention! Thanks for wasting my time. Let me clean up now. :triumph:");
-                await Task.Delay(5000);
-                await interactivityResult.Result.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark });
+                await interactivityResult.Result.Channel.SendMessageAsync($"{user.Mention}, well then why did you get my attention! Thanks for wasting my time. :triumph:");
                 return interactivityResult.TimedOut ? Reaction.None : Reaction.No;
             }
 

@@ -5,10 +5,8 @@ using NodaTime;
 using Norm.Database.Contexts;
 using Norm.Database.Entities;
 using Norm.Database.Requests.BaseClasses;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,7 +33,7 @@ namespace Norm.Database.Requests
 
         public class AddHandler : DbRequestHandler<Add, GuildModerationAuditRecord>
         {
-            public AddHandler(IDbContext db, IClock clock) : base(db) 
+            public AddHandler(IDbContext db, IClock clock) : base(db)
             {
                 this.Clock = clock;
             }
@@ -43,7 +41,7 @@ namespace Norm.Database.Requests
             public override async Task<DbResult<GuildModerationAuditRecord>> Handle(Add request, CancellationToken cancellationToken)
             {
                 request.Record.Timestamp = this.Clock.GetCurrentInstant();
-                EntityEntry<GuildModerationAuditRecord> entity = await this.DbContext.GuildModerationAuditRecords.AddAsync(request.Record, cancellationToken: cancellationToken);
+                EntityEntry<GuildModerationAuditRecord> entity = this.DbContext.GuildModerationAuditRecords.Add(request.Record);
                 DbResult<GuildModerationAuditRecord> result = new DbResult<GuildModerationAuditRecord>
                 {
                     Success = entity.State.Equals(EntityState.Added),
@@ -127,7 +125,7 @@ namespace Norm.Database.Requests
                         (filter.UserId == null || record.UserId == filter.UserId) &&
                         (filter.ModerationAction == ModerationActionType.NONE || record.ModerationAction == filter.ModerationAction))
                     .ToListAsync(cancellationToken: cancellationToken);
-                
+
                 return new DbResult<IEnumerable<GuildModerationAuditRecord>>
                 {
                     Success = true,

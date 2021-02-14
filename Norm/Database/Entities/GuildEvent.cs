@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Norm.Database.Entities
+﻿namespace Norm.Database.Entities
 {
     public class GuildEvent
     {

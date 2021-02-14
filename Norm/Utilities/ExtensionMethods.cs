@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Norm.Utilities
@@ -124,7 +123,6 @@ namespace Norm.Utilities
                             default:
                                 break;
                         }
-                        await messageEvent.Message.DeleteAsync();
                         return new CustomResult<T>(result: messageCreateFuncResult);
                     }
                     else
@@ -132,8 +130,6 @@ namespace Norm.Utilities
                         _ = Task.Run(async () =>
                         {
                             DiscordMessage invalid = await messageEvent.Channel.SendMessageAsync("Invalid Input");
-                            Thread.Sleep(5000);
-                            await messageEvent.Channel.DeleteMessagesAsync(new List<DiscordMessage> { messageEvent.Message, invalid });
                         });
                     }
                 }

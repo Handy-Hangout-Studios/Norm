@@ -1,45 +1,48 @@
 ﻿using Hangfire;
 using Hangfire.PostgreSql;
-using Norm.Configuration;
-using Norm.Database;
-using Norm.Services;
+using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NodaTime;
+using NodaTime.TimeZones;
+using Norm.Configuration;
+using Norm.Database.Contexts;
+using Norm.Database.TypeHandlers;
+using Norm.Services;
 using Serilog;
 using Serilog.Formatting.Json;
 using System;
-using Microsoft.EntityFrameworkCore.Design;
-using Norm.Database.Contexts;
-using MediatR;
-using NodaTime;
-using NodaTime.TimeZones;
-using Norm.Database.TypeHandlers;
-using Microsoft.Extensions.Options;
 
 namespace Norm
 {
     public class Program
     {
-        public static void Main(string[] args) =>
+        public static void Main(string[] args)
+        {
             CreateHostBuilder(args)
                 .Build()
                 .Run();
+        }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .UseSerilog(ConfigureSerilog)
-                .ConfigureHostConfiguration(ConfigureHostConfiguration(args))
-                .ConfigureServices(ConfigureHangfire)
-                .ConfigureServices(ConfigureMediatR)
-                .ConfigureServices(AddBotServices)
-                .UseConsoleLifetime();
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
+                    .UseSerilog(ConfigureSerilog)
+                    .ConfigureHostConfiguration(ConfigureHostConfiguration(args))
+                    .ConfigureServices(ConfigureHangfire)
+                    .ConfigureServices(ConfigureMediatR)
+                    .ConfigureServices(AddBotServices)
+                    .UseConsoleLifetime();
+        }
 
-        public static Action<IConfigurationBuilder> ConfigureHostConfiguration(string[] args) =>
-            configuration => configuration
+        public static Action<IConfigurationBuilder> ConfigureHostConfiguration(string[] args)
+        {
+            return configuration => configuration
                 .AddJsonFile("config.json", optional: false)
                 .AddCommandLine(args);
+        }
 
         public static void ConfigureSerilog(HostBuilderContext context, IServiceProvider services, LoggerConfiguration configuration)
         {
@@ -56,7 +59,7 @@ namespace Norm
             services
                 .AddOptions<NormHangfireOptions>()
                 .Configure<IConfiguration>(
-                    (options, configuration) 
+                    (options, configuration)
                         => configuration.Bind(NormHangfireOptions.Section, options
                     )
                  )
@@ -67,7 +70,7 @@ namespace Norm
                     {
                         NormHangfireOptions opts = serviceProvider
                             .GetRequiredService<IOptions<NormHangfireOptions>>().Value;
-                        
+
                         configuration
                             .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                             .UseSimpleAssemblyNameTypeSerializer()

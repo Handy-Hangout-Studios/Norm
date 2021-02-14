@@ -12,7 +12,6 @@ using Norm.Database.Entities;
 using Norm.Database.Requests;
 using Norm.Services;
 using Norm.Utilities;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +21,7 @@ namespace Norm.Modules
 {
     [Group("prefix")]
     [BotCategory("Configuration and Information")]
-    [Description("All functionalities associated with prefixes in Handy Hansel.\n\nWhen used alone, show all guild's prefixes separated by spaces")]
+    [Description("All of my functionalities associated with prefixes.\n\nWhen used alone, show all guild's prefixes separated by spaces")]
     public class PrefixModule : BaseCommandModule
     {
         private readonly IMediator mediator;
@@ -56,7 +55,7 @@ namespace Norm.Modules
             }
             DiscordMessageBuilder msg = new DiscordMessageBuilder()
                 .WithContent(prefixString)
-                .WithReply(context.Message.Id);
+                .WithReply(context.Message.Id, mention: true);
             await context.RespondAsync(msg);
         }
 
@@ -103,14 +102,14 @@ namespace Norm.Modules
 
             await this.mediator.Send(new GuildPrefixes.Add(context.Guild.Id, newPrefix));
             await context.RespondAsync(
-                $"Congratulations, you have added the prefix {newPrefix} to your server's prefixes for Handy Hansel.\nJust a reminder, this disables the default prefix for Handy Hansel unless you specifically add that prefix in again later or do not have any prefixes of your own.");
+                $"Congratulations, you have added the prefix {Formatter.InlineCode(Formatter.Sanitize(newPrefix))} to your server's prefixes for Handy Hansel.\nJust a reminder, this disables the default prefix for Handy Hansel unless you specifically add that prefix in again later or do not have any prefixes of your own.");
 
-            PurgeCache(context.Guild);
+            this.PurgeCache(context.Guild);
         }
 
         [Command("remove")]
         [Description("Remove a prefix from the guild's prefixes")]
-        [RequireUserPermissions(DSharpPlus.Permissions.ManageGuild)]
+        [RequireUserPermissions(Permissions.ManageGuild)]
         [RequireGuild]
         public async Task RemovePrefix(
             CommandContext context,
@@ -129,14 +128,14 @@ namespace Norm.Modules
 
             await this.mediator.Send(new GuildPrefixes.Delete(guildPrefix));
             await context.RespondAsync(
-                $"{context.User.Mention}, I have removed the prefix {guildPrefix.Prefix} for this server.");
+                $"{context.User.Mention}, I have removed the prefix {Formatter.InlineCode(Formatter.Sanitize(guildPrefix.Prefix))} for this server.");
 
-            PurgeCache(context.Guild);
+            this.PurgeCache(context.Guild);
         }
 
         [Command("iremove")]
         [Description("Starts an interactive removal process allowing you to choose which prefix to remove")]
-        [RequireUserPermissions(DSharpPlus.Permissions.ManageGuild)]
+        [RequireUserPermissions(Permissions.ManageGuild)]
         [RequireGuild]
         public async Task InteractiveRemovePrefix(CommandContext context)
         {
@@ -162,8 +161,6 @@ namespace Norm.Modules
                     DiscordEmoji.FromName(context.Client, ":regional_indicator_y:")))
             {
                 DiscordMessage snark = await context.RespondAsync("Well then why did you get my attention! Thanks for wasting my time.");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark });
                 return;
             }
 
@@ -191,8 +188,6 @@ namespace Norm.Modules
             if (result.TimedOut || result.Cancelled)
             {
                 DiscordMessage snark = await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
-                await Task.Delay(5000);
-                await context.Channel.DeleteMessagesAsync(new List<DiscordMessage> { msg, snark });
                 return;
             }
 
@@ -200,10 +195,10 @@ namespace Norm.Modules
 
             await this.mediator.Send(new GuildPrefixes.Delete(selectedPrefix));
 
-            await msg.ModifyAsync(
-                $"You have deleted the prefix \"{selectedPrefix.Prefix}\" from this guild's prefixes.", embed: null);
+            await context.RespondAsync(
+                $"You have deleted the prefix {Formatter.InlineCode(Formatter.Sanitize(selectedPrefix.Prefix))} from this guild's prefixes.", embed: null);
 
-            PurgeCache(context.Guild);
+            this.PurgeCache(context.Guild);
         }
 
         private void PurgeCache(DiscordGuild guild)

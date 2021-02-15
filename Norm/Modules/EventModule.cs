@@ -210,6 +210,9 @@ namespace Norm.Modules
                 .WithTitle("Select an event by typing: <event number>")
                 .WithColor(context.Member.Color);
 
+            msg = await context.RespondAsync("Loading...");
+            await context.TriggerTypingAsync();
+            await Task.Delay(1000);
             GuildEvent selectedEvent = await this.SelectPredefinedEvent(context, msg, interactivity, scheduleEmbedBase);
 
             Instant eventDateTime = datetime.InZoneStrictly(schedulerTimeZone).ToInstant();

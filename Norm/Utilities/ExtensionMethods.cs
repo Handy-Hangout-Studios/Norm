@@ -23,7 +23,7 @@ namespace Norm.Utilities
                Func<MessageCreateEventArgs, Task<(bool, T)>> messageValidationAndReturn,
                PaginationEmojis paginationEmojis = null,
                PaginationBehaviour behaviour = PaginationBehaviour.WrapAround,
-               PaginationDeletion deletion = PaginationDeletion.DeleteEmojis,
+               PaginationDeletion deletion = PaginationDeletion.KeepEmojis,
                DiscordMessage msg = null)
         {
             List<Page> pagesList = pages.ToList();

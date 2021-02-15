@@ -114,7 +114,10 @@ namespace Norm.Modules
                 return;
             }
 
-            LocalDateTime datetime = Recognizers.RecognizeDateTime(datetimeString, DateTimeV2Type.DateTime)
+            ZonedDateTime zonedMessageDateTime = ZonedDateTime.FromDateTimeOffset(context.Message.CreationTimestamp);
+            DateTime senderRefTime = zonedMessageDateTime.WithZone(schedulerTimeZone).ToDateTimeOffset().DateTime;
+
+            LocalDateTime datetime = Recognizers.RecognizeDateTime(datetimeString, senderRefTime, DateTimeV2Type.DateTime)
                 .First().Values.Select(value => (LocalDateTime)value.Value).OrderBy(key => key).First();
             DiscordMessage msg = await context.RespondAsync($":wave: Hi, {context.User.Mention}! You want to schedule an event for {datetime:g} in your timezone?");
 
@@ -125,7 +128,7 @@ namespace Norm.Modules
                 return;
             }
 
-            CustomResult<DiscordMessage> addResult = await this.AddGuildEventInteractive(context, interactivity, msg);
+            CustomResult<DiscordMessage> addResult = await this.AddGuildEventInteractive(context, interactivity);
 
             if (addResult.TimedOut || addResult.Cancelled)
             {
@@ -189,7 +192,10 @@ namespace Norm.Modules
                 return;
             }
 
-            LocalDateTime datetime = Recognizers.RecognizeDateTime(datetimeString, DateTimeV2Type.DateTime)
+            ZonedDateTime zonedMessageDateTime = ZonedDateTime.FromDateTimeOffset(context.Message.CreationTimestamp);
+            DateTime senderRefTime = zonedMessageDateTime.WithZone(schedulerTimeZone).ToDateTimeOffset().DateTime;
+
+            LocalDateTime datetime = Recognizers.RecognizeDateTime(datetimeString, senderRefTime, DateTimeV2Type.DateTime)
                 .First().Values.Select(value => (LocalDateTime)value.Value).OrderBy(key => key).First();
             DiscordMessage msg = await context.RespondAsync($":wave: Hi, {context.User.Mention}! You want to schedule an event for {datetime:g} in your timezone?");
 
@@ -332,7 +338,6 @@ namespace Norm.Modules
 
             BackgroundJob.Delete(job.HangfireJobId);
             await this.mediator.Send(new GuildBackgroundJobs.Delete(job));
-            await msg.DeleteAllReactionsAsync();
             await msg.ModifyAsync("Ok, I've unscheduled that event!", embed: null);
         }
 
@@ -354,7 +359,7 @@ namespace Norm.Modules
             await this.AddGuildEventInteractive(context, interactivity, msg);
         }
 
-        private async Task<CustomResult<DiscordMessage>> AddGuildEventInteractive(CommandContext context, InteractivityExtension interactivity, DiscordMessage msg)
+        private async Task<CustomResult<DiscordMessage>> AddGuildEventInteractive(CommandContext context, InteractivityExtension interactivity, DiscordMessage msg=null)
         {
 
             if (msg == null)
@@ -440,12 +445,9 @@ namespace Norm.Modules
 
             List<GuildEvent> guildEvents = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.ToList();
 
-            await msg.DeleteAllReactionsAsync();
-
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(
                 GetGuildEventsPages(guildEvents, interactivity, removeEventEmbed),
-                messageValidationAndReturn,
-                msg: msg);
+                messageValidationAndReturn);
 
             if (result.TimedOut || result.Cancelled)
             {

@@ -23,7 +23,6 @@ namespace Norm.Utilities
                 return interactivityResult.TimedOut ? Reaction.None : Reaction.No;
             }
 
-            await msg.DeleteAllReactionsAsync();
             return Reaction.Yes;
         }
     }

@@ -179,7 +179,6 @@ namespace Norm.Modules
                     return Task.FromResult((false, -1));
                 }
             }
-            await msg.DeleteAllReactionsAsync();
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(
                 GetGuildPrefixPages(guildPrefixes, interactivity, removeEventEmbed),
                 messageValidationAndReturn,

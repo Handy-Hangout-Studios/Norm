@@ -118,7 +118,12 @@ namespace Norm.Modules
             DateTime senderRefTime = zonedMessageDateTime.WithZone(schedulerTimeZone).ToDateTimeOffset().DateTime;
 
             LocalDateTime datetime = Recognizers.RecognizeDateTime(datetimeString, senderRefTime, DateTimeV2Type.DateTime)
-                .First().Values.Select(value => (LocalDateTime)value.Value).OrderBy(key => key).First();
+                .First()
+                .Values
+                .Select(value => (LocalDateTime)value.Value)
+                .Where(value => value >= LocalDateTime.FromDateTime(senderRefTime))
+                .OrderBy(key => key)
+                .First();
             DiscordMessage msg = await context.RespondAsync($":wave: Hi, {context.User.Mention}! You want to schedule an event for {datetime:g} in your timezone?");
 
             InteractivityExtension interactivity = context.Client.GetInteractivity();
@@ -196,7 +201,12 @@ namespace Norm.Modules
             DateTime senderRefTime = zonedMessageDateTime.WithZone(schedulerTimeZone).ToDateTimeOffset().DateTime;
 
             LocalDateTime datetime = Recognizers.RecognizeDateTime(datetimeString, senderRefTime, DateTimeV2Type.DateTime)
-                .First().Values.Select(value => (LocalDateTime)value.Value).OrderBy(key => key).First();
+                .First()
+                .Values
+                .Select(value => (LocalDateTime)value.Value)
+                .Where(value => value >= LocalDateTime.FromDateTime(senderRefTime))
+                .OrderBy(key => key)
+                .First();
             DiscordMessage msg = await context.RespondAsync($":wave: Hi, {context.User.Mention}! You want to schedule an event for {datetime:g} in your timezone?");
 
             InteractivityExtension interactivity = context.Client.GetInteractivity();

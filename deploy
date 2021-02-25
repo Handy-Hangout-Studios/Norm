@@ -7,11 +7,12 @@ pkill Norm;
 rm -rf ~/bots/bin/Norm;
 
 # Build bot
-cd ~/bots/repos/Norm
+cd ~/bots/repos/Norm;
 git secret reveal -p "'$1'";
 dotnet build -c Release -o ../../bin/Norm -p:PublishReadyToRun=true -p:PublishTrimmed=true --source=https://api.nuget.org/v3/index.json --source=https://nuget.emzi0767.com/api/v3/index.json;
 
 # Set up and start the bot
 cp config.json ../../bin/Norm/config.json;
+cp bee_movie.txt ../../bin/Norm/bee_movie.txt;
 cd ~/bots/bin/Norm;
 ./Norm;

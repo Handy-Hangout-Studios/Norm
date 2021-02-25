@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Norm.Modules
 {
     [Group("welcome")]
-    [BotCategory("Configuration and Information")]
+    [BotCategory(BotCategory.ConfigAndInfo)]
     [Description("All functionalities associated with welcome messages in Norm.\n\nWhen used alone, shows your current welcome message settings for me")]
     [RequireUserPermissions(Permissions.ManageGuild)]
     [Aliases("w", "wel")]
@@ -30,7 +30,7 @@ namespace Norm.Modules
         public async Task ExecuteGroupAsync(CommandContext context)
         {
             DbResult<GuildWelcomeMessageSettings> result = await this.mediator.Send(new GuildWelcomeMessageSettingsRequest.GetGuildWelcomeMessageSettings(context.Guild));
-            DiscordMessageBuilder builder = new DiscordMessageBuilder();
+            DiscordMessageBuilder builder = new();
             if (!result.Success || (result.Success && !result.Value.ShouldWelcomeMembers))
             {
                 builder.WithContent("Currently, I won't send a welcome message to new members.");
@@ -60,7 +60,7 @@ namespace Norm.Modules
                 throw new Exception($"There was an error updating the welcome message settings for {context.Guild.Id}");
             }
 
-            DiscordMessageBuilder builder = new DiscordMessageBuilder();
+            DiscordMessageBuilder builder = new();
             StringBuilder contentBuilder = new StringBuilder().Append("I have successfully updated your welcome message settings. ");
 
             if (result.Value.ShouldWelcomeMembers)

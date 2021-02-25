@@ -29,7 +29,7 @@ namespace Norm.Database.Requests
 
         public class AddHandler : DbRequestHandler<Add, GuildPrefix>
         {
-            public AddHandler(IDbContext context) : base(context) { }
+            public AddHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<GuildPrefix>> Handle(Add request, CancellationToken cancellationToken)
             {
@@ -56,12 +56,12 @@ namespace Norm.Database.Requests
 
         public class DeleteHandler : DbRequestHandler<Delete>
         {
-            public DeleteHandler(IDbContext context) : base(context) { }
+            public DeleteHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
                 EntityEntry<GuildPrefix> entity = this.DbContext.GuildPrefixes.Remove(request.Prefix);
-                DbResult result = new DbResult
+                DbResult result = new()
                 {
                     Success = entity.State.Equals(EntityState.Deleted),
                 };
@@ -84,7 +84,7 @@ namespace Norm.Database.Requests
 
         public class GetGuildsPrefixesHandler : DbRequestHandler<GetGuildsPrefixes, IEnumerable<GuildPrefix>>
         {
-            public GetGuildsPrefixesHandler(IDbContext context) : base(context) { }
+            public GetGuildsPrefixesHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<IEnumerable<GuildPrefix>>> Handle(GetGuildsPrefixes request, CancellationToken cancellationToken)
             {

@@ -23,7 +23,7 @@ namespace Norm.Database.Requests
 
         public class UpsertHandler : DbRequestHandler<Upsert, GuildLogChannel>
         {
-            public UpsertHandler(IDbContext db) : base(db) { }
+            public UpsertHandler(NormDbContext db) : base(db) { }
             public override async Task<DbResult<GuildLogChannel>> Handle(Upsert request, CancellationToken cancellationToken)
             {
                 GuildLogChannel logChannel = await this.DbContext.GuildLogChannels.FirstOrDefaultAsync(channel => channel.GuildId == request.LogChannel.GuildId, cancellationToken: cancellationToken);
@@ -69,7 +69,7 @@ namespace Norm.Database.Requests
 
         public class DeleteHandler : DbRequestHandler<Delete>
         {
-            public DeleteHandler(IDbContext dbContext) : base(dbContext) { }
+            public DeleteHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
@@ -83,7 +83,7 @@ namespace Norm.Database.Requests
                 }
 
                 EntityEntry<GuildLogChannel> entity = this.DbContext.GuildLogChannels.Remove(logChannel);
-                DbResult result = new DbResult
+                DbResult result = new()
                 {
                     Success = entity.State.Equals(EntityState.Deleted),
                 };
@@ -106,7 +106,7 @@ namespace Norm.Database.Requests
 
         public class GetGuildEventsHandler : DbRequestHandler<GetGuildLogChannel, GuildLogChannel>
         {
-            public GetGuildEventsHandler(IDbContext dbContext) : base(dbContext) { }
+            public GetGuildEventsHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult<GuildLogChannel>> Handle(GetGuildLogChannel request, CancellationToken cancellationToken)
             {

@@ -18,7 +18,7 @@ namespace Norm.Configuration
     {
         public static string AsNpgsqlConnectionString(this DatabaseConfig config)
         {
-            NpgsqlConnectionStringBuilder builder = new NpgsqlConnectionStringBuilder
+            NpgsqlConnectionStringBuilder builder = new()
             {
                 Host = config.Host,
                 Port = config.Port,

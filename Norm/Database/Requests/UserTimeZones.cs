@@ -29,7 +29,7 @@ namespace Norm.Database.Requests
 
         public class AddHandler : DbRequestHandler<Add, UserTimeZone>
         {
-            public AddHandler(IDbContext context) : base(context) { }
+            public AddHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<UserTimeZone>> Handle(Add request, CancellationToken cancellationToken)
             {
@@ -65,7 +65,7 @@ namespace Norm.Database.Requests
 
         public class UpdateHandler : DbRequestHandler<Update, UserTimeZone>
         {
-            public UpdateHandler(IDbContext context) : base(context) { }
+            public UpdateHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<UserTimeZone>> Handle(Update request, CancellationToken cancellationToken)
             {
@@ -92,12 +92,12 @@ namespace Norm.Database.Requests
 
         public class DeleteHandler : DbRequestHandler<Delete>
         {
-            public DeleteHandler(IDbContext context) : base(context) { }
+            public DeleteHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
                 EntityEntry<UserTimeZone> entity = this.DbContext.UserTimeZones.Remove(request.UserTimeZone);
-                DbResult result = new DbResult
+                DbResult result = new()
                 {
                     Success = entity.State.Equals(EntityState.Deleted),
                 };
@@ -120,7 +120,7 @@ namespace Norm.Database.Requests
 
         public class GetUsersTimeZoneHandler : DbRequestHandler<GetUsersTimeZone, UserTimeZone>
         {
-            public GetUsersTimeZoneHandler(IDbContext context) : base(context) { }
+            public GetUsersTimeZoneHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<UserTimeZone>> Handle(GetUsersTimeZone request, CancellationToken cancellationToken)
             {

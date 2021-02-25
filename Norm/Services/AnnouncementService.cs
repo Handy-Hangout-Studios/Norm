@@ -130,7 +130,7 @@ namespace Norm.Services
 
         private async Task<List<ChapterUpdateBucket>> GetUpdatedChapterBucketList()
         {
-            List<ChapterUpdateBucket> allUpdatedChapterBuckets = new List<ChapterUpdateBucket>();
+            List<ChapterUpdateBucket> allUpdatedChapterBuckets = new();
 
             DbResult<IEnumerable<NovelInfo>> result = await this.mediator.Send(new NovelInfos.GetAllNovelsInfo());
 
@@ -142,13 +142,13 @@ namespace Norm.Services
             // Retrieve all updated chapters
             foreach (NovelInfo novelInfo in result.Value)
             {
-                ChapterUpdateBucket temp = new ChapterUpdateBucket
+                ChapterUpdateBucket temp = new()
                 {
                     Novel = novelInfo
                 };
 
                 using XmlReader reader = XmlReader.Create(novelInfo.SyndicationUri, new XmlReaderSettings { Async = true, });
-                RssFeedReader feedReader = new RssFeedReader(reader);
+                RssFeedReader feedReader = new(reader);
 
                 while (await feedReader.Read())
                 {
@@ -250,7 +250,7 @@ namespace Norm.Services
                 return;
             }
 
-            HtmlWeb fictionGet = new HtmlWeb();
+            HtmlWeb fictionGet = new();
             HtmlDocument fictionPage = fictionGet.Load(this.Novel.FictionUri);
             HtmlNodeCollection metaNodes = fictionPage.DocumentNode.SelectNodes("//meta");
 

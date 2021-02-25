@@ -11,7 +11,7 @@ namespace Norm.Database.Requests
         public class Migrate : DbRequest { }
         public class MigrateHandler : DbRequestHandler<Migrate>
         {
-            public MigrateHandler(IDbContext db) : base(db) { }
+            public MigrateHandler(NormDbContext db) : base(db) { }
 
             public override async Task<DbResult> Handle(Migrate request, CancellationToken cancellationToken)
             {

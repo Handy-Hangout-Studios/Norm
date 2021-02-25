@@ -59,7 +59,7 @@ namespace Norm.Services
             this.Logger = factory.CreateLogger<BotService>();
             this.Mediator = mediator;
             this.TimeZoneProvider = timeZoneProvider;
-            MemoryCacheOptions memCacheOpts = new MemoryCacheOptions
+            MemoryCacheOptions memCacheOpts = new()
             {
                 SizeLimit = 1000,
                 CompactionPercentage = .25,
@@ -123,6 +123,7 @@ namespace Norm.Services
                 commands.RegisterCommands<PrefixModule>();
                 commands.RegisterCommands<ModerationModule>();
                 commands.RegisterCommands<WelcomeMessageSettingsModule>();
+                commands.RegisterCommands<FunModule>();
 
                 commands.CommandErrored += ChecksFailedError;
                 commands.CommandErrored += this.CheckCommandExistsError;
@@ -199,7 +200,7 @@ namespace Norm.Services
             if (!this.PrefixCache.TryGetValue(msg.Channel.Guild.Id, out GuildPrefix[] guildPrefixes))
             {
                 guildPrefixes = (await this.Mediator.Send(new GuildPrefixes.GetGuildsPrefixes(msg.Channel.Guild))).Value.ToArray();
-                MemoryCacheEntryOptions entryOpts = new MemoryCacheEntryOptions()
+                MemoryCacheEntryOptions entryOpts = new()
                 {
                     SlidingExpiration = TimeSpan.FromMinutes(5),
                     AbsoluteExpiration = DateTime.Now + TimeSpan.FromDays(1),

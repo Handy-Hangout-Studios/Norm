@@ -50,8 +50,8 @@ namespace Norm.Formatters
 
             if (command.Overloads?.Any() == true)
             {
-                StringBuilder allUsageStrings = new StringBuilder();
-                StringBuilder allArguments = new StringBuilder();
+                StringBuilder allUsageStrings = new();
+                StringBuilder allArguments = new();
 
                 ISet<string> argNames = new HashSet<string>();
                 foreach (CommandOverload co in command.Overloads.OrderByDescending(x => x.Priority))
@@ -94,19 +94,19 @@ namespace Norm.Formatters
 
         public override BaseHelpFormatter WithSubcommands(IEnumerable<Command> subcommands)
         {
-            Dictionary<string, ISet<string>> modules = new Dictionary<string, ISet<string>>();
-            List<CommandGroup> groupCommands = new List<CommandGroup>();
-            List<Command> currentLevelCommands = new List<Command>();
+            Dictionary<BotCategory, ISet<string>> modules = new();
+            List<CommandGroup> groupCommands = new();
+            List<Command> currentLevelCommands = new();
 
             foreach (Command command in subcommands.OrderBy(test => test.Name))
             {
                 if (command.CustomAttributes.FirstOrDefault(item => item is BotCategoryAttribute) is BotCategoryAttribute module)
                 {
-                    if (!modules.ContainsKey(module.Name))
+                    if (!modules.ContainsKey(module.Category))
                     {
-                        modules[module.Name] = new HashSet<string>();
+                        modules[module.Category] = new HashSet<string>();
                     }
-                    modules[module.Name].Add(command.Name);
+                    modules[module.Category].Add(command.Name);
                 }
                 else if (command is CommandGroup cgroup)
                 {
@@ -130,9 +130,9 @@ namespace Norm.Formatters
 
             if (modules.Any())
             {
-                foreach (KeyValuePair<string, ISet<string>> moduleLists in modules)
+                foreach (KeyValuePair<BotCategory, ISet<string>> moduleLists in modules)
                 {
-                    this._embed.AddField($"{moduleLists.Key}:", string.Join(", ", moduleLists.Value.Select(Formatter.InlineCode)));
+                    this._embed.AddField($"{moduleLists.Key.ToCategoryString()}:", string.Join(", ", moduleLists.Value.Select(Formatter.InlineCode)));
                 }
             }
 

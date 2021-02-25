@@ -5,7 +5,9 @@ using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using Norm.Attributes;
+using Owoify;
 using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Norm.Modules
@@ -14,7 +16,7 @@ namespace Norm.Modules
     {
         [Command("invite")]
         [Description("Generate an invite link for this bot")]
-        [BotCategory("General")]
+        [BotCategory(BotCategory.General)]
         public async Task InviteAsync(CommandContext context)
         {
             DiscordEmbed embed = new DiscordEmbedBuilder()
@@ -33,7 +35,7 @@ namespace Norm.Modules
 
         [Command("hi")]
         [Description("A basic \"Hello, World!\" command for D#+")]
-        [BotCategory("General")]
+        [BotCategory(BotCategory.General)]
 #pragma warning disable CA1822 // Mark members as static
         public async Task Hi(CommandContext context)
 #pragma warning restore CA1822 // Mark members as static
@@ -51,7 +53,7 @@ namespace Norm.Modules
 
         [Command("tutorial")]
         [Description("A general high-level overview of my functionalites will be DM-ed to you.")]
-        [BotCategory("General")]
+        [BotCategory(BotCategory.General)]
         public async Task Tutorial(CommandContext context)
         {
             DiscordEmbed tutorial = new DiscordEmbedBuilder()
@@ -76,7 +78,7 @@ namespace Norm.Modules
         [Command("break")]
         [Description("Purposefully throw an error for testing purposes")]
         [RequireOwner]
-        [BotCategory("General")]
+        [BotCategory(BotCategory.General)]
 #pragma warning disable CA1822 // Mark members as static
         public async Task Break(CommandContext context)
 #pragma warning restore CA1822 // Mark members as static
@@ -84,6 +86,76 @@ namespace Norm.Modules
             await context.RespondAsync("Throwing an exception now");
             throw new Exception();
         }
+
+        [Command("say")]
+        [Description("Have Norm say the message as himself.\nIf you add `--hide` and Norm has permission to delete messages in that channel he will delete your message.\nIf you add `--owo`, `--uwu`, or `--uvu` to your message then Norm will OwOify your message from readable to completely unreadable depending on which type you choose.\nIf you add `--sarcasm` to your message then Norm will say the message alternating caps letters.")]
+        public async Task SayAsync(CommandContext context, [RemainingText] string message)
+        {
+            if (message.Contains(HideIndicator) && context.Guild.CurrentMember.PermissionsIn(context.Channel).HasPermission(Permissions.ManageMessages))
+            {
+                await context.Message.DeleteAsync();
+                message = message.Replace(HideIndicator, string.Empty);
+            }
+
+            Owoifier.OwoifyLevel? owoLevel = null;
+            if (message.Contains(OwOIndicator))
+            {
+                owoLevel = Owoifier.OwoifyLevel.Owo;
+                message = message.Replace(OwOIndicator, string.Empty);
+            }
+            if (message.Contains(UwUIndicator))
+            {
+                owoLevel = Owoifier.OwoifyLevel.Uwu;
+                message = message.Replace(UwUIndicator, string.Empty);
+            }
+            if (message.Contains(UvUIndicator))
+            {
+                owoLevel = Owoifier.OwoifyLevel.Uvu;
+                message = message.Replace(UvUIndicator, string.Empty);
+            }
+            bool sarcasmify;
+            if (sarcasmify = message.Contains(SarcasmifyIndicator))
+            {
+                message = message.Replace(SarcasmifyIndicator, string.Empty);
+            }
+
+            if (owoLevel.HasValue)
+            {
+                message = Owoifier.Owoify(message, (Owoifier.OwoifyLevel)owoLevel);
+            }
+            if (sarcasmify)
+            {
+                message = Sarcasmify(message);
+            }
+
+            await context.RespondAsync(message);
+        }
+
+        private static string Sarcasmify(string message)
+        {
+            StringBuilder builder = new();
+            bool caps = false;
+            foreach (char c in message)
+            {
+                if (char.IsLetter(c))
+                {
+                    caps = !caps;
+                    builder.Append(caps ? char.ToUpper(c) : char.ToLower(c));
+                }
+                else
+                {
+                    builder.Append(c);
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private const string HideIndicator = "--hide";
+        private const string OwOIndicator = "--owo";
+        private const string UwUIndicator = "--uwu";
+        private const string UvUIndicator = "--uvu";
+        private const string SarcasmifyIndicator = "--sarcasm";
 
         private const Permissions Level1 = Permissions.AddReactions | Permissions.ChangeNickname | Permissions.ReadMessageHistory | Permissions.SendMessages | Permissions.AccessChannels | Permissions.EmbedLinks;
         private const Permissions Level2 = Level1 | Permissions.MentionEveryone;

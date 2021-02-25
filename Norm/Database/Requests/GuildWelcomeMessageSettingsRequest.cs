@@ -30,7 +30,7 @@ namespace Norm.Database.Requests
 
         public class UpsertHandler : DbRequestHandler<Upsert, GuildWelcomeMessageSettings>
         {
-            public UpsertHandler(IDbContext db) : base(db) { }
+            public UpsertHandler(NormDbContext db) : base(db) { }
             public override async Task<DbResult<GuildWelcomeMessageSettings>> Handle(Upsert request, CancellationToken cancellationToken)
             {
                 GuildWelcomeMessageSettings settings = await this.DbContext.GuildWelcomeMessages
@@ -78,7 +78,7 @@ namespace Norm.Database.Requests
 
         public class DeleteHandler : DbRequestHandler<Delete>
         {
-            public DeleteHandler(IDbContext dbContext) : base(dbContext) { }
+            public DeleteHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
@@ -92,7 +92,7 @@ namespace Norm.Database.Requests
                 }
 
                 EntityEntry<GuildWelcomeMessageSettings> entity = this.DbContext.GuildWelcomeMessages.Remove(guildWelcomeMessage);
-                DbResult result = new DbResult
+                DbResult result = new()
                 {
                     Success = entity.State.Equals(EntityState.Deleted),
                 };
@@ -115,7 +115,7 @@ namespace Norm.Database.Requests
 
         public class GetGuildWelcomeMessageSettingsHandler : DbRequestHandler<GetGuildWelcomeMessageSettings, GuildWelcomeMessageSettings>
         {
-            public GetGuildWelcomeMessageSettingsHandler(IDbContext dbContext) : base(dbContext) { }
+            public GetGuildWelcomeMessageSettingsHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult<GuildWelcomeMessageSettings>> Handle(GetGuildWelcomeMessageSettings request, CancellationToken cancellationToken)
             {

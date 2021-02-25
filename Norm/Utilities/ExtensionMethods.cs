@@ -206,7 +206,7 @@ namespace Norm.Utilities
 
         public static string AsHumanReadableString(this Period period)
         {
-            StringBuilder humanReadableString = new StringBuilder();
+            StringBuilder humanReadableString = new();
 
             Period normalizedPeriod = period.Normalize();
 

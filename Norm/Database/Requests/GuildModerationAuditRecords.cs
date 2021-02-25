@@ -33,7 +33,7 @@ namespace Norm.Database.Requests
 
         public class AddHandler : DbRequestHandler<Add, GuildModerationAuditRecord>
         {
-            public AddHandler(IDbContext db, IClock clock) : base(db)
+            public AddHandler(NormDbContext db, IClock clock) : base(db)
             {
                 this.Clock = clock;
             }
@@ -42,7 +42,7 @@ namespace Norm.Database.Requests
             {
                 request.Record.Timestamp = this.Clock.GetCurrentInstant();
                 EntityEntry<GuildModerationAuditRecord> entity = this.DbContext.GuildModerationAuditRecords.Add(request.Record);
-                DbResult<GuildModerationAuditRecord> result = new DbResult<GuildModerationAuditRecord>
+                DbResult<GuildModerationAuditRecord> result = new()
                 {
                     Success = entity.State.Equals(EntityState.Added),
                     Value = entity.Entity,
@@ -113,7 +113,7 @@ namespace Norm.Database.Requests
 
         public class GetGuildEventsHandler : DbRequestHandler<GetGuildModerationAuditRecords, IEnumerable<GuildModerationAuditRecord>>
         {
-            public GetGuildEventsHandler(IDbContext dbContext) : base(dbContext) { }
+            public GetGuildEventsHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult<IEnumerable<GuildModerationAuditRecord>>> Handle(GetGuildModerationAuditRecords request, CancellationToken cancellationToken)
             {

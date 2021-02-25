@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 namespace Norm.Modules
 {
     [Group("prefix")]
-    [BotCategory("Configuration and Information")]
+    [BotCategory(BotCategory.ConfigAndInfo)]
     [Description("All of my functionalities associated with prefixes.\n\nWhen used alone, show all guild's prefixes separated by spaces")]
     public class PrefixModule : BaseCommandModule
     {
@@ -42,7 +42,7 @@ namespace Norm.Modules
                 List<GuildPrefix> guildPrefixes = (await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).Value.ToList();
                 if (!guildPrefixes.Any())
                 {
-                    prefixString = "My prefix is ^";
+                    prefixString = "My prefix is `^`";
                 }
                 else
                 {
@@ -207,7 +207,7 @@ namespace Norm.Modules
 
         private static IEnumerable<Page> GetGuildPrefixPages(List<GuildPrefix> guildPrefixes, InteractivityExtension interactivity, DiscordEmbedBuilder pageEmbedBase = null)
         {
-            StringBuilder guildPrefixesStringBuilder = new StringBuilder();
+            StringBuilder guildPrefixesStringBuilder = new();
             int count = 1;
             foreach (GuildPrefix prefix in guildPrefixes)
             {

@@ -35,12 +35,12 @@ namespace Norm.Database.Requests
 
         public class AddHandler : DbRequestHandler<Add, GuildNovelRegistration>
         {
-            public AddHandler(IDbContext dbContext) : base(dbContext) { }
+            public AddHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult<GuildNovelRegistration>> Handle(Add request, CancellationToken cancellationToken)
             {
                 EntityEntry<GuildNovelRegistration> entity = this.DbContext.GuildNovelRegistrations.Add(request.NovelRegistration);
-                DbResult<GuildNovelRegistration> result = new DbResult<GuildNovelRegistration>
+                DbResult<GuildNovelRegistration> result = new()
                 {
                     Success = entity.State.Equals(EntityState.Added),
                     Value = entity.Entity,
@@ -62,12 +62,12 @@ namespace Norm.Database.Requests
 
         public class DeleteHandler : DbRequestHandler<Delete>
         {
-            public DeleteHandler(IDbContext dbContext) : base(dbContext) { }
+            public DeleteHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
                 EntityEntry<GuildNovelRegistration> entity = this.DbContext.GuildNovelRegistrations.Remove(request.NovelRegistration);
-                DbResult result = new DbResult
+                DbResult result = new()
                 {
                     Success = entity.State.Equals(EntityState.Deleted),
                 };
@@ -89,7 +89,7 @@ namespace Norm.Database.Requests
 
         public class GetGuildsNovelRegistrationsHandler : DbRequestHandler<GetGuildsNovelRegistrations, IEnumerable<GuildNovelRegistration>>
         {
-            public GetGuildsNovelRegistrationsHandler(IDbContext dbContext) : base(dbContext) { }
+            public GetGuildsNovelRegistrationsHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult<IEnumerable<GuildNovelRegistration>>> Handle(GetGuildsNovelRegistrations request, CancellationToken cancellationToken)
             {
@@ -119,7 +119,7 @@ namespace Norm.Database.Requests
 
         public class GetMemberNovelRegistrationsHandler : DbRequestHandler<GetMemberNovelRegistrations, IEnumerable<GuildNovelRegistration>>
         {
-            public GetMemberNovelRegistrationsHandler(IDbContext dbContext) : base(dbContext) { }
+            public GetMemberNovelRegistrationsHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult<IEnumerable<GuildNovelRegistration>>> Handle(GetMemberNovelRegistrations request, CancellationToken cancellationToken)
             {

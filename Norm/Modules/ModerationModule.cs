@@ -37,7 +37,7 @@ namespace Norm.Modules
         }
 
         [Command("warn")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [Description("Warn a member and add a record to the guild moderation audit log with the reason for the warning.")]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
         [RequireGuild]
@@ -73,7 +73,7 @@ namespace Norm.Modules
         }
 
         [Command("ban")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [Description("Permanently ban a member from the guild")]
         [RequirePermissions(Permissions.BanMembers)]
         [RequireGuild]
@@ -126,7 +126,7 @@ namespace Norm.Modules
         }
 
         [Command("tempban")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [RequirePermissions(Permissions.BanMembers)]
         [RequireGuild]
         public async Task TempBanMemberAsync(CommandContext context,
@@ -195,7 +195,7 @@ namespace Norm.Modules
         }
 
         [Command("kick")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [Description("Kick a member from the server and send a message explaining why if possible.")]
         [RequirePermissions(Permissions.KickMembers)]
         [RequireGuild]
@@ -240,7 +240,7 @@ namespace Norm.Modules
         }
 
         [Command("mute")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [Description("Mute a member in the server using the `Muted` role and send them a message explaining why if possible. \nCreates the `Muted` role if it doesn't exist.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
@@ -288,7 +288,7 @@ namespace Norm.Modules
         }
 
         [Command("tempmute")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [Description("Temporarily mute a member in the server using the `Muted` role and send them a message explaining why if possible. \n\nCreates the `Muted` role if it doesn't exist.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
@@ -359,7 +359,7 @@ namespace Norm.Modules
         }
 
         [Command("unmute")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [Description("Unmute a member in the server and send them a message making them aware of the unmute if possible.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
@@ -387,7 +387,7 @@ namespace Norm.Modules
         }
 
         [Command("audit")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [Description("View the audit log filtered on the information given")]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
         [RequireGuild]
@@ -400,7 +400,7 @@ namespace Norm.Modules
             ModerationActionType action = ModerationActionType.NONE)
         {
 
-            GuildModerationAuditRecords.GetGuildModerationAuditRecords message = new GuildModerationAuditRecords.GetGuildModerationAuditRecords(context.Guild);
+            GuildModerationAuditRecords.GetGuildModerationAuditRecords message = new(context.Guild);
 
             if (moderator != null)
             {
@@ -430,7 +430,7 @@ namespace Norm.Modules
 
         private static List<Page> GenerateAuditPages(List<GuildModerationAuditRecord> auditRecords, IDictionary<ulong, DiscordMember> memberDict, DiscordUser user)
         {
-            List<Page> pages = new List<Page>();
+            List<Page> pages = new();
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
                 .WithTitle("Audit Log")
                 .WithAuthor(user.Username, iconUrl: user.AvatarUrl);
@@ -549,7 +549,7 @@ namespace Norm.Modules
 
         [Group("log")]
         [Description("Commands to manage the moderation logging channel")]
-        [BotCategory("Moderation")]
+        [BotCategory(BotCategory.Moderation)]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
         [RequireGuild]
         public class LogCommands : BaseCommandModule

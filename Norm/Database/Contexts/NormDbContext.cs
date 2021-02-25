@@ -8,39 +8,31 @@ using Npgsql;
 
 namespace Norm.Database.Contexts
 {
-    public class NormDbContext : DbContext, IDbContext
+    public class NormDbContext : DbContext
     {
         public NormDbContext(IOptions<BotOptions> options, ILoggerFactory factory)
         {
-            this.DbConnectionString = options.Value.Database.AsNpgsqlConnectionString();
-            this.LoggerFactory = factory;
+            this.dbConnectionString = options.Value.Database.AsNpgsqlConnectionString();
+            this.loggerFactory = factory;
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder
-                .UseNpgsql(this.DbConnectionString, o => o.UseNodaTime())
-                .UseLoggerFactory(this.LoggerFactory);
+                .UseNpgsql(this.dbConnectionString, o => o.UseNodaTime())
+                .UseLoggerFactory(this.loggerFactory);
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            new GuildBackgroundJobETC().Configure(builder.Entity<GuildBackgroundJob>());
-            new GuildEventETC().Configure(builder.Entity<GuildEvent>());
-            new GuildLogsChannelETC().Configure(builder.Entity<GuildLogChannel>());
-            new GuildModerationAuditRecordETC().Configure(builder.Entity<GuildModerationAuditRecord>());
-            new GuildNovelRegistrationETC().Configure(builder.Entity<GuildNovelRegistration>());
-            new GuildPrefixETC().Configure(builder.Entity<GuildPrefix>());
-            new NovelInfoETC().Configure(builder.Entity<NovelInfo>());
-            new UserTimeZoneETC().Configure(builder.Entity<UserTimeZone>());
-            new GuildWelcomeMessageSettingsETC().Configure(builder.Entity<GuildWelcomeMessageSettings>());
+            builder.ApplyConfigurationsFromAssembly(typeof(NormDbContext).Assembly);
             base.OnModelCreating(builder);
         }
 
         public DbContext Context => this;
 
-        private string DbConnectionString { get; }
-        public ILoggerFactory LoggerFactory { get; }
+        private string dbConnectionString;
+        public ILoggerFactory loggerFactory;
 
         // Novel Tables
         public DbSet<NovelInfo> AllNovelInfo { get; private set; }

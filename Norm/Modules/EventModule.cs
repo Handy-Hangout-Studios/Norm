@@ -25,11 +25,11 @@ namespace Norm.Modules
 {
     [Group("event")]
     [Description("The event functionality's submodule.")]
-    [BotCategory("Events and Announcements")]
+    [BotCategory(BotCategory.EventsAndAnnouncements)]
     [RequireGuild]
     public class EventModule : BaseCommandModule
     {
-        private static readonly Random Random = new Random();
+        private static readonly Random Random = new();
 
         private readonly IDateTimeZoneProvider timeZoneProvider;
 
@@ -71,7 +71,7 @@ namespace Norm.Modules
 
             List<GuildEvent> guildEvents = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.ToList();
             GuildEvent selectedEvent = guildEvents[Random.Next(guildEvents.Count)];
-            DiscordEmbedBuilder eventEmbedBuilder = new DiscordEmbedBuilder();
+            DiscordEmbedBuilder eventEmbedBuilder = new();
             eventEmbedBuilder
                 .WithTitle(selectedEvent.EventName)
                 .WithDescription(selectedEvent.EventDesc);
@@ -87,7 +87,7 @@ namespace Norm.Modules
         [Command("cschedule")]
         [Description("Create and schedule an event for the time given announced to the role given or the `@everyone` role if no role is specified.")]
         [RequirePermissions(Permissions.MentionEveryone)]
-        [BotCategory("Scheduling sub-commands")]
+        [BotCategory(BotCategory.Scheduling)]
         public async Task CreateAndScheduleGuildEvent(
             CommandContext context,
             [Description("The channel to announce the event in")]
@@ -170,7 +170,7 @@ namespace Norm.Modules
         [Command("schedule")]
         [Description("Schedule an event from the list of events defined for this guild that will be announced to the role given.")]
         [RequirePermissions(Permissions.MentionEveryone)]
-        [BotCategory("Scheduling sub-commands")]
+        [BotCategory(BotCategory.Scheduling)]
         public async Task ScheduleGuildEvent(
             CommandContext context,
             [Description("The channel to announce the event in")]
@@ -299,7 +299,7 @@ namespace Norm.Modules
 
         [Command("unschedule")]
         [Description("Start the interactive unscheduling prompt.")]
-        [BotCategory("Scheduling sub-commands")]
+        [BotCategory(BotCategory.Scheduling)]
         [RequirePermissions(Permissions.MentionEveryone)]
         public async Task UnscheduleGuildEvent(CommandContext context)
         {
@@ -485,7 +485,7 @@ namespace Norm.Modules
 
         private static IEnumerable<Page> GetGuildEventsPages(IEnumerable<GuildEvent> guildEvents, InteractivityExtension interactivity, DiscordEmbedBuilder pageEmbedBase = null)
         {
-            StringBuilder guildEventsStringBuilder = new StringBuilder();
+            StringBuilder guildEventsStringBuilder = new();
 
             int count = 1;
             foreach (GuildEvent guildEvent in guildEvents)
@@ -504,7 +504,7 @@ namespace Norm.Modules
 
         private static IEnumerable<Page> GetScheduledEventsPages(IEnumerable<GuildBackgroundJob> guildEventJobs, DateTimeZone timeZone, InteractivityExtension interactivity, DiscordEmbedBuilder pageEmbedBase = null)
         {
-            StringBuilder guildEventsStringBuilder = new StringBuilder();
+            StringBuilder guildEventsStringBuilder = new();
 
             int count = 1;
             foreach (GuildBackgroundJob job in guildEventJobs)

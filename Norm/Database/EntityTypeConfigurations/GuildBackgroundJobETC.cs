@@ -11,8 +11,7 @@ namespace Norm.Database.EntityTypeConfigurations
             builder.ToTable("all_guild_background_jobs");
 
             builder.HasKey(b => b.HangfireJobId)
-                .HasName("hangfire_job_id")
-                ;
+                .HasName("hangfire_job_id");
 
             builder.Property(b => b.GuildId)
                 .HasColumnName("guild_id");

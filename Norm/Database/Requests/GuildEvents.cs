@@ -25,11 +25,11 @@ namespace Norm.Database.Requests
 
         public class AddHandler : DbRequestHandler<Add, GuildEvent>
         {
-            public AddHandler(IDbContext db) : base(db) { }
+            public AddHandler(NormDbContext db) : base(db) { }
             public override async Task<DbResult<GuildEvent>> Handle(Add request, CancellationToken cancellationToken)
             {
                 EntityEntry<GuildEvent> entity = this.DbContext.GuildEvents.Add(request.Event);
-                DbResult<GuildEvent> result = new DbResult<GuildEvent>
+                DbResult<GuildEvent> result = new()
                 {
                     Success = entity.State.Equals(EntityState.Added),
                     Value = entity.Entity,
@@ -52,12 +52,12 @@ namespace Norm.Database.Requests
 
         public class DeleteHandler : DbRequestHandler<Delete>
         {
-            public DeleteHandler(IDbContext dbContext) : base(dbContext) { }
+            public DeleteHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
                 EntityEntry<GuildEvent> entity = this.DbContext.GuildEvents.Remove(request.Event);
-                DbResult result = new DbResult
+                DbResult result = new()
                 {
                     Success = entity.State.Equals(EntityState.Deleted),
                 };
@@ -80,7 +80,7 @@ namespace Norm.Database.Requests
 
         public class GetGuildEventsHandler : DbRequestHandler<GetGuildEvents, IEnumerable<GuildEvent>>
         {
-            public GetGuildEventsHandler(IDbContext dbContext) : base(dbContext) { }
+            public GetGuildEventsHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult<IEnumerable<GuildEvent>>> Handle(GetGuildEvents request, CancellationToken cancellationToken)
             {

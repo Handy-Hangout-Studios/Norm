@@ -33,11 +33,11 @@ namespace Norm.Database.Requests
 
         public class AddHandler : DbRequestHandler<Add, GuildBackgroundJob>
         {
-            public AddHandler(IDbContext db) : base(db) { }
+            public AddHandler(NormDbContext db) : base(db) { }
             public override async Task<DbResult<GuildBackgroundJob>> Handle(Add request, CancellationToken cancellationToken)
             {
                 EntityEntry<GuildBackgroundJob> entity = this.DbContext.GuildBackgroundJobs.Add(request.Job);
-                DbResult<GuildBackgroundJob> result = new DbResult<GuildBackgroundJob>
+                DbResult<GuildBackgroundJob> result = new()
                 {
                     Success = entity.State.Equals(EntityState.Added),
                     Value = entity.Entity,
@@ -60,12 +60,12 @@ namespace Norm.Database.Requests
 
         public class DeleteHandler : DbRequestHandler<Delete>
         {
-            public DeleteHandler(IDbContext dbContext) : base(dbContext) { }
+            public DeleteHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
                 EntityEntry<GuildBackgroundJob> entity = this.DbContext.GuildBackgroundJobs.Remove(request.Job);
-                DbResult result = new DbResult
+                DbResult result = new()
                 {
                     Success = entity.State.Equals(EntityState.Deleted),
                 };
@@ -88,7 +88,7 @@ namespace Norm.Database.Requests
 
         public class GetGuildJobsHandler : DbRequestHandler<GetGuildJobs, IEnumerable<GuildBackgroundJob>>
         {
-            public GetGuildJobsHandler(IDbContext dbContext, IClock clock) : base(dbContext)
+            public GetGuildJobsHandler(NormDbContext dbContext, IClock clock) : base(dbContext)
             {
                 this.Clock = clock;
             }

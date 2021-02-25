@@ -26,7 +26,7 @@ namespace Norm.Modules
     [Aliases("rr")]
     [Description("Commands associated with RoyalRoad web novels")]
     [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
-    [BotCategory("Events and Announcements")]
+    [BotCategory(BotCategory.WebNovel)]
     public class RoyalRoadModule : BaseCommandModule
     {
         private readonly IMediator mediator;
@@ -112,7 +112,7 @@ namespace Norm.Modules
 
         private static async Task<ulong> GetFictionId(CommandContext context, string royalroadUrl)
         {
-            Regex fictionIdRegex = new Regex("https://www.royalroad.com/fiction/(?<fictionId>.*)/.*");
+            Regex fictionIdRegex = new("https://www.royalroad.com/fiction/(?<fictionId>.*)/.*");
             Match fictionIdMatch = fictionIdRegex.Match(royalroadUrl);
             if (!fictionIdMatch.Success)
             {
@@ -160,7 +160,7 @@ namespace Norm.Modules
             }
             GuildNovelRegistration[] allRegisteredFictions = getNovelRegistrationsResult.Value.ToArray();
 
-            StringBuilder pageString = new StringBuilder();
+            StringBuilder pageString = new();
             for (int i = 0; i < allRegisteredFictions.Length; i++)
             {
                 pageString.AppendLine($"{i + 1}. {allRegisteredFictions[i].NovelInfo.Name}");
@@ -207,7 +207,7 @@ namespace Norm.Modules
                 }
                 GuildNovelRegistration[] allRegisteredFictions = getNovelRegistrationsResult.Value.ToArray();
 
-                StringBuilder pageString = new StringBuilder();
+                StringBuilder pageString = new();
                 for (int i = 0; i < allRegisteredFictions.Length; i++)
                 {
                     pageString.AppendLine($"{i + 1}. {allRegisteredFictions[i].NovelInfo.Name}");
@@ -272,7 +272,7 @@ namespace Norm.Modules
 
             private static async Task<ulong> GetFictionId(CommandContext context, string royalroadUrl)
             {
-                Regex fictionIdRegex = new Regex("https://www.royalroad.com/fiction/(?<fictionId>.*)/.*");
+                Regex fictionIdRegex = new("https://www.royalroad.com/fiction/(?<fictionId>.*)/.*");
                 Match fictionIdMatch = fictionIdRegex.Match(royalroadUrl);
                 if (!fictionIdMatch.Success)
                 {
@@ -310,7 +310,7 @@ namespace Norm.Modules
         private static async Task<ulong> GetMostRecentChapterId(string syndicationUri)
         {
             using XmlReader reader = XmlReader.Create(syndicationUri, new XmlReaderSettings { Async = true, });
-            RssFeedReader feedReader = new RssFeedReader(reader);
+            RssFeedReader feedReader = new(reader);
 
             while (await feedReader.Read())
             {
@@ -326,7 +326,7 @@ namespace Norm.Modules
 
         private static string GetFictionName(string fictionUri)
         {
-            HtmlWeb fictionGet = new HtmlWeb();
+            HtmlWeb fictionGet = new();
             HtmlDocument fictionPage = fictionGet.Load(fictionUri);
 
             return fictionPage.DocumentNode

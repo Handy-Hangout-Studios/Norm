@@ -30,12 +30,12 @@ namespace Norm.Database.Requests
 
         public class AddHandler : DbRequestHandler<Add, NovelInfo>
         {
-            public AddHandler(IDbContext context) : base(context) { }
+            public AddHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<NovelInfo>> Handle(Add request, CancellationToken cancellationToken)
             {
                 EntityEntry<NovelInfo> entity = this.DbContext.AllNovelInfo.Add(request.Novel);
-                DbResult<NovelInfo> result = new DbResult<NovelInfo>
+                DbResult<NovelInfo> result = new()
                 {
                     Success = entity.State.Equals(EntityState.Added),
                     Value = entity.Entity,
@@ -58,12 +58,12 @@ namespace Norm.Database.Requests
 
         public class UpdateHandler : DbRequestHandler<Update, NovelInfo>
         {
-            public UpdateHandler(IDbContext context) : base(context) { }
+            public UpdateHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<NovelInfo>> Handle(Update request, CancellationToken cancellationToken)
             {
                 EntityEntry<NovelInfo> entity = this.DbContext.AllNovelInfo.Update(request.Novel);
-                DbResult<NovelInfo> result = new DbResult<NovelInfo>
+                DbResult<NovelInfo> result = new()
                 {
                     Success = entity.State.Equals(EntityState.Modified),
                     Value = entity.Entity,
@@ -86,12 +86,12 @@ namespace Norm.Database.Requests
 
         public class DeleteHandler : DbRequestHandler<Delete>
         {
-            public DeleteHandler(IDbContext dbContext) : base(dbContext) { }
+            public DeleteHandler(NormDbContext dbContext) : base(dbContext) { }
 
             public override async Task<DbResult> Handle(Delete request, CancellationToken cancellationToken)
             {
                 EntityEntry<NovelInfo> entity = this.DbContext.AllNovelInfo.Remove(request.Novel);
-                DbResult result = new DbResult
+                DbResult result = new()
                 {
                     Success = entity.State.Equals(EntityState.Deleted),
                 };
@@ -118,7 +118,7 @@ namespace Norm.Database.Requests
 
         public class GetNovelInfoHandler : DbRequestHandler<GetNovelInfo, NovelInfo>
         {
-            public GetNovelInfoHandler(IDbContext context) : base(context) { }
+            public GetNovelInfoHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<NovelInfo>> Handle(GetNovelInfo request, CancellationToken cancellationToken)
             {
@@ -140,7 +140,7 @@ namespace Norm.Database.Requests
 
         public class GetAllNovelsInfoHandler : DbRequestHandler<GetAllNovelsInfo, IEnumerable<NovelInfo>>
         {
-            public GetAllNovelsInfoHandler(IDbContext context) : base(context) { }
+            public GetAllNovelsInfoHandler(NormDbContext context) : base(context) { }
 
             public override async Task<DbResult<IEnumerable<NovelInfo>>> Handle(GetAllNovelsInfo request, CancellationToken cancellationToken)
             {

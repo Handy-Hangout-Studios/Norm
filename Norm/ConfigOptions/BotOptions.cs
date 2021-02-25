@@ -21,5 +21,8 @@
         public string[] Prefixes { get; set; }
 
         public DatabaseConfig Database { get; set; }
+
+        public ulong BeeMovieEmojiGuildId { get; set; }
+        public string BeeMovieFilePath { get; set; }
     }
 }

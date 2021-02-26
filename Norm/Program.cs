@@ -48,7 +48,7 @@ namespace Norm
         {
             // TODO: switch from hardcoded log file path to configuration based log file path
             configuration
-                .MinimumLevel.Verbose()
+                .MinimumLevel.Is(Serilog.Events.LogEventLevel.Verbose)
                 .Enrich.FromLogContext()
                 .WriteTo.File(formatter: new JsonFormatter(renderMessage: true), "../../logs/Norm/log-.txt", rollingInterval: RollingInterval.Day)
                 .WriteTo.Console(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information);

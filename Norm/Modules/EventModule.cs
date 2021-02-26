@@ -107,8 +107,7 @@ namespace Norm.Modules
                 return;
             }
 
-            DiscordMember botMember = await context.Guild.GetMemberAsync(context.Client.CurrentUser.Id);
-            if (!announcementChannel.PermissionsFor(botMember).HasPermission(Permissions.SendMessages | Permissions.MentionEveryone))
+            if (!announcementChannel.PermissionsFor(context.Guild.CurrentMember).HasPermission(Permissions.SendMessages | Permissions.MentionEveryone))
             {
                 await context.RespondAsync($"{context.Member.Mention}, I don't have permission to send messages and mention `@everyone` in that channel.");
                 return;
@@ -190,8 +189,7 @@ namespace Norm.Modules
                 return;
             }
 
-            DiscordMember botMember = await context.Guild.GetMemberAsync(context.Client.CurrentUser.Id);
-            if (!announcementChannel.PermissionsFor(botMember).HasPermission(Permissions.SendMessages | Permissions.MentionEveryone))
+            if (!announcementChannel.PermissionsFor(context.Guild.CurrentMember).HasPermission(Permissions.SendMessages | Permissions.MentionEveryone))
             {
                 await context.RespondAsync($"{context.Member.Mention}, I don't have permission to send messages and mention `@everyone` in that channel.");
                 return;

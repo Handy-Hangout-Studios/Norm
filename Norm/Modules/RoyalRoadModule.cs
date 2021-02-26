@@ -67,8 +67,7 @@ namespace Norm.Modules
 
         private async Task RegisterRoyalRoadFictionAsync(CommandContext context, DiscordChannel announcementChannel, DiscordRole announcementRole, bool pingEveryone, bool pingNoOne, string royalroadUrl)
         {
-            DiscordMember botMember = await context.Guild.GetMemberAsync(context.Client.CurrentUser.Id);
-            if (!announcementChannel.PermissionsFor(botMember).HasFlag(DSharpPlus.Permissions.SendMessages | DSharpPlus.Permissions.EmbedLinks))
+            if (!announcementChannel.PermissionsFor(context.Guild.CurrentMember).HasFlag(DSharpPlus.Permissions.SendMessages | DSharpPlus.Permissions.EmbedLinks))
             {
                 await context.RespondAsync($"{context.Member.Mention}, the channel provided doesn't let me send messages. Please try again after you have set permissions such that I can send messages in that channel.");
                 return;

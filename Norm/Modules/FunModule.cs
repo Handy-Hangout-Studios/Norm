@@ -1,9 +1,12 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Emzi0767.Utilities;
 using Microsoft.Extensions.Options;
+using Norm.Attributes;
 using Norm.Configuration;
+using Owoify;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,6 +25,7 @@ namespace Norm.Modules
 
         [Command("beemovie")]
         [Description("Play the bee movie using emojis and a text file")]
+        [BotCategory(BotCategory.Miscellaneous)]
         public async Task OutputBeeMovie(CommandContext context)
         {
             StringBuilder contentBuilder = new();
@@ -43,5 +47,139 @@ namespace Norm.Modules
             messageBuilder.WithFile(fs);
             await context.RespondAsync(messageBuilder);
         }
+
+        [Command("say")]
+        [Description("Have Norm say the message as himself. If you reply to a message and use this command then Norm will also will reply to the message with the same mention settings you used.\n"+FormattingDescription)]
+        public async Task SayAsync(CommandContext context, [RemainingText][Description("The message to say as well as the options you want used in the message")] string message = "")
+        {
+            message = await CheckAndDeleteOnHide(context, message);
+
+            DiscordMessageBuilder builder = new DiscordMessageBuilder()
+                .WithContent(ParseOptionsAndEdit(message));
+
+            if (context.Message.MessageType.HasValue && context.Message.MessageType.Value.Equals(MessageType.Reply))
+            {
+                DiscordMessage msg = await context.Channel.GetMessageAsync(context.Message.Id);
+                builder.WithReply(msg.ReferencedMessage.Id, msg.MentionedUsers.Contains(msg.ReferencedMessage.Author));
+            }
+
+            await context.RespondAsync(builder);
+        }
+
+        [Command("me")]
+        [RequireBotPermissions(Permissions.ManageWebhooks)]
+        [Description("Say a message as yourself but with some extra formatting added.\n"+FormattingDescription)]
+        [BotCategory(BotCategory.Miscellaneous)]
+        public async Task SayAsAuthorAsync(CommandContext context, [RemainingText][Description("The message to say as you as well as the options you want used in the message")] string message = "")
+        {
+            message = await CheckAndDeleteOnHide(context, message);
+            DiscordWebhook webhook = (await context.Channel.GetWebhooksAsync()).FirstOrDefault(wbhk => wbhk.Name.Equals("Norm"));
+            if (webhook is null)
+            {
+                webhook = await context.Channel.CreateWebhookAsync("Norm");
+            }
+
+            DiscordWebhookBuilder wBuilder = new DiscordWebhookBuilder().WithContent(ParseOptionsAndEdit(message)).WithAvatarUrl(context.Member.AvatarUrl).WithUsername(context.Member.DisplayName);
+            await webhook.ExecuteAsync(wBuilder);
+        }
+
+
+        private static async Task<string> CheckAndDeleteOnHide(CommandContext context, string message)
+        {
+
+            if (message.Contains(HideIndicator))
+            {
+                if (context.Guild.CurrentMember.PermissionsIn(context.Channel).HasPermission(Permissions.ManageMessages))
+                    await context.Message.DeleteAsync();
+                message = message.Replace(HideIndicator, string.Empty);
+            }
+
+            return message;
+        }
+
+        private static string ParseOptionsAndEdit(string message)
+        {
+            Owoifier.OwoifyLevel? owoLevel = null;
+            if (message.Contains(OwOIndicator))
+            {
+                owoLevel = Owoifier.OwoifyLevel.Owo;
+                message = message.Replace(OwOIndicator, string.Empty);
+            }
+            if (message.Contains(UwUIndicator))
+            {
+                owoLevel = Owoifier.OwoifyLevel.Uwu;
+                message = message.Replace(UwUIndicator, string.Empty);
+            }
+            if (message.Contains(UvUIndicator))
+            {
+                owoLevel = Owoifier.OwoifyLevel.Uvu;
+                message = message.Replace(UvUIndicator, string.Empty);
+            }
+            bool sarcasmify;
+            if (sarcasmify = message.Contains(SarcasmifyIndicator))
+            {
+                message = message.Replace(SarcasmifyIndicator, string.Empty);
+            }
+
+            bool clappify;
+            if (clappify = message.Contains(ClappifyIndicator))
+            {
+                message = message.Replace(ClappifyIndicator, string.Empty);
+            }
+
+            message = message.Trim();
+
+            if (owoLevel.HasValue)
+            {
+                message = Owoifier.Owoify(message, (Owoifier.OwoifyLevel)owoLevel);
+            }
+            if (sarcasmify)
+            {
+                message = Sarcasmify(message);
+            }
+            if (clappify)
+            {
+                message = Clappify(message);
+            }
+
+            return message;
+        }
+
+        private static string Sarcasmify(string message)
+        {
+            StringBuilder builder = new();
+            bool caps = false;
+            foreach (char c in message)
+            {
+                if (char.IsLetter(c))
+                {
+                    caps = !caps;
+                    builder.Append(caps ? char.ToUpper(c) : char.ToLower(c));
+                }
+                else
+                {
+                    builder.Append(c);
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private static string Clappify(string message)
+        {
+            return string.Join(" 👏 ", message.Split(' '));
+        }
+
+        private const string HideIndicator = "--hide";
+        private const string HideDescription = "If you add `"+HideIndicator+"` and Norm has permission to delete messages in that channel he will delete your message.";
+        private const string OwOIndicator = "--owo";
+        private const string UwUIndicator = "--uwu";
+        private const string UvUIndicator = "--uvu";
+        private const string OwOifyDescription = "If you add `" + OwOIndicator + "`, `" + UwUIndicator + "`, or `" + UvUIndicator + "` to your message then Norm will OwOify your message from readable to completely unreadable depending on which type you choose.";
+        private const string SarcasmifyIndicator = "--sarcasm";
+        private const string SarcasmifyDescription = "If you add `" + SarcasmifyIndicator + "` to your message then Norm will say the message alternating caps letters.";
+        private const string ClappifyIndicator = "--clap";
+        private const string ClappifyDescription = "If you add `" + ClappifyIndicator + "` to your message then Norm will replace every space with \" 👏 \"";
+        private const string FormattingDescription = HideDescription + "\n" + OwOifyDescription + "\n" + SarcasmifyDescription + "\n" + ClappifyDescription;
     }
 }

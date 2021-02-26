@@ -71,8 +71,7 @@ namespace Norm.Services
             {
                 Token = this.config.BotToken,
                 TokenType = TokenType.Bot,
-                MinimumLogLevel = LogLevel.Information,
-                LoggerFactory = factory,
+                MinimumLogLevel = LogLevel.Trace,
                 Intents = DiscordIntents.All,
             };
             #endregion
@@ -180,10 +179,7 @@ namespace Norm.Services
             if (!isDm)
             {
                 prefixPos = await this.CheckGuildPrefixes(msg);
-                if (prefixPos != -1)
-                {
-                    return prefixPos;
-                }
+                return prefixPos;
             }
 
             prefixPos = msg.GetStringPrefixLength("^");
@@ -219,7 +215,7 @@ namespace Norm.Services
                 }
             }
 
-            return -1;
+            return guildPrefixes.Any() ? -1 : msg.GetStringPrefixLength("^");
         }
     }
 }

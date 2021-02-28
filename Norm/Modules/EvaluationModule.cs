@@ -41,7 +41,7 @@ namespace Norm.Modules
                 lowerBound = latex.Length;
             }
 
-            using Stream fontStream = new FileStream("IBMPlexSans-Text.otf", FileMode.Open);
+            //using Stream fontStream = new FileStream("IBMPlexSans-Text.otf", FileMode.Open);
 
             TextPainter painter = new TextPainter { 
                 LaTeX = $"{latex[upperBound..lowerBound]}", 

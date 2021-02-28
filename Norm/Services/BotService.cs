@@ -123,6 +123,7 @@ namespace Norm.Services
                 commands.RegisterCommands<ModerationModule>();
                 commands.RegisterCommands<WelcomeMessageSettingsModule>();
                 commands.RegisterCommands<FunModule>();
+                commands.RegisterCommands<EvaluationModule>();
 
                 commands.CommandErrored += ChecksFailedError;
                 commands.CommandErrored += this.CheckCommandExistsError;

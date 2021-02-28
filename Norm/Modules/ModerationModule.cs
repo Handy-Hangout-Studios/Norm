@@ -552,11 +552,11 @@ namespace Norm.Modules
         [BotCategory(BotCategory.Moderation)]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
         [RequireGuild]
-        public class LogCommands : BaseCommandModule
+        public class LogModule : BaseCommandModule
         {
             private readonly IMediator mediator;
 
-            public LogCommands(IMediator mediator)
+            public LogModule(IMediator mediator)
             {
                 this.mediator = mediator;
             }

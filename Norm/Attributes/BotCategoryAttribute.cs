@@ -23,6 +23,7 @@ namespace Norm.Attributes
         Time,
         Miscellaneous,
         Scheduling,
+        Evaluation,
     }
 
     public static class BotCategoryExtensionMethods
@@ -38,6 +39,7 @@ namespace Norm.Attributes
                 BotCategory.Time => "Time",
                 BotCategory.Miscellaneous => "Miscellaneous",
                 BotCategory.Scheduling => "Scheduling sub-commands",
+                BotCategory.Evaluation => "Evaluation",
                 _ => throw new NotImplementedException(),
             };
     }

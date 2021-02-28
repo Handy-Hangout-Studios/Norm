@@ -31,7 +31,7 @@ namespace Norm.Database.Contexts
 
         public DbContext Context => this;
 
-        private string dbConnectionString;
+        private readonly string dbConnectionString;
         public ILoggerFactory loggerFactory;
 
         // Novel Tables

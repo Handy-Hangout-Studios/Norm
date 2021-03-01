@@ -28,6 +28,10 @@ namespace Norm.Services
                     {
                         return "you don't have the permissions necessary";
                     }
+                    if (failedChecks.Any(x => x is RequirePermissionsAttribute))
+                    {
+                        return "either you or I don't have the permissions necessary";
+                    }
                     if (failedChecks.Any(x => x is CooldownAttribute))
                     {
                         CooldownAttribute cooldown = failedChecks.First(x => x is CooldownAttribute) as CooldownAttribute;
@@ -46,7 +50,7 @@ namespace Norm.Services
                         return "this command must be used in the direct messages";
                     }
 
-                    return "The check failed is unknown";
+                    return "of an unknown failed check";
                 }
 
                 await e.Context.RespondAsync($"You can't use `{e.Command.QualifiedName}` because {DetermineMessage()}.");
@@ -58,7 +62,12 @@ namespace Norm.Services
         {
             if (e.Exception is CommandNotFoundException)
             {
-                await e.Context.RespondAsync("The given command doesn't exist");
+                DiscordMessage msg = await e.Context.RespondAsync("The given command doesn't exist");
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(5000);
+                    await msg.DeleteAsync();
+                });
                 e.Handled = true;
             }
             else if (e.Exception is InvalidOperationException invalid)

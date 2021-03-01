@@ -25,7 +25,6 @@ namespace Norm.Modules
     [Group("royalroad")]
     [Aliases("rr")]
     [Description("Commands associated with RoyalRoad web novels")]
-    [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
     [BotCategory(BotCategory.WebNovel)]
     public class RoyalRoadModule : BaseCommandModule
     {
@@ -38,6 +37,7 @@ namespace Norm.Modules
         [Command("register")]
         [Aliases("r")]
         [Description("Register a channel for update announcements from a RoyalRoad webnovel for specified role, if a role isn't specified this will ping `@everyone`")]
+        [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
         [RequireGuild]
         public async Task RegisterRoyalRoadFictionWithDiscordRoleAsync(
             CommandContext context,
@@ -148,6 +148,7 @@ namespace Norm.Modules
         [Command("deregister")]
         [Aliases("dr")]
         [Description("Begin the interactive deregistration process to remove a RoyalRoad webnovel announcement from your guild")]
+        [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
         [RequireGuild]
         public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
         {

@@ -1,6 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
@@ -85,6 +86,20 @@ namespace Norm.Modules
         {
             await context.RespondAsync("Throwing an exception now");
             throw new Exception();
+        }
+
+        [Command("proxy")]
+        [Description("Execute Command as another user")]
+        [RequireOwner]
+        public async Task MaskAsync(CommandContext context, DiscordUser user, string command, [RemainingText] string parameters)
+        {
+            if (!context.CommandsNext.RegisteredCommands.TryGetValue(command, out Command cmd))
+            {
+                throw new CommandNotFoundException("command");
+            }
+
+            CommandContext innerContext = context.CommandsNext.CreateFakeContext(user, context.Channel, context.Message.Content, "", cmd, parameters);
+            await context.CommandsNext.ExecuteCommandAsync(innerContext).ConfigureAwait(false);
         }
 
         private const Permissions Level1 = Permissions.AddReactions | Permissions.ChangeNickname | Permissions.ReadMessageHistory | Permissions.SendMessages | Permissions.AccessChannels | Permissions.EmbedLinks;

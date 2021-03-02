@@ -55,7 +55,8 @@ namespace Norm.Modules
             message = await CheckAndDeleteOnHide(context, message);
 
             DiscordMessageBuilder builder = new DiscordMessageBuilder()
-                .WithContent(ParseOptionsAndEdit(message));
+                .WithContent(ParseOptionsAndEdit(message))
+                .WithAllowedMentions(Mentions.None.Union(new List<IMention> { new UserMention(), }));
 
             if (context.Message.MessageType.HasValue && context.Message.MessageType.Value.Equals(MessageType.Reply))
             {
@@ -79,7 +80,11 @@ namespace Norm.Modules
                 webhook = await context.Channel.CreateWebhookAsync("Norm");
             }
 
-            DiscordWebhookBuilder wBuilder = new DiscordWebhookBuilder().WithContent(ParseOptionsAndEdit(message)).WithAvatarUrl(context.Member.AvatarUrl).WithUsername(context.Member.DisplayName);
+            DiscordWebhookBuilder wBuilder = new DiscordWebhookBuilder()
+                .WithContent(ParseOptionsAndEdit(message))
+                .WithAvatarUrl(context.Member.AvatarUrl)
+                .WithUsername(context.Member.DisplayName)
+                .AddMentions(Mentions.None.Union(new List<IMention> { new UserMention(), }));
             await webhook.ExecuteAsync(wBuilder);
         }
 

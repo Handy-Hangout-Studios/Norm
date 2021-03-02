@@ -372,11 +372,14 @@ namespace Norm.Modules
 
             await member.RevokeRoleAsync(mutedRole);
 
-            await member.SendMessageAsync($"You have just been unmuted in {context.Guild.Name}");
+            DiscordEmbedBuilder moderationEmbed = new DiscordEmbedBuilder()
+                .WithTitle("You were just unmuted!")
+                .WithDescription($"You unmuted in {context.Guild.Name}. Feel free to chat again.");
+
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
 
             // Add output message to logging channel
-            DiscordChannel logChannel = await this.GetGuildLogChannelAsync(context.Guild);
+            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(moderationEmbed.Build(), member, context.Member, context.Guild);
 
             if (logChannel == null)
             {

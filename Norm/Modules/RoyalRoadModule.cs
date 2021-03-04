@@ -128,13 +128,12 @@ namespace Norm.Modules
             NovelInfo fictionInfo = fictionInfoResult.Success ? fictionInfoResult.Value : throw new Exception("Error using NovelInfos.GetNovelInfo(fictionId)");
             if (fictionInfo is null)
             {
-                string fictionUri = $"https://www.royalroad.com/fiction/{fictionId}";
-                string synUri = $"https://www.royalroad.com/fiction/{fictionId}";
-                fictionInfo.MostRecentChapterId = await GetMostRecentChapterId(synUri);
+                string fictionUri = $"{FictionUri}/{fictionId}";
+                string synUri = $"{SyndicationUri}/{fictionId}";
                 fictionInfo = (await this.mediator.Send(
                     new NovelInfos.Add(
                         fictionId,
-                        GetFictionName(fictionInfo.FictionUri).WithHtmlDecoded(),
+                        GetFictionName(fictionUri).WithHtmlDecoded(),
                         fictionUri,
                         synUri,
                         await GetMostRecentChapterId(synUri)
@@ -289,13 +288,12 @@ namespace Norm.Modules
                 NovelInfo fictionInfo = fictionInfoResult.Success ? fictionInfoResult.Value : throw new Exception("Error using NovelInfos.GetNovelInfo(fictionId)");
                 if (fictionInfo is null)
                 {
-                    string fictionUri = $"https://www.royalroad.com/fiction/{fictionId}";
-                    string synUri = $"https://www.royalroad.com/fiction/{fictionId}";
-                    fictionInfo.MostRecentChapterId = await GetMostRecentChapterId(synUri);
+                    string fictionUri = $"{FictionUri}/{fictionId}";
+                    string synUri = $"{SyndicationUri}/{fictionId}";
                     fictionInfo = (await this.mediator.Send(
                         new NovelInfos.Add(
                             fictionId,
-                            GetFictionName(fictionInfo.FictionUri).WithHtmlDecoded(),
+                            GetFictionName(fictionUri).WithHtmlDecoded(),
                             fictionUri,
                             synUri,
                             await GetMostRecentChapterId(synUri)
@@ -335,5 +333,9 @@ namespace Norm.Modules
                 .Element("title")
                 .InnerHtml;
         }
+
+        private const string RoyalRoadUri = "https://royalroad.com";
+        private const string FictionUri = RoyalRoadUri + "/fiction";
+        private const string SyndicationUri = FictionUri + "/syndication";
     }
 }

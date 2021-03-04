@@ -134,8 +134,8 @@ namespace Norm.Modules
                     new NovelInfos.Add(
                         fictionId,
                         GetFictionName(fictionUri).WithHtmlDecoded(),
-                        fictionUri,
                         synUri,
+                        fictionUri,
                         await GetMostRecentChapterId(synUri)
                      )
                 )).Value;
@@ -294,8 +294,8 @@ namespace Norm.Modules
                         new NovelInfos.Add(
                             fictionId,
                             GetFictionName(fictionUri).WithHtmlDecoded(),
-                            fictionUri,
                             synUri,
+                            fictionUri,
                             await GetMostRecentChapterId(synUri)
                          )
                     )).Value;

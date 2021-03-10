@@ -99,7 +99,7 @@ namespace Norm.Modules
             }
             
             
-            await context.RespondAsync($"Executing the command `{command}` on behalf of {context.Member} as {user.Mention} with the input `{parameters}`");
+            await context.RespondAsync($"Executing the command `{command}` on behalf of {context.Member.Mention} as {user.Mention} with the input `{parameters}`");
             CommandContext innerContext = context.CommandsNext.CreateFakeContext(user, context.Channel, context.Message.Content, "", cmd, parameters);
             await context.CommandsNext.ExecuteCommandAsync(innerContext).ConfigureAwait(false);
         }

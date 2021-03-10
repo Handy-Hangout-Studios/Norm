@@ -97,7 +97,9 @@ namespace Norm.Modules
             {
                 throw new CommandNotFoundException("command");
             }
-
+            
+            
+            await context.RespondAsync($"Executing the command `{command}` with the input `{parameters}`");
             CommandContext innerContext = context.CommandsNext.CreateFakeContext(user, context.Channel, context.Message.Content, "", cmd, parameters);
             await context.CommandsNext.ExecuteCommandAsync(innerContext).ConfigureAwait(false);
         }

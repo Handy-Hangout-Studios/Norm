@@ -1,4 +1,5 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
@@ -91,27 +92,51 @@ namespace Norm.Services
 
                 if (e.Exception.Message != null)
                 {
-                    commandErrorEmbed.AddField("Message", e.Exception.Message);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "Message", e.Exception.Message);
                 }
 
                 if (e.Exception.StackTrace != null)
                 {
-                    int stackTraceLength = e.Exception?.StackTrace.Length > 1024 ? 1024 : e.Exception.StackTrace.Length;
-                    commandErrorEmbed.AddField("StackTrace", e.Exception.StackTrace.Substring(0, stackTraceLength));
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "StackTrace", e.Exception.StackTrace);
+                }
+
+                if (e.Exception is DSharpPlus.Exceptions.UnauthorizedException u && u.JsonMessage is not null)
+                {
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "JsonMessage", u.JsonMessage);
+                }
+
+                if (e.Exception is DSharpPlus.Exceptions.BadRequestException b)
+                {
+                    commandErrorEmbed.AddField("Bad Request Code", b.Code.ToString(), true);
+                    if (b.JsonMessage is not null)
+                    {
+                        AddSanitizedAndShortenedField(commandErrorEmbed, "JsonMessage", b.JsonMessage);
+                    }
+                    if (b.Errors is not null)
+                    {
+                        AddSanitizedAndShortenedField(commandErrorEmbed, "Errors", b.Errors);
+                    }
                 }
 
                 if (e.Exception.GetType() != null)
                 {
-                    commandErrorEmbed.AddField("ExceptionType", e.Exception.GetType().FullName);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "ExceptionType", e.Exception.GetType().FullName);
                 }
 
-                await this.BotDeveloper.SendMessageAsync(embed: commandErrorEmbed);
                 this.Logger.LogError(e.Exception, "Exception from Command Errored");
+                await this.BotDeveloper.SendMessageAsync(embed: commandErrorEmbed);
             }
             catch (Exception exception)
             {
                 this.Logger.LogError(exception, "An error occurred in sending the exception to the Dev");
             }
+        }
+
+        private static void AddSanitizedAndShortenedField(DiscordEmbedBuilder embed, string title, string value)
+        {
+            string sanitized = Formatter.Sanitize(value);
+            int sanitizedLength = sanitized.Length > 1024 ? 1024 : sanitized.Length;
+            embed.AddField(title, sanitized.Substring(0, sanitizedLength));
         }
     }
 }

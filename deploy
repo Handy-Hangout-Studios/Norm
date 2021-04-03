@@ -15,6 +15,6 @@ dotnet build -c Debug -o ../../bin/Norm -p:PublishReadyToRun=true -p:PublishTrim
 
 # Set up and start the bot
 cp config.json ../../bin/Norm/config.json;
-cp bee_movie.txt ../../bin/Norm/bee_movie.txt;
+cp movie_text.txt ../../bin/Norm/movie_text.txt;
 cd ~/bots/bin/Norm;
 ./Norm;

@@ -48,10 +48,10 @@ namespace Norm
         {
             // TODO: switch from hardcoded log file path to configuration based log file path
             configuration
-                .MinimumLevel.Is(Serilog.Events.LogEventLevel.Verbose)
+                .MinimumLevel.Information()
                 .Enrich.FromLogContext()
                 .WriteTo.File(formatter: new JsonFormatter(renderMessage: true), "../../logs/Norm/log-.txt", rollingInterval: RollingInterval.Day)
-                .WriteTo.Console(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information);
+                .WriteTo.Console();
         }
 
         public static void ConfigureHangfire(HostBuilderContext context, IServiceCollection services)

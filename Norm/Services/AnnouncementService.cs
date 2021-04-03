@@ -47,19 +47,16 @@ namespace Norm.Services
                             DiscordClient client = this.bot.ShardedClient.GetShard(registration.GuildId);
                             DiscordGuild guild = await client.GetGuildAsync(registration.GuildId);
                             DiscordMember clientMember = await guild.GetMemberAsync(client.CurrentUser.Id);
-                            DiscordChannel channel = guild.GetChannel(registration.AnnouncementChannelId);
+                            DiscordChannel channel = !registration.IsDm ? 
+                                guild.GetChannel(registration.AnnouncementChannelId) : 
+                                await (await guild.GetMemberAsync((ulong)registration.MemberId)).CreateDmChannelAsync();
                             DiscordRole role = registration.RoleId == null ? null : guild.Roles[(ulong)registration.RoleId];
                             string mentionString = GenerateMentionString(registration, role);
                             try
                             {
-                                if (!registration.IsDm)
+                                foreach (DiscordEmbed embed in bucket.AnnouncementEmbeds)
                                 {
-                                    await channel.SendMessageAsync(content: mentionString, embed: bucket.AnnouncementEmbed);
-                                }
-                                else
-                                {
-                                    DiscordMember member = await guild.GetMemberAsync((ulong)registration.MemberId);
-                                    await member.SendMessageAsync(embed: bucket.AnnouncementEmbed);
+                                    await channel.SendMessageAsync(content: mentionString, embed: embed);
                                 }
                             }
                             catch (ServerErrorException)
@@ -207,25 +204,28 @@ namespace Norm.Services
                 return this.fictionCoverUri;
             }
         }
-        public DiscordEmbed AnnouncementEmbed
+        public IEnumerable<DiscordEmbed> AnnouncementEmbeds
         {
             get
             {
                 this.PopulateFiction();
-                return this.announcementEmbed ??= this.GetAnnouncementEmbed();
+                return this.announcementEmbeds ??= this.GetAnnouncementEmbeds();
             }
         }
 
         private bool populated = false;
         private List<ChapterUpdateItem> chapterUpdateItems;
-        private DiscordEmbed announcementEmbed;
+        private List<DiscordEmbed> announcementEmbeds;
         private string fictionCoverUri;
         private ulong newMostRecentChapter;
 
-        private DiscordEmbed GetAnnouncementEmbed()
+        private List<DiscordEmbed> GetAnnouncementEmbeds()
         {
+            List<DiscordEmbed> embeds = new();
+            string title = $"{(this.NewTitle ?? this.Novel.Name)} just released {(this.ChapterUpdateItems.Count > 1 ? "new chapters!" : "a new chapter!")}";
+            int count = title.Length;
             DiscordEmbedBuilder announcementEmbedBuilder = new DiscordEmbedBuilder()
-                .WithTitle($"{(this.NewTitle ?? this.Novel.Name)} just released {(this.ChapterUpdateItems.Count > 1 ? "new chapters!" : "a new chapter!")}");
+                .WithTitle(title);
 
             if (this.FictionCoverUri != null)
             {
@@ -234,13 +234,23 @@ namespace Norm.Services
 
             foreach (ChapterUpdateItem item in this.ChapterUpdateItems.OrderBy(item => item.PublishDate))
             {
+                string fieldName = $"{item.Title[((this.NewTitle ?? this.Novel.Name).Length + 3)..]}";
+                string fieldValue = $"{item.Description.Substring(0, Math.Min(500, item.Description.Length))}{(item.Description.Length > 50 ? "..." : "")}\n[Link to Chapter]({item.Link})";
+                count += fieldName.Length + fieldValue.Length;
+                if (count > 6000)
+                {
+                    embeds.Add(announcementEmbedBuilder.Build());
+                    announcementEmbedBuilder = new DiscordEmbedBuilder();
+                    count = fieldName.Length + fieldValue.Length;
+                }
                 announcementEmbedBuilder.AddField(
-                    name: $"{item.Title[((this.NewTitle ?? this.Novel.Name).Length + 3)..]}",
-                    value: $"{item.Description.Substring(0, Math.Min(500, item.Description.Length))}{(item.Description.Length > 50 ? "..." : "")}\n[Link to Chapter]({item.Link})"
+                    name: fieldName,
+                    value: fieldValue
                 );
             }
 
-            return announcementEmbedBuilder;
+            embeds.Add(announcementEmbedBuilder.Build());
+            return embeds;
         }
 
         private void PopulateFiction()

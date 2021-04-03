@@ -23,28 +23,28 @@ namespace Norm.Modules
             this.options = options;
         }
 
-        [Command("beemovie")]
-        [Description("Play the bee movie using emojis and a text file")]
+        [Command("movie")]
+        [Description("Plays a movie using emojis and a text file")]
         [BotCategory(BotCategory.Miscellaneous)]
         public async Task OutputBeeMovie(CommandContext context)
         {
             StringBuilder contentBuilder = new();
 
-            DiscordGuild beeMovieGuild = await context.Client.GetGuildAsync(this.options.Value.BeeMovieEmojiGuildId);
-            Dictionary<string, DiscordEmoji> beeMovieEmojis = beeMovieGuild.Emojis.Values.ToList().ToDictionary(emoji => emoji.Name);
+            DiscordGuild movieGuild = await context.Client.GetGuildAsync(this.options.Value.MovieEmojiGuildId);
+            Dictionary<string, DiscordEmoji> movieEmojis = movieGuild.Emojis.Values.ToList().ToDictionary(emoji => emoji.Name);
 
             for (int row = 0; row < 5; row++)
             {
                 for (int column = 0; column < 8; column++)
                 {
-                    contentBuilder.Append(beeMovieEmojis[$"beemovie{column}x{row}"].ToString());
+                    contentBuilder.Append(movieEmojis[$"beemovie{column}x{row}"].ToString());
                 }
                 contentBuilder.AppendLine();
             }
 
-            using FileStream fs = new(this.options.Value.BeeMovieFilePath, FileMode.Open);
+            using FileStream fs = new(this.options.Value.MovieFilePath, FileMode.Open);
             DiscordMessageBuilder messageBuilder = new DiscordMessageBuilder().WithContent(contentBuilder.ToString());
-            messageBuilder.WithFile(fs);
+            messageBuilder.WithFile("movie", fs);
             await context.RespondAsync(messageBuilder);
         }
 

@@ -21,7 +21,7 @@ namespace Norm.Modules
 {
 
 
-    // This Command was yoinked from Emzi0767#1837 and VelvetThePanda.
+    
     public class EvaluationModule : BaseCommandModule
     {
         [Command("tex")]
@@ -43,7 +43,7 @@ namespace Norm.Modules
 
             //using Stream fontStream = new FileStream("IBMPlexSans-Text.otf", FileMode.Open);
 
-            TextPainter painter = new TextPainter { 
+            TextPainter painter = new(){ 
                 LaTeX = $"{latex[upperBound..lowerBound]}", 
                 FontSize = 20, 
                 TextColor = lightMode ? SKColors.Black : SKColors.White,
@@ -63,6 +63,7 @@ namespace Norm.Modules
             await context.RespondAsync(builder);
         }
 
+        // This Command was yoinked from Emzi0767#1837 and VelvetThePanda.
         [Command("csharp")]
         [Description("Evaluates C# code.")]
         [RequireOwner]
@@ -85,7 +86,7 @@ namespace Norm.Modules
             }
         }
 
-
+        // This Command was yoinked from Emzi0767#1837 and VelvetThePanda.
         [Command("csharp")]
         [Priority(0)]
         public async Task EvalCS(CommandContext ctx, [RemainingText] string code)
@@ -158,6 +159,7 @@ namespace Norm.Modules
 
         }
 
+        // This record was yoinked from Emzi0767#1837 and VelvetThePanda.
         public record TestVariables
         {
             public DiscordMessage Message { get; }

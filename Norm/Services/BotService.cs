@@ -71,8 +71,9 @@ namespace Norm.Services
             {
                 Token = this.config.BotToken,
                 TokenType = TokenType.Bot,
-                MinimumLogLevel = LogLevel.Trace,
                 Intents = DiscordIntents.All,
+                LoggerFactory = factory,
+                MinimumLogLevel = LogLevel.Trace,
             };
             #endregion
 
@@ -138,6 +139,7 @@ namespace Norm.Services
             this.ShardedClient.GuildDownloadCompleted += this.ShardedClient_GuildDownloadCompleted;
 
             //this.ShardedClient.MessageCreated += this.CheckForDate;
+            this.ShardedClient.MessageCreated += this.TestMentionedUsers;
             this.ShardedClient.MessageReactionAdded += this.SendAdjustedDate;
 
             this.ShardedClient.GuildMemberAdded += this.SendWelcomeMessage;

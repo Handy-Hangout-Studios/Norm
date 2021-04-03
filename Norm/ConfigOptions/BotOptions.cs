@@ -22,7 +22,7 @@
 
         public DatabaseConfig Database { get; set; }
 
-        public ulong BeeMovieEmojiGuildId { get; set; }
-        public string BeeMovieFilePath { get; set; }
+        public ulong MovieEmojiGuildId { get; set; }
+        public string MovieFilePath { get; set; }
     }
 }

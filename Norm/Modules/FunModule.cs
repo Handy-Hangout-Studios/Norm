@@ -52,12 +52,6 @@ namespace Norm.Modules
         [Description("Have Norm say the message as himself. If you reply to a message and use this command then Norm will also will reply to the message with the same mention settings you used.\n"+FormattingDescription)]
         public async Task SayAsync(CommandContext context, [RemainingText][Description("The message to say as well as the options you want used in the message")] string message = "")
         {
-            if (context.Member.Id.Equals(795028011313135616))
-            {
-                await context.RespondAsync("I'm sorry, I'm no longer allowed to say things you tell me to say.");
-                return;
-            }
-
             message = await CheckAndDeleteOnHide(context, message);
 
             DiscordMessageBuilder builder = new DiscordMessageBuilder()

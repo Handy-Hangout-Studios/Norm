@@ -9,6 +9,7 @@ using Norm.Configuration;
 using Owoify;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -68,22 +69,30 @@ namespace Norm.Modules
 
             int previous = 0;
             int next = 0;
-
-            for (int i = 0; i < content.Length; i++)
+            int numBytes = 0;
+            StringBuilder stringBuilder = new();
+            StringBuilder wordBuilder = new();
+            TextElementEnumerator te = StringInfo.GetTextElementEnumerator(content);
+            while (te.MoveNext())
             {
-                if ((i - previous == 2000))
+                string teString = te.GetTextElement();
+                int teNumBytes = teString.EnumerateRunes().Sum(x => x.Utf8SequenceLength);
+                numBytes += teNumBytes;
+                if (numBytes >= 2000)
                 {
-                    int sEnd = next != previous ? next : i;
-                    allMessages.Add(content[previous..sEnd]);
-                    previous = next;
-                    next = i;
+                    allMessages.Add(stringBuilder.ToString());
+                    stringBuilder.Clear();
+                    numBytes = teNumBytes;
                 }
-
-                if (char.IsWhiteSpace(content[i]))
-                    next = i;
+                wordBuilder.Append(teString);
+                if (string.IsNullOrWhiteSpace(teString))
+                {
+                    stringBuilder.Append(wordBuilder);
+                    wordBuilder.Clear();
+                }
             }
 
-            allMessages.Add(content[previous..]);
+            allMessages.Add(stringBuilder.Append(wordBuilder).ToString());
 
             foreach (string c in allMessages)
             {

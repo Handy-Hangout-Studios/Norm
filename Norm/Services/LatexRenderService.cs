@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Norm.Services
 {
-    public class LatexRenderService : IDisposable
+    public sealed class LatexRenderService : IDisposable
     {
         private bool isDisposed = false;
         private HttpClient quickLatexHttpClient;

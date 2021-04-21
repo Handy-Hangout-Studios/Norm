@@ -16,6 +16,7 @@ using System.Drawing;
 using System.Collections.Generic;
 using CSharpMath.Rendering.BackEnd;
 using Typography.OpenFont;
+using Norm.Services;
 
 namespace Norm.Modules
 {
@@ -24,8 +25,14 @@ namespace Norm.Modules
     
     public class EvaluationModule : BaseCommandModule
     {
-        [Command("tex")]
-        [Description("Produce a PNG of the LaTeX code in the code block. Note that the LaTeX must be in a code block like so\n\\`\\`\\`\nLaTeX here\n\\`\\`\\`")]
+        private readonly LatexRenderService latexRenderer;
+        public EvaluationModule(LatexRenderService latexRenderer)
+        {
+            this.latexRenderer = latexRenderer;
+        }
+
+        [Command("math")]
+        [Description("Produce a PNG of the LaTeX formatted math in the code block. Note that the LaTeX must be in a code block like so\n\\`\\`\\`\nLaTeX here\n\\`\\`\\`")]
         [BotCategory(BotCategory.Evaluation)]
         public async Task EvaluateTex(CommandContext context, [RemainingText][Description("The LaTeX code in a code block to render as an image")] string latex)
         {
@@ -44,7 +51,7 @@ namespace Norm.Modules
             //using Stream fontStream = new FileStream("IBMPlexSans-Text.otf", FileMode.Open);
 
             TextPainter painter = new(){ 
-                LaTeX = $"{latex[upperBound..lowerBound]}", 
+                LaTeX = latex[upperBound..lowerBound], 
                 FontSize = 20, 
                 TextColor = lightMode ? SKColors.Black : SKColors.White,
             };
@@ -59,6 +66,28 @@ namespace Norm.Modules
 
             using Stream png = snapshot.AsStream();
             DiscordMessageBuilder builder = new DiscordMessageBuilder().WithFile("latex.png", png);
+
+            await context.RespondAsync(builder);
+        }
+
+        [Command("tex")]
+        [Description("Produce a PNG of the LaTeX that is in the code block. If you have `\\begin{document}` in your tex, then it assumes that you have a full preamble and doesn't add anything. If you do not, then it provides the following preamble. \n```\n\\documentclass[border=10pt]{standalone}\n\\usepackage{amsmath}\n\\usepackage{amsfonts}\n\\usepackage{amssymb}\n\\usepackage{nopageno}\n\\begin{document}\nYour code here\n\\end{document}\n```Note that the LaTeX must be in a code block like so\n\\`\\`\\`\nLaTeX here\n\\`\\`\\`")]
+        public async Task RenderTexAsync(CommandContext context, [RemainingText][Description("The latex to render")] string content)
+        {
+            int upperBound = content.IndexOf("```", StringComparison.Ordinal) + 3;
+            upperBound = content.IndexOf('\n', upperBound) + 1;
+            int lowerBound = content.LastIndexOf("```", StringComparison.Ordinal); 
+            bool lightMode = content.Contains("--light");
+
+            if (upperBound == -1 || lowerBound == -1)
+            {
+                upperBound = 0;
+                lowerBound = content.Length;
+            }
+
+            using Stream renderedLatex = await this.latexRenderer.RenderLatex(content[upperBound..lowerBound]);
+            DiscordEmbedBuilder imgEmbed = new DiscordEmbedBuilder().WithImageUrl("attachment://latex.png").WithDescription("Pʀᴏᴅᴜᴄᴇᴅ ʙʏ [QᴜɪᴄᴋLᴀTᴇX](http://quicklatex.com/)");
+            DiscordMessageBuilder builder = new DiscordMessageBuilder().WithEmbed(imgEmbed.Build()).WithFile("latex.png", renderedLatex);
 
             await context.RespondAsync(builder);
         }

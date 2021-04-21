@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Norm.Attributes;
 using Norm.Configuration;
 using Owoify;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -52,11 +53,7 @@ namespace Norm.Modules
         [Description("Have Norm say the message as himself. If you reply to a message and use this command then Norm will also will reply to the message with the same mention settings you used.\n"+FormattingDescription)]
         public async Task SayAsync(CommandContext context, [RemainingText][Description("The message to say as well as the options you want used in the message")] string message = "")
         {
-            message = await CheckAndDeleteOnHide(context, message);
-
-            DiscordMessageBuilder builder = new DiscordMessageBuilder()
-                .WithContent(ParseOptionsAndEdit(message))
-                .WithAllowedMentions(Mentions.None.Union(new List<IMention> { new UserMention(), }));
+            DiscordMessageBuilder builder = new DiscordMessageBuilder().WithAllowedMentions(Mentions.None.Union(new List<IMention> { new UserMention(), }));
 
             if (context.Message.MessageType.HasValue && context.Message.MessageType.Value.Equals(MessageType.Reply))
             {
@@ -64,7 +61,36 @@ namespace Norm.Modules
                 builder.WithReply(msg.ReferencedMessage.Id, msg.MentionedUsers.Contains(msg.ReferencedMessage.Author));
             }
 
-            await context.RespondAsync(builder);
+            message = await CheckAndDeleteOnHide(context, message);
+
+            string content = ParseOptionsAndEdit(message);
+            List<string> allMessages = new();
+
+            int previous = 0;
+            int next = 0;
+
+            for (int i = 0; i < content.Length; i++)
+            {
+                if ((i - previous == 2000))
+                {
+                    int sEnd = next != previous ? next : i;
+                    allMessages.Add(content[previous..sEnd]);
+                    previous = next;
+                    next = i;
+                }
+
+                if (char.IsWhiteSpace(content[i]))
+                    next = i;
+            }
+
+            allMessages.Add(content[previous..]);
+
+            foreach (string c in allMessages)
+            {
+                builder.WithContent(c);
+                await context.Channel.SendMessageAsync(builder);
+                builder.Clear();
+            }
         }
 
         [Command("me")]

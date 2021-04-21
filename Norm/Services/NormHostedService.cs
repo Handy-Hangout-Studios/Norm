@@ -11,11 +11,13 @@ namespace Norm.Services
     {
         private readonly IBotService bot;
         private readonly IMediator mediator;
+        private readonly LatexRenderService latexRenderService;
 
-        public NormHostedService(IBotService bot, IMediator mediator)
+        public NormHostedService(IBotService bot, IMediator mediator, LatexRenderService renderer)
         {
             this.bot = bot;
             this.mediator = mediator;
+            this.latexRenderService = renderer;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -32,6 +34,7 @@ namespace Norm.Services
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await this.bot.StopAsync();
+            this.latexRenderService.Dispose();
         }
     }
 }

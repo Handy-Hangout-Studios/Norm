@@ -107,6 +107,7 @@ namespace Norm
                 .AddSingleton<IDateTimeZoneSource>((p) => TzdbDateTimeZoneSource.Default)
                 .AddSingleton<IDateTimeZoneProvider, DateTimeZoneCache>()
                 .AddScoped<NormDbContext>()
+                .AddSingleton<LatexRenderService>()
                 .AddSingleton<IBotService, BotService>()
                 .AddScoped<AnnouncementService>()
                 .AddScoped<EventService>()

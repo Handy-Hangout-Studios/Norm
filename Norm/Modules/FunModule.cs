@@ -65,10 +65,19 @@ namespace Norm.Modules
             message = await CheckAndDeleteOnHide(context, message);
 
             string content = ParseOptionsAndEdit(message);
-            List<string> allMessages = new();
+            List<string> allMessages = GenerateIndividualMessages(content);
 
-            int previous = 0;
-            int next = 0;
+            foreach (string c in allMessages)
+            {
+                builder.WithContent(c);
+                await context.Channel.SendMessageAsync(builder);
+                builder.Clear();
+            }
+        }
+
+        private static List<string> GenerateIndividualMessages(string content)
+        {
+            List<string> allMessages = new();
             int numBytes = 0;
             StringBuilder stringBuilder = new();
             StringBuilder wordBuilder = new();
@@ -93,13 +102,7 @@ namespace Norm.Modules
             }
 
             allMessages.Add(stringBuilder.Append(wordBuilder).ToString());
-
-            foreach (string c in allMessages)
-            {
-                builder.WithContent(c);
-                await context.Channel.SendMessageAsync(builder);
-                builder.Clear();
-            }
+            return allMessages;
         }
 
         [Command("me")]

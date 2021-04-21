@@ -15,7 +15,7 @@ namespace Norm.Attributes
 
     public enum BotCategory
     {
-        General, 
+        General,
         EventsAndAnnouncements,
         ConfigAndInfo,
         Moderation,
@@ -28,8 +28,9 @@ namespace Norm.Attributes
 
     public static class BotCategoryExtensionMethods
     {
-        public static string ToCategoryString(this BotCategory category) =>
-            category switch
+        public static string ToCategoryString(this BotCategory category)
+        {
+            return category switch
             {
                 BotCategory.General => "General",
                 BotCategory.EventsAndAnnouncements => "Events and Announcements",
@@ -42,5 +43,6 @@ namespace Norm.Attributes
                 BotCategory.Evaluation => "Evaluation",
                 _ => throw new NotImplementedException(),
             };
+        }
     }
 }

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Norm.Configuration;
 using Norm.Database.Entities;
-using Norm.Database.EntityTypeConfigurations;
 using Npgsql;
 
 namespace Norm.Database.Contexts

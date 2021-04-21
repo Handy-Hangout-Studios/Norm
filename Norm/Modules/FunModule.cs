@@ -51,7 +51,7 @@ namespace Norm.Modules
         }
 
         [Command("say")]
-        [Description("Have Norm say the message as himself. If you reply to a message and use this command then Norm will also will reply to the message with the same mention settings you used.\n"+FormattingDescription)]
+        [Description("Have Norm say the message as himself. If you reply to a message and use this command then Norm will also will reply to the message with the same mention settings you used.\n" + FormattingDescription)]
         public async Task SayAsync(CommandContext context, [RemainingText][Description("The message to say as well as the options you want used in the message")] string message = "")
         {
             DiscordMessageBuilder builder = new DiscordMessageBuilder().WithAllowedMentions(Mentions.None.Union(new List<IMention> { new UserMention(), }));
@@ -107,7 +107,7 @@ namespace Norm.Modules
 
         [Command("me")]
         [RequireBotPermissions(Permissions.ManageWebhooks)]
-        [Description("Say a message as yourself but with some extra formatting added.\n"+FormattingDescription)]
+        [Description("Say a message as yourself but with some extra formatting added.\n" + FormattingDescription)]
         [BotCategory(BotCategory.Miscellaneous)]
         public async Task SayAsAuthorAsync(CommandContext context, [RemainingText][Description("The message to say as you as well as the options you want used in the message")] string message = "")
         {
@@ -133,7 +133,10 @@ namespace Norm.Modules
             if (message.Contains(HideIndicator))
             {
                 if (context.Guild.CurrentMember.PermissionsIn(context.Channel).HasPermission(Permissions.ManageMessages))
+                {
                     await context.Message.DeleteAsync();
+                }
+
                 message = message.Replace(HideIndicator, string.Empty);
             }
 
@@ -214,7 +217,7 @@ namespace Norm.Modules
         }
 
         private const string HideIndicator = "--hide";
-        private const string HideDescription = "If you add `"+HideIndicator+"` and Norm has permission to delete messages in that channel he will delete your message.";
+        private const string HideDescription = "If you add `" + HideIndicator + "` and Norm has permission to delete messages in that channel he will delete your message.";
         private const string OwOIndicator = "--owo";
         private const string UwUIndicator = "--uwu";
         private const string UvUIndicator = "--uvu";

@@ -1,15 +1,7 @@
 ﻿using DSharpPlus.Entities;
-using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Norm.Services
@@ -17,7 +9,7 @@ namespace Norm.Services
     public sealed class LatexRenderService : IDisposable
     {
         private bool isDisposed = false;
-        private HttpClient quickLatexHttpClient;
+        private readonly HttpClient quickLatexHttpClient;
         private const string defaultLatexHeader =
 @"\documentclass[border=10pt]{standalone}
 \usepackage{amsmath}
@@ -33,7 +25,7 @@ namespace Norm.Services
 
         public LatexRenderService()
         {
-            quickLatexHttpClient = new HttpClient()
+            this.quickLatexHttpClient = new HttpClient()
             {
                 BaseAddress = new Uri("https://quicklatex.com"),
             };
@@ -48,15 +40,15 @@ namespace Norm.Services
         /// <returns></returns>
         public async Task<Stream> RenderLatex(string latex, DiscordColor? color = null, int fsize = 32)
         {
-            if(!latex.Contains("\\begin{document}"))
+            if (!latex.Contains("\\begin{document}"))
             {
                 latex = $"{defaultLatexHeader}{latex}{defaultLatexFooter}";
             }
 
             color ??= DiscordColor.Black;
             string dump = $"formula=Unneccesary&fsize={fsize}px&fcolor={color.ToString()[1..]}&mode=0&out=1&remhost=localhost&preamble={Uri.EscapeDataString(latex)}";
-            HttpResponseMessage response = await quickLatexHttpClient.PostAsync(
-                "/latex3.f", 
+            HttpResponseMessage response = await this.quickLatexHttpClient.PostAsync(
+                "/latex3.f",
                 new StringContent(dump)
             );
             if (!response.IsSuccessStatusCode)
@@ -68,15 +60,18 @@ namespace Norm.Services
             string picture_url =
                 (await response.Content.ReadAsStringAsync())
                     .Split((char[])null, StringSplitOptions.RemoveEmptyEntries)[1][this.quickLatexHttpClient.BaseAddress.OriginalString.Length..];
-            return await quickLatexHttpClient.GetStreamAsync(picture_url);
+            return await this.quickLatexHttpClient.GetStreamAsync(picture_url);
         }
 
         public void Dispose()
         {
-            if (isDisposed)
+            if (this.isDisposed)
+            {
                 return;
-            quickLatexHttpClient.Dispose();
-            isDisposed = true;
+            }
+
+            this.quickLatexHttpClient.Dispose();
+            this.isDisposed = true;
         }
     }
 }

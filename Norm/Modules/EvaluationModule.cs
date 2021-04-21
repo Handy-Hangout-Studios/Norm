@@ -1,28 +1,26 @@
 ﻿using CSharpMath.SkiaSharp;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.IO;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.VoiceNext;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Norm.Attributes;
-using SkiaSharp;
-using System.Drawing;
-using System.Collections.Generic;
-using CSharpMath.Rendering.BackEnd;
-using Typography.OpenFont;
 using Norm.Services;
+using SkiaSharp;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Norm.Modules
 {
 
 
-    
+
     public class EvaluationModule : BaseCommandModule
     {
         private readonly LatexRenderService latexRenderer;
@@ -50,15 +48,16 @@ namespace Norm.Modules
 
             //using Stream fontStream = new FileStream("IBMPlexSans-Text.otf", FileMode.Open);
 
-            TextPainter painter = new(){ 
-                LaTeX = latex[upperBound..lowerBound], 
-                FontSize = 20, 
+            TextPainter painter = new()
+            {
+                LaTeX = latex[upperBound..lowerBound],
+                FontSize = 20,
                 TextColor = lightMode ? SKColors.Black : SKColors.White,
             };
 
             RectangleF bounds = painter.Measure(800);
 
-            using SKSurface surface = SKSurface.Create(new SKImageInfo((int)Math.Ceiling(bounds.Width)+50, (int)Math.Ceiling(bounds.Height)+50));
+            using SKSurface surface = SKSurface.Create(new SKImageInfo((int)Math.Ceiling(bounds.Width) + 50, (int)Math.Ceiling(bounds.Height) + 50));
             using SKCanvas canvas = surface.Canvas;
             canvas.Clear(lightMode ? SKColors.White : SKColors.Black);
             painter.Draw(canvas, new PointF(25, 25), bounds.Width);
@@ -76,7 +75,7 @@ namespace Norm.Modules
         {
             int upperBound = content.IndexOf("```", StringComparison.Ordinal) + 3;
             upperBound = content.IndexOf('\n', upperBound) + 1;
-            int lowerBound = content.LastIndexOf("```", StringComparison.Ordinal); 
+            int lowerBound = content.LastIndexOf("```", StringComparison.Ordinal);
             bool lightMode = content.Contains("--light");
 
             if (upperBound == -1 || lowerBound == -1)
@@ -100,7 +99,10 @@ namespace Norm.Modules
         [BotCategory(BotCategory.Evaluation)]
         public async Task EvalCS(CommandContext ctx)
         {
-            if (ctx.Message.ReferencedMessage is null) await EvalCS(ctx, ctx.RawArgumentString);
+            if (ctx.Message.ReferencedMessage is null)
+            {
+                await this.EvalCS(ctx, ctx.RawArgumentString);
+            }
             else
             {
 #pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
@@ -111,7 +113,7 @@ namespace Norm.Modules
                     int index = code.IndexOf(' ');
                     code = code[++index..];
                 }
-                await EvalCS(ctx, code);
+                await this.EvalCS(ctx, code);
             }
         }
 
@@ -142,14 +144,14 @@ namespace Norm.Modules
 
             try
             {
-                var globals = new TestVariables(ctx.Message, ctx.Client, ctx);
+                TestVariables globals = new TestVariables(ctx.Message, ctx.Client, ctx);
 
-                var sopts = ScriptOptions.Default;
+                ScriptOptions sopts = ScriptOptions.Default;
                 sopts = sopts.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text",
                     "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.VoiceNext", "Norm",
                     "DSharpPlus.CommandsNext", "DSharpPlus.Interactivity",
                     "Microsoft.Extensions.Logging");
-                var asm = AppDomain.CurrentDomain.GetAssemblies()
+                IEnumerable<System.Reflection.Assembly> asm = AppDomain.CurrentDomain.GetAssemblies()
                     .Where(xa => !xa.IsDynamic && !string.IsNullOrWhiteSpace(xa.Location));
                 asm = asm.Append(typeof(VoiceNextConnection).Assembly);
 
@@ -159,6 +161,7 @@ namespace Norm.Modules
                 script.Compile();
                 ScriptState<object> result = await script.RunAsync(globals).ConfigureAwait(false);
                 if (result?.ReturnValue is not null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
+                {
                     await msg.ModifyAsync(new DiscordEmbedBuilder
                     {
                         Title = "Evaluation Result",
@@ -166,7 +169,9 @@ namespace Norm.Modules
                         Color = new DiscordColor("#007FFF")
                     }.Build())
                         .ConfigureAwait(false);
+                }
                 else
+                {
                     await msg.ModifyAsync(new DiscordEmbedBuilder
                     {
                         Title = "Evaluation Successful",
@@ -174,6 +179,7 @@ namespace Norm.Modules
                         Color = new DiscordColor("#007FFF")
                     }.Build())
                         .ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
@@ -202,14 +208,17 @@ namespace Norm.Modules
 
             public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx)
             {
-                Client = client;
-                Context = ctx;
-                Message = msg;
-                Channel = msg.Channel;
-                Guild = Channel.Guild;
-                User = Message.Author;
+                this.Client = client;
+                this.Context = ctx;
+                this.Message = msg;
+                this.Channel = msg.Channel;
+                this.Guild = this.Channel.Guild;
+                this.User = this.Message.Author;
 
-                if (Guild != null) Member = Guild.GetMemberAsync(User.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                if (this.Guild != null)
+                {
+                    this.Member = this.Guild.GetMemberAsync(this.User.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
             }
         }
     }

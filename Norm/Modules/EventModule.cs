@@ -370,7 +370,7 @@ namespace Norm.Modules
             await this.AddGuildEventInteractive(context, interactivity, msg);
         }
 
-        private async Task<CustomResult<DiscordMessage>> AddGuildEventInteractive(CommandContext context, InteractivityExtension interactivity, DiscordMessage msg=null)
+        private async Task<CustomResult<DiscordMessage>> AddGuildEventInteractive(CommandContext context, InteractivityExtension interactivity, DiscordMessage msg = null)
         {
 
             if (msg == null)

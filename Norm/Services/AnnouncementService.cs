@@ -47,8 +47,8 @@ namespace Norm.Services
                             DiscordClient client = this.bot.ShardedClient.GetShard(registration.GuildId);
                             DiscordGuild guild = await client.GetGuildAsync(registration.GuildId);
                             DiscordMember clientMember = await guild.GetMemberAsync(client.CurrentUser.Id);
-                            DiscordChannel channel = !registration.IsDm ? 
-                                guild.GetChannel(registration.AnnouncementChannelId) : 
+                            DiscordChannel channel = !registration.IsDm ?
+                                guild.GetChannel(registration.AnnouncementChannelId) :
                                 await (await guild.GetMemberAsync((ulong)registration.MemberId)).CreateDmChannelAsync();
                             DiscordRole role = registration.RoleId == null ? null : guild.Roles[(ulong)registration.RoleId];
                             string mentionString = GenerateMentionString(registration, role);

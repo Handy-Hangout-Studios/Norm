@@ -109,9 +109,9 @@ namespace Norm
                 .AddScoped<NormDbContext>()
                 .AddSingleton<LatexRenderService>()
                 .AddSingleton<IBotService, BotService>()
-                .AddScoped<AnnouncementService>()
-                .AddScoped<EventService>()
-                .AddScoped<ModerationService>()
+                .AddTransient<AnnouncementService>()
+                .AddTransient<EventService>()
+                .AddTransient<ModerationService>()
                 .AddHostedService<NormHostedService>();
         }
     }

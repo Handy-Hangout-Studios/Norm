@@ -13,7 +13,7 @@ namespace Norm.Formatters
     internal class CategoryHelpFormatter : BaseHelpFormatter
     {
         private readonly DiscordEmbedBuilder _embed;
-        private Command _command;
+        private Command? _command;
 
         public CategoryHelpFormatter(CommandContext ctx) : base(ctx)
         {

@@ -2,6 +2,7 @@
 
 namespace Norm.Configuration
 {
+#nullable disable
     public class DatabaseConfig
     {
         public static readonly string Section = "DatabaseConfig";

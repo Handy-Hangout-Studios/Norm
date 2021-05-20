@@ -32,8 +32,8 @@ namespace Norm.Modules
         [GroupCommand]
         public async Task CurrentTimeAsync(CommandContext context)
         {
-            UserTimeZone memberTimeZone = (await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User))).Value;
-            if (memberTimeZone == null)
+            DbResult<UserTimeZone> memberTimeZoneResult = (await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User)));
+            if (!memberTimeZoneResult.TryGetValue(out UserTimeZone? memberTimeZone))
             {
                 await context.RespondAsync("You don't have a timezone set up. Please try again after using `time init`");
                 return;

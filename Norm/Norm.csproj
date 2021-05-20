@@ -7,22 +7,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharpMath" Version="0.5.0" />
-    <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.0" />
-    <PackageReference Include="DSharpPlus" Version="4.0.1-nightly-00841" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.1-nightly-00841" />
-    <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.1-nightly-00841" />
-    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.1-nightly-00841" />
+    <PackageReference Include="CSharpMath" Version="0.5.1" />
+    <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
+    <PackageReference Include="DSharpPlus" Version="4.1.0-nightly-00862" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0-nightly-00862" />
+    <PackageReference Include="DSharpPlus.Interactivity" Version="4.1.0-nightly-00862" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.1.0-nightly-00862" />
     <PackageReference Include="HandyHangoutStudios.Common" Version="1.2.3" />
     <PackageReference Include="Hangfire" Version="1.8.0-beta2" />
     <PackageReference Include="Hangfire.Core" Version="1.8.0-beta2" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.8.4" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.32" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.33" />
     <PackageReference Include="MediatR" Version="9.0.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.10.0-2.final" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.10.0-2.final" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.10.0-2.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.10.0-3.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="3.10.0-3.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.10.0-3.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.10.0-3.final" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0-preview.3.21201.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0-preview.3.21201.2">
       <PrivateAssets>all</PrivateAssets>
@@ -43,11 +44,11 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0-preview3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.0-preview3" />
     <PackageReference Include="Owoify.Net" Version="1.1.0" />
-    <PackageReference Include="RestSharp" Version="106.11.7" />
-    <PackageReference Include="RestSharp.Serializers.SystemTextJson" Version="106.11.7" />
-    <PackageReference Include="Serilog" Version="2.10.1-dev-01285" />
+    <PackageReference Include="RestSharp" Version="106.11.8-alpha.0.14" />
+    <PackageReference Include="RestSharp.Serializers.SystemTextJson" Version="106.11.8-alpha.0.14" />
+    <PackageReference Include="Serilog" Version="2.10.1-dev-01308" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.2-dev-10284" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.2-dev-10289" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0-dev-00839" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0-dev-00909" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.80.3-preview.40" />
@@ -55,8 +56,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Database\" />
     <Folder Include="Migrations\" />
-    <Folder Include="Services\Omdb\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Norm.Database\Norm.Database.csproj" />
+    <ProjectReference Include="..\Norm.Omdb\Norm.Omdb.csproj" />
   </ItemGroup>
 
 </Project>

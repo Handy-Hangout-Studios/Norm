@@ -105,9 +105,7 @@ namespace Norm.Modules
             }
             else
             {
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
                 string? code = ctx.Message.ReferencedMessage.Content;
-#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
                 if (code.Contains(ctx.Prefix))
                 {
                     int index = code.IndexOf(' ');
@@ -199,9 +197,9 @@ namespace Norm.Modules
         {
             public DiscordMessage Message { get; }
             public DiscordChannel Channel { get; }
-            public DiscordGuild Guild { get; }
+            public DiscordGuild? Guild { get; }
             public DiscordUser User { get; }
-            public DiscordMember Member { get; }
+            public DiscordMember? Member { get; }
             public CommandContext Context { get; }
 
             public DiscordClient Client { get; }

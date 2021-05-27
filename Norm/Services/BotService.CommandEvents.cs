@@ -35,8 +35,9 @@ namespace Norm.Services
                     }
                     if (failedChecks.Any(x => x is CooldownAttribute))
                     {
-                        CooldownAttribute cooldown = failedChecks.First(x => x is CooldownAttribute) as CooldownAttribute;
-                        return $"this command is on cooldown for {cooldown.GetRemainingCooldown(e.Context):hh\\:mm\\:ss}";
+                        CheckBaseAttribute cooldown = failedChecks.FirstOrDefault(x => x is CooldownAttribute)!;
+
+                        return $"this command is on cooldown for {(cooldown as CooldownAttribute)!.GetRemainingCooldown(e.Context):hh\\:mm\\:ss}";
                     }
                     if (failedChecks.Any(x => x is RequireOwnerAttribute))
                     {
@@ -120,7 +121,7 @@ namespace Norm.Services
 
                 if (e.Exception.GetType() != null)
                 {
-                    AddSanitizedAndShortenedField(commandErrorEmbed, "ExceptionType", e.Exception.GetType().FullName);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "ExceptionType", e.Exception.GetType().FullName!);
                 }
 
                 this.Logger.LogError(e.Exception, "Exception from Command Errored");

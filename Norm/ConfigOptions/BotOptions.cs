@@ -1,5 +1,6 @@
 ﻿namespace Norm.Configuration
 {
+#nullable disable
     public class BotOptions
     {
         public static readonly string Section = "BotConfig";

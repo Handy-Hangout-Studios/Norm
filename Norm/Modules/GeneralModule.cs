@@ -89,9 +89,9 @@ namespace Norm.Modules
         [Command("proxy")]
         [Description("Execute Command as another user")]
         [RequireOwner]
-        public async Task MaskAsync(CommandContext context, DiscordUser user, string command, [RemainingText] string parameters)
+        public async Task ProxyAsync(CommandContext context, DiscordUser user, string command, [RemainingText] string parameters)
         {
-            if (!context.CommandsNext.RegisteredCommands.TryGetValue(command, out Command cmd))
+            if (!context.CommandsNext.RegisteredCommands.TryGetValue(command, out Command? cmd))
             {
                 throw new CommandNotFoundException("command");
             }

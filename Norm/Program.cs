@@ -14,6 +14,9 @@ using Norm.Services;
 using Serilog;
 using Serilog.Formatting.Json;
 using System;
+using Norm.Omdb;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Norm
 {
@@ -106,7 +109,19 @@ namespace Norm
                 .AddSingleton<IClock>((p) => SystemClock.Instance)
                 .AddSingleton<IDateTimeZoneSource>((p) => TzdbDateTimeZoneSource.Default)
                 .AddSingleton<IDateTimeZoneProvider, DateTimeZoneCache>()
-                .AddScoped<NormDbContext>()
+                .AddDbContext<NormDbContext>((s, o) =>
+                {
+                    DatabaseConfig db = s.GetRequiredService<IOptions<BotOptions>>().Value.Database;
+                    ILoggerFactory lf = s.GetRequiredService<ILoggerFactory>();
+                    o.UseNpgsql(db.AsNpgsqlConnectionString(), o => o.UseNodaTime())
+                     .UseLoggerFactory(lf);
+                })
+                .AddOmdbClient((s, o) =>
+                {
+                    OmdbClientOptions opts = s.GetRequiredService<IOptions<OmdbClientOptions>>().Value;
+                    o.ApiKey = opts.ApiKey;
+                    o.Version = opts.Version ?? o.Version;
+                })
                 .AddSingleton<LatexRenderService>()
                 .AddSingleton<IBotService, BotService>()
                 .AddTransient<AnnouncementService>()

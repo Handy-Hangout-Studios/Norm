@@ -52,8 +52,8 @@ namespace Norm.Modules
         [GroupCommand]
         public async Task ExecuteGroupAsync(CommandContext context, [Description("User to request current time for")] DiscordUser member)
         {
-            UserTimeZone memberTimeZone = (await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(member))).Value;
-            if (memberTimeZone == null)
+            DbResult<UserTimeZone> memberTimeZoneResult = (await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(member)));
+            if (!memberTimeZoneResult.TryGetValue(out UserTimeZone? memberTimeZone))
             {
                 await context.RespondAsync("This user doesn't have a timezone set up. Please try again after the mentioned user has set up their timezone using `time init`");
                 return;
@@ -73,7 +73,7 @@ namespace Norm.Modules
         [Description("Perform initial set-up of user's timezone.")]
         public async Task InitializeTimeZoneAsync(CommandContext context)
         {
-            if ((await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User))).Value != null)
+            if ((await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User))).TryGetValue(out UserTimeZone? _))
             {
                 await context.RespondAsync(
                     $"{context.User.Mention}, you already have a timezone set up. To update your timezone please type `time update`.");
@@ -89,7 +89,7 @@ namespace Norm.Modules
 
             if (!result.TimedOut)
             {
-                DateTimeZone test = this.timeZoneProvider.GetZoneOrNull(result.Result.Content);
+                DateTimeZone? test = this.timeZoneProvider.GetZoneOrNull(result.Result.Content);
                 if (test != null)
                 {
                     await this.mediator.Send(new UserTimeZones.Add(context.User, result.Result.Content));
@@ -111,8 +111,8 @@ namespace Norm.Modules
         [Description("Perform the time zone update process for the user who called update.")]
         public async Task UpdateTimeZone(CommandContext context)
         {
-            UserTimeZone memberTimeZone = (await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User))).Value;
-            if (memberTimeZone == null)
+            DbResult<UserTimeZone> memberTimeZoneResult = await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User));
+            if (!memberTimeZoneResult.TryGetValue(out UserTimeZone? memberTimeZone))
             {
                 await context.RespondAsync(
                     $"{context.User.Mention}, you don't have a timezone set up. To initialize your timezone please type `time init`.");
@@ -125,7 +125,7 @@ namespace Norm.Modules
 
             if (!result.TimedOut)
             {
-                DateTimeZone test = this.timeZoneProvider.GetZoneOrNull(result.Result.Content);
+                DateTimeZone? test = this.timeZoneProvider.GetZoneOrNull(result.Result.Content);
                 if (test != null)
                 {
                     memberTimeZone.TimeZoneId = result.Result.Content;
@@ -148,7 +148,12 @@ namespace Norm.Modules
         [Command("unregister")]
         public async Task UnregisterTimeZone(CommandContext context)
         {
-            UserTimeZone timeZone = (await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User))).Value;
+            DbResult<UserTimeZone> timeZoneResult = await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User));
+            if (!timeZoneResult.TryGetValue(out UserTimeZone? timeZone))
+            {
+                await context.RespondAsync("You don't have a timezone registered to unregister.");
+                return;
+            }
             await this.mediator.Send(new UserTimeZones.Delete(timeZone));
             await context.RespondAsync("Ok, I've unregistered your timezone from my databases. This means that it has been completely deleted.");
         }

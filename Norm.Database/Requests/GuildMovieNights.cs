@@ -18,22 +18,13 @@ namespace Norm.Database.Requests
     {
         public class Add : DbRequest<GuildMovieNight>
         {
-            public Add(string votingStartId, string votingEndId, int numSuggestions, OmdbParentalRating maxRating, ulong announcementChannelId, ulong guildId, ulong hostId)
+            public Add(string votingStartId, string votingEndId, string movieNightStartId, int numSuggestions, OmdbParentalRating maxRating, ulong guildId, ulong announcementChannelId, ulong hostId)
             {
-                this.MovieNight = new GuildMovieNight
-                {
-                    VotingStartHangfireId = votingStartId,
-                    VotingEndHangfireId = votingEndId,
-                    NumberOfSuggestions = numSuggestions,
-                    MaximumRating = maxRating,
-                    AnnouncementChannelId = announcementChannelId,
-                    GuildId = guildId,
-                    HostId = hostId,
-                };
+                this.MovieNight = new GuildMovieNight(votingStartId, votingEndId, movieNightStartId, numSuggestions, maxRating, guildId, announcementChannelId, hostId);
             }
 
-            public Add(string votingStartId, string votingEndId, int numSuggestions, OmdbParentalRating maxRating, DiscordChannel announcementChannel, DiscordGuild guild, DiscordUser host) :
-                this(votingStartId, votingEndId, numSuggestions, maxRating, announcementChannel.Id, guild.Id, host.Id) 
+            public Add(string votingStartId, string votingEndId, string movieNightStartId, int numSuggestions, OmdbParentalRating maxRating, DiscordGuild guild, DiscordChannel announcementChannel, DiscordUser host) :
+                this(votingStartId, votingEndId, movieNightStartId, numSuggestions, maxRating, guild.Id, announcementChannel.Id, host.Id) 
             {
                 
             }
@@ -135,7 +126,12 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult<GuildMovieNight>> Handle(GetMovieNight request, CancellationToken cancellationToken)
             {
-                GuildMovieNight? gmn = await this.DbContext.GuildMovieNights.FirstOrDefaultAsync(gmn => gmn.Id == request.MovieNightId, cancellationToken: cancellationToken);
+                GuildMovieNight? gmn = 
+                    await this.DbContext.GuildMovieNights
+                        .Include(gmn => gmn.MovieNightAndSuggestions)
+                        .ThenInclude(row => row.MovieSuggestion)
+                        .FirstOrDefaultAsync(gmn => gmn.Id == request.MovieNightId, cancellationToken: cancellationToken);
+
                 return new DbResult<GuildMovieNight>
                 {
                     Success = gmn != null,
@@ -162,7 +158,13 @@ namespace Norm.Database.Requests
             {
                 try
                 {
-                    IEnumerable<GuildMovieNight> movieNights = await this.DbContext.GuildMovieNights.Where(gmn => gmn.GuildId == request.GuildId).ToListAsync(cancellationToken);
+                    IEnumerable<GuildMovieNight> movieNights = 
+                        await this.DbContext.GuildMovieNights
+                            .Include(gmn => gmn.MovieNightAndSuggestions)
+                            .ThenInclude(row => row.MovieSuggestion)
+                            .Where(gmn => gmn.GuildId == request.GuildId)
+                            .ToListAsync(cancellationToken);
+
                     return new DbResult<IEnumerable<GuildMovieNight>>
                     {
                         Success = true,

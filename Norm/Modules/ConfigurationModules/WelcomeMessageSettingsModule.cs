@@ -31,13 +31,13 @@ namespace Norm.Modules
         {
             DbResult<GuildWelcomeMessageSettings> result = await this.mediator.Send(new GuildWelcomeMessageSettingsRequest.GetGuildWelcomeMessageSettings(context.Guild));
             DiscordMessageBuilder builder = new();
-            if (!result.Success || (result.Success && !result.Value.ShouldWelcomeMembers))
+            if (!result.TryGetValue(out GuildWelcomeMessageSettings? settings) || !settings.ShouldWelcomeMembers)
             {
                 builder.WithContent("Currently, I won't send a welcome message to new members.");
             }
-            else if (result.Value.ShouldWelcomeMembers)
+            else if (settings.ShouldWelcomeMembers)
             {
-                builder.WithContent($"Currently, I will send a welcome message to new members {(result.Value.ShouldPing ? "and ping them in it" : "without pinging them")}");
+                builder.WithContent($"Currently, I will send a welcome message to new members {(settings.ShouldPing ? "and ping them in it" : "without pinging them")}");
             }
 
             builder.WithReply(context.Message.Id, mention: true);
@@ -54,7 +54,7 @@ namespace Norm.Modules
             bool shouldPing = false)
         {
             DbResult<GuildWelcomeMessageSettings> result = await this.mediator.Send(new GuildWelcomeMessageSettingsRequest.Upsert(context.Guild, shouldWelcomeMembers, shouldPing));
-            if (!result.Success)
+            if (!result.TryGetValue(out GuildWelcomeMessageSettings? settings))
             {
                 await context.RespondAsync("I failed to update your welcome message settings. A report has been sent to the developer. Please try again later.");
                 throw new Exception($"There was an error updating the welcome message settings for {context.Guild.Id}");
@@ -63,10 +63,12 @@ namespace Norm.Modules
             DiscordMessageBuilder builder = new();
             StringBuilder contentBuilder = new StringBuilder().Append("I have successfully updated your welcome message settings. ");
 
-            if (result.Value.ShouldWelcomeMembers)
+
+
+            if (settings.ShouldWelcomeMembers)
             {
                 contentBuilder.Append("I will send new members a welcome message ");
-                if (result.Value.ShouldPing)
+                if (settings.ShouldPing)
                 {
                     contentBuilder.Append("and ping them in it.");
                 }

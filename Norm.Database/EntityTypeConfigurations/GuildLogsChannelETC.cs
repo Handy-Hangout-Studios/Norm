@@ -14,10 +14,14 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasName("guild_log_channel_id");
 
             builder.Property(g => g.GuildId)
-                .HasColumnName("guild_id");
+                .HasColumnName("guild_id")
+                .IsRequired();
 
             builder.Property(g => g.ChannelId)
-                .HasColumnName("log_channel_id");
+                .HasColumnName("log_channel_id")
+                .IsRequired();
+
+            builder.HasIndex(g => g.GuildId);
         }
     }
 }

@@ -65,7 +65,7 @@ namespace Norm.Modules
             await this.RegisterRoyalRoadFictionAsync(context, announcementChannel, null, whoToPing.ToLower().Equals("everyone"), whoToPing.ToLower().Equals("none"), royalroadURL);
         }
 
-        private async Task RegisterRoyalRoadFictionAsync(CommandContext context, DiscordChannel announcementChannel, DiscordRole announcementRole, bool pingEveryone, bool pingNoOne, string royalroadUrl)
+        private async Task RegisterRoyalRoadFictionAsync(CommandContext context, DiscordChannel announcementChannel, DiscordRole? announcementRole, bool pingEveryone, bool pingNoOne, string royalroadUrl)
         {
             if (!announcementChannel.PermissionsFor(context.Guild.CurrentMember).HasFlag(DSharpPlus.Permissions.SendMessages | DSharpPlus.Permissions.EmbedLinks))
             {
@@ -89,11 +89,17 @@ namespace Norm.Modules
                 )
             );
 
+            if (!registerResult.TryGetValue(out GuildNovelRegistration? gnr))
+            {
+                await context.RespondAsync("The registration of the novel failed.");
+                throw new Exception("Novel registration failed");
+            }
+
             string content = new StringBuilder()
                 .Append($"I have registered  \"{fictionInfo.Name}\" updates to be output in {announcementChannel.Mention} ")
-                .Append(registerResult.Value.PingEveryone ? "for @everyone" : "")
-                .Append(registerResult.Value.PingNoOne ? "for everyone but without any ping" : "")
-                .Append(registerResult.Value.RoleId != null ? $"for members with the {announcementRole.Mention} role" : "")
+                .Append(gnr.PingEveryone ? "for @everyone" : "")
+                .Append(gnr.PingNoOne ? "for everyone but without any ping" : "")
+                .Append(gnr.RoleId != null ? $"for members with the {announcementRole!.Mention} role" : "")
                 .ToString();
 
             await new DiscordMessageBuilder()
@@ -125,20 +131,17 @@ namespace Norm.Modules
         {
             // Get or create fiction info
             DbResult<NovelInfo> fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
-            NovelInfo fictionInfo = fictionInfoResult.Success ? fictionInfoResult.Value : throw new Exception("Error using NovelInfos.GetNovelInfo(fictionId)");
-            if (fictionInfo is null)
+
+            if (!fictionInfoResult.TryGetValue(out NovelInfo? fictionInfo))
             {
                 string fictionUri = $"{FictionUri}/{fictionId}";
                 string synUri = $"{SyndicationUri}/{fictionId}";
-                fictionInfo = (await this.mediator.Send(
-                    new NovelInfos.Add(
-                        fictionId,
-                        GetFictionName(fictionUri).WithHtmlDecoded(),
-                        synUri,
-                        fictionUri,
-                        await GetMostRecentChapterId(synUri)
-                     )
-                )).Value;
+                string fictionName = GetFictionName(fictionUri).WithHtmlDecoded();
+                ulong chapterId = await GetMostRecentChapterId(synUri);
+                if (!(await this.mediator.Send(new NovelInfos.Add(fictionId, fictionName, synUri, fictionUri, chapterId))).TryGetValue(out fictionInfo))
+                {
+                    throw new Exception("Error adding a new novel during GetOrCreateNovelInfo");
+                }
             }
 
             return fictionInfo;
@@ -152,12 +155,12 @@ namespace Norm.Modules
         public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
         {
             DbResult<IEnumerable<GuildNovelRegistration>> getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetGuildsNovelRegistrations(context.Guild));
-            if (!getNovelRegistrationsResult.Success)
+            if (!getNovelRegistrationsResult.TryGetValue(out var novelRegistrations))
             {
                 await context.RespondAsync("There was an error getting the Guild's Novel Registrations. An error report has been sent to the developer. DM any extra details that you might find relevant.");
                 throw new Exception("error using GetGuildNovelRegistration");
             }
-            GuildNovelRegistration[] allRegisteredFictions = getNovelRegistrationsResult.Value.ToArray();
+            GuildNovelRegistration[] allRegisteredFictions = novelRegistrations.ToArray();
 
             StringBuilder pageString = new();
             for (int i = 0; i < allRegisteredFictions.Length; i++)
@@ -199,12 +202,13 @@ namespace Norm.Modules
             public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
             {
                 DbResult<IEnumerable<GuildNovelRegistration>> getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetMemberNovelRegistrations(context.Member));
-                if (!getNovelRegistrationsResult.Success)
+                if (!getNovelRegistrationsResult.TryGetValue(out var novelRegistrations))
                 {
                     await context.RespondAsync("There was an error getting your Novel Registrations. An error report has been sent to the developer. DM any extra details to the developer that you might find relevant.");
                     throw new Exception("error using GetGuildNovelRegistration");
                 }
-                GuildNovelRegistration[] allRegisteredFictions = getNovelRegistrationsResult.Value.ToArray();
+
+                GuildNovelRegistration[] allRegisteredFictions = novelRegistrations.ToArray();
 
                 StringBuilder pageString = new();
                 for (int i = 0; i < allRegisteredFictions.Length; i++)
@@ -285,20 +289,17 @@ namespace Norm.Modules
             {
                 // Get or create fiction info
                 DbResult<NovelInfo> fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
-                NovelInfo fictionInfo = fictionInfoResult.Success ? fictionInfoResult.Value : throw new Exception("Error using NovelInfos.GetNovelInfo(fictionId)");
-                if (fictionInfo is null)
+
+                if (!fictionInfoResult.TryGetValue(out NovelInfo? fictionInfo))
                 {
                     string fictionUri = $"{FictionUri}/{fictionId}";
                     string synUri = $"{SyndicationUri}/{fictionId}";
-                    fictionInfo = (await this.mediator.Send(
-                        new NovelInfos.Add(
-                            fictionId,
-                            GetFictionName(fictionUri).WithHtmlDecoded(),
-                            synUri,
-                            fictionUri,
-                            await GetMostRecentChapterId(synUri)
-                         )
-                    )).Value;
+                    string fictionName = GetFictionName(fictionUri).WithHtmlDecoded();
+                    ulong chapterId = await GetMostRecentChapterId(synUri);
+                    if (!(await this.mediator.Send(new NovelInfos.Add(fictionId, fictionName, synUri, fictionUri, chapterId))).TryGetValue(out fictionInfo))
+                    {
+                        throw new Exception("Error adding a new novel during GetOrCreateNovelInfo");
+                    }
                 }
 
                 return fictionInfo;

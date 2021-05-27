@@ -19,20 +19,21 @@ using Norm.Formatters;
 using Norm.Modules;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Norm.Services
 {
-    public partial class BotService : IBotService
+    public partial class BotService
     {
         // Client and Extensions
         public DiscordShardedClient ShardedClient { get; private set; }
-        private IReadOnlyDictionary<int, CommandsNextExtension> commandsDict;
-        private IReadOnlyDictionary<int, InteractivityExtension> interactivityDict;
+        private IReadOnlyDictionary<int, CommandsNextExtension>? commandsDict;
+        private IReadOnlyDictionary<int, InteractivityExtension>? interactivityDict;
 
         // Shared between events
-        public DiscordMember BotDeveloper { get; private set; }
+        public DiscordMember? BotDeveloper { get; private set; }
         private ILogger Logger { get; }
         private IMediator Mediator { get; }
         private IDateTimeZoneProvider TimeZoneProvider { get; }
@@ -45,6 +46,7 @@ namespace Norm.Services
         public IMemoryCache PrefixCache { get; }
 
         // Public properties
+        [MemberNotNullWhen(true, nameof(BotDeveloper))]
         public bool Started { get; private set; }
 
         public BotService(
@@ -104,12 +106,12 @@ namespace Norm.Services
                 Timeout = TimeSpan.FromMinutes(5),
             };
             #endregion
+
+            this.ShardedClient = new DiscordShardedClient(this.clientConfig);
         }
 
         public async Task StartAsync()
         {
-            this.ShardedClient = new DiscordShardedClient(this.clientConfig);
-
             this.commandsDict = await this.ShardedClient.UseCommandsNextAsync(this.commandsConfig);
 
             this.interactivityDict = await this.ShardedClient.UseInteractivityAsync(this.interactivityConfig);
@@ -158,7 +160,7 @@ namespace Norm.Services
             await this.ShardedClient.UpdateStatusAsync(new DiscordActivity("^help", ActivityType.Watching));
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously which isn't a problem in this case
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private async Task ShardedClient_GuildDownloadCompleted(DiscordClient client, GuildDownloadCompletedEventArgs args)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
@@ -197,7 +199,16 @@ namespace Norm.Services
         {
             if (!this.PrefixCache.TryGetValue(msg.Channel.Guild.Id, out GuildPrefix[] guildPrefixes))
             {
-                guildPrefixes = (await this.Mediator.Send(new GuildPrefixes.GetGuildsPrefixes(msg.Channel.Guild))).Value.ToArray();
+                DbResult<IEnumerable<GuildPrefix>> guildPrefixesResult = await this.Mediator.Send(new GuildPrefixes.GetGuildsPrefixes(msg.Channel.Guild));
+                if (!guildPrefixesResult.TryGetValue(out IEnumerable<GuildPrefix>? guildPrefixesEnumerable))
+                {
+                    guildPrefixes = Array.Empty<GuildPrefix>();
+                }
+                else
+                {
+                    guildPrefixes = guildPrefixesEnumerable.ToArray();
+                }
+
                 MemoryCacheEntryOptions entryOpts = new()
                 {
                     SlidingExpiration = TimeSpan.FromMinutes(5),

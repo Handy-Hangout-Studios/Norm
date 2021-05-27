@@ -17,11 +17,11 @@ namespace Norm.Services
 {
     public class MovieNightService
     {
-        private readonly IBotService bot;
+        private readonly BotService bot;
         private readonly IMediator mediator;
         private readonly IDateTimeZoneProvider timeZoneProvider;
 
-        public MovieNightService(IBotService bot, IMediator mediator, IDateTimeZoneProvider timeZoneProvider)
+        public MovieNightService(BotService bot, IMediator mediator, IDateTimeZoneProvider timeZoneProvider)
         {
             this.bot = bot;
             this.mediator = mediator;
@@ -50,7 +50,7 @@ namespace Norm.Services
             if (!randomSuggestionsResult.TryGetValue(out IEnumerable<GuildMovieSuggestion>? randomSuggestions))
                 throw new Exception("Something went wrong with getting the random suggestions.");
 
-            string description = this.AddMovieSuggestionsAndGenerateDescription(client, movieNight, randomSuggestions);
+            string description = AddMovieSuggestionsAndGenerateDescription(client, movieNight, randomSuggestions);
 
             RecurringJobDto? rJobDto = JobStorage.Current.GetConnection().GetRecurringJobs().FirstOrDefault(x => x.Id == movieNight.MovieNightStartHangfireId); 
             if (rJobDto == null || !rJobDto.NextExecution.HasValue)
@@ -76,8 +76,8 @@ namespace Norm.Services
             DiscordEmbed eBuilder = new DiscordEmbedBuilder()
                 .WithTitle($"Time to vote for a movie!")
                 .WithDescription(description)
-                .AddField("Date and Time of Movie", zdt.ToString("mm/dd/yyyy x", null))
-                .AddField("Maximum Parental Rating", movieNight.MaximumRating.ToQueryValue());
+                .AddField("Date and Time of Movie", zdt.ToString("mm/dd/yyyy hh:mm x", null), true)
+                .AddField("Maximum Parental Rating", movieNight.MaximumRating.ToQueryValue(), true);
 
             DiscordMessageBuilder mBuilder = new DiscordMessageBuilder()
                 .WithContent("@everyone")
@@ -88,7 +88,7 @@ namespace Norm.Services
         }
 
         private static IEnumerable<DiscordEmoji>? numbers = null;
-        private string AddMovieSuggestionsAndGenerateDescription(DiscordClient client, GuildMovieNight movieNight, IEnumerable<GuildMovieSuggestion> suggestions)
+        private static string AddMovieSuggestionsAndGenerateDescription(DiscordClient client, GuildMovieNight movieNight, IEnumerable<GuildMovieSuggestion> suggestions)
         {
             numbers ??= new List<DiscordEmoji>
             {
@@ -107,15 +107,10 @@ namespace Norm.Services
             if (numbers.Count() < suggestions.Count())
                 throw new ArgumentException("Attempted to use more suggestions than is allowed by the system");
 
-            StringBuilder descriptionBuilder = new StringBuilder();
+            StringBuilder descriptionBuilder = new();
             foreach ((GuildMovieSuggestion gms, DiscordEmoji emoji) in suggestions.Zip(numbers))
             {
-                movieNight.MovieNightAndSuggestions.Add(new MovieNightAndSuggestion
-                {
-                    EmojiId = emoji.Id,
-                    MovieNightId = movieNight.Id,
-                    MovieSuggestionId = gms.ImdbId,
-                });
+                movieNight.MovieNightAndSuggestions.Add(new MovieNightAndSuggestion(movieNight.Id, gms.ImdbId, emoji.Id));
                 descriptionBuilder.AppendLine($"{emoji}. {gms.Title}");
             }
 

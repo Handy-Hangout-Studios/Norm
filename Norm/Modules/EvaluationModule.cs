@@ -142,7 +142,7 @@ namespace Norm.Modules
 
             try
             {
-                TestVariables globals = new TestVariables(ctx.Message, ctx.Client, ctx);
+                TestVariables globals = new(ctx.Message, ctx.Client, ctx);
 
                 ScriptOptions sopts = ScriptOptions.Default;
                 sopts = sopts.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text",

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace Norm.Omdb.Test
 {
+    // These are not expected to remain correct
+
     [TestFixture]
     public class TestOmdbClient
     {
@@ -35,7 +37,7 @@ namespace Norm.Omdb.Test
             Assert.AreEqual(expected, result, $"Expected: \n{expected.ToDetailedString()}\nActual: \n{result.ToDetailedString()}\n");
         }
 
-        private static object[] _getTestSource = new object[]
+        private static readonly object[] _getTestSource = new object[]
         {
             new object[] {
                 "tt0389790",
@@ -236,7 +238,7 @@ namespace Norm.Omdb.Test
             Assert.IsTrue(resultList.SequenceEqual(expected));
         }
 
-        private static object[] _searchTestSource = new object[]
+        private static readonly object[] _searchTestSource = new object[]
         {
             new object[]
             {

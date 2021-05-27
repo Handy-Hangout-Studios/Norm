@@ -125,7 +125,7 @@ namespace Norm.Services
                 }
 
                 this.Logger.LogError(e.Exception, "Exception from Command Errored");
-                await this.BotDeveloper.SendMessageAsync(embed: commandErrorEmbed);
+                await this.BotDeveloper!.SendMessageAsync(embed: commandErrorEmbed);
             }
             catch (Exception exception)
             {

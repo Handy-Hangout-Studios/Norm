@@ -16,14 +16,7 @@ namespace Norm.Database.Requests
         {
             public Add(ulong fictionId, string name, string syndicationUri, string fictionUri, ulong mostRecentChapterId)
             {
-                this.Novel = new()
-                {
-                    FictionId = fictionId,
-                    Name = name,
-                    SyndicationUri = syndicationUri,
-                    FictionUri = fictionUri,
-                    MostRecentChapterId = mostRecentChapterId,
-                };
+                this.Novel = new NovelInfo(fictionId, name, syndicationUri, fictionUri, mostRecentChapterId);
             }
 
             public NovelInfo Novel { get; }
@@ -162,7 +155,7 @@ namespace Norm.Database.Requests
                     {
                         Success = false,
                         Value = null,
-                    }
+                    };
                 }
             }
         }

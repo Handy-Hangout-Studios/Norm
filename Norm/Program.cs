@@ -95,7 +95,7 @@ namespace Norm
         public static void ConfigureMediatR(HostBuilderContext context, IServiceCollection services)
         {
             services
-                .AddMediatR(typeof(Program));
+                .AddMediatR(typeof(NormDbContext));
         }
 
         public static void AddBotServices(HostBuilderContext context, IServiceCollection services)

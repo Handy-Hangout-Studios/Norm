@@ -15,7 +15,7 @@ namespace Norm.Database.Requests
         {
             public Upsert(ulong guildId, ulong channelId)
             {
-                this.LogChannel = new GuildLogChannel { GuildId = guildId, ChannelId = channelId };
+                this.LogChannel = new GuildLogChannel(guildId, channelId);
             }
 
             public GuildLogChannel LogChannel { get; }

@@ -53,7 +53,7 @@ namespace Norm.Modules
                 .AddField("Guild:", context.Guild.Name)
                 .AddField("Reason:", reason);
 
-            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
+            DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
             await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.WARN, reason));
 
@@ -83,7 +83,7 @@ namespace Norm.Modules
             [Description("Number of days worth of their messages to delete")]
             int numDays = 0,
             [Description("Reason for ban")]
-            [RemainingText] string reason = null)
+            [RemainingText] string? reason = null)
         {
             DiscordEmbedBuilder messageEmbed = new DiscordEmbedBuilder()
                .WithTitle($"You have been banned from {context.Guild.Name}!");
@@ -93,7 +93,7 @@ namespace Norm.Modules
                 messageEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
+            DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
             await member.BanAsync(numDays, reason);
 
             await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.BAN, reason));
@@ -120,7 +120,7 @@ namespace Norm.Modules
         [Command("ban")]
         public async Task BanMemberNoDeleteAsync(CommandContext context,
             DiscordMember member,
-            [RemainingText] string reason = null)
+            [RemainingText] string? reason = null)
         {
             await this.BanMemberAsync(context, member, 0, reason);
         }
@@ -131,13 +131,20 @@ namespace Norm.Modules
         [RequireGuild]
         public async Task TempBanMemberAsync(CommandContext context,
             DiscordMember member,
-            int numDays = 0,
             [Description("Duration to ban the member for (must be quoted if there are any spaces, however it should work with colloquial language)")]
-            string durationOfBan = null,
+            string durationOfBan,
+            [Description("Number of days worth of messages to delete (max of 7 days)")]
+            int numDays = 0,
             [RemainingText]
-            string reason = null)
+            string? reason = null)
         {
-            DateTimeV2ModelResult durationResult = DateTimeRecognizer
+            if (numDays < 0 || numDays > 7)
+            {
+                await context.RespondAsync("You provided an invalid number of days worth of messages to delete");
+                return;
+            }
+
+            DateTimeV2ModelResult? durationResult = DateTimeRecognizer
                 .RecognizeDateTime(durationOfBan, culture: Culture.English)
                 .Select(model => model.ToDateTimeV2ModelResult())
                 .Where(result => result.TypeName is DateTimeV2Type.Duration)
@@ -149,7 +156,7 @@ namespace Norm.Modules
                 return;
             }
 
-            Duration duration = (Duration)durationResult.Values.FirstOrDefault().Value;
+            Duration duration = (Duration?)durationResult.Values.FirstOrDefault()?.Value ?? Duration.FromMinutes(5);            
             string durationString = Period.FromSeconds((long)duration.TotalSeconds).AsHumanReadableString();
 
             DiscordEmbedBuilder messageEmbed = new DiscordEmbedBuilder()
@@ -161,7 +168,7 @@ namespace Norm.Modules
                 messageEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
+            DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
 
             await member.BanAsync(numDays, reason);
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
@@ -204,7 +211,7 @@ namespace Norm.Modules
             DiscordMember member,
             [RemainingText]
             [Description("The reason for the kick")]
-            string reason = null)
+            string? reason = null)
         {
             DiscordEmbedBuilder successEmbed = new DiscordEmbedBuilder()
                 .WithTitle($"You have been kicked from {context.Guild.Name}!");
@@ -214,7 +221,7 @@ namespace Norm.Modules
                 successEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
+            DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
             await member.RemoveAsync(reason);
 
@@ -250,7 +257,7 @@ namespace Norm.Modules
             DiscordMember member,
             [RemainingText]
             [Description("The reason for the mute")]
-            string reason = null)
+            string? reason = null)
         {
             DiscordRole mutedRole = await GetOrCreateMutedRole(context);
 
@@ -262,7 +269,7 @@ namespace Norm.Modules
                 successEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
+            DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
             await member.GrantRoleAsync(mutedRole, reason);
 
@@ -300,9 +307,9 @@ namespace Norm.Modules
             string durationOfMute,
             [RemainingText]
             [Description("The reason for the mute")]
-            string reason = null)
+            string? reason = null)
         {
-            DateTimeV2ModelResult durationResult = DateTimeRecognizer
+            DateTimeV2ModelResult? durationResult = DateTimeRecognizer
                 .RecognizeDateTime(durationOfMute, culture: Culture.English)
                 .Select(model => model.ToDateTimeV2ModelResult())
                 .Where(result => result.TypeName is DateTimeV2Type.Duration)
@@ -314,7 +321,7 @@ namespace Norm.Modules
                 return;
             }
 
-            Duration duration = (Duration)durationResult.Values.FirstOrDefault().Value;
+            Duration duration = (Duration?)durationResult.Values.FirstOrDefault()?.Value ?? Duration.FromMinutes(5);
             string durationString = Period.FromSeconds((long)duration.TotalSeconds).AsHumanReadableString();
 
             DiscordRole mutedRole = await GetOrCreateMutedRole(context);
@@ -328,7 +335,7 @@ namespace Norm.Modules
                 successEmbed.AddField("Reason:", reason);
             }
 
-            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
+            DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
             await member.GrantRoleAsync(mutedRole, reason);
 
@@ -379,7 +386,7 @@ namespace Norm.Modules
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
 
             // Add output message to logging channel
-            DiscordChannel logChannel = await this.SendModerationEmbedAndGetLogChannel(moderationEmbed.Build(), member, context.Member, context.Guild);
+            DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(moderationEmbed.Build(), member, context.Member, context.Guild);
 
             if (logChannel == null)
             {
@@ -396,9 +403,9 @@ namespace Norm.Modules
         [RequireGuild]
         public async Task ShowAuditLogVersionOne(CommandContext context,
             [Description("The moderator who took action to filter on.")]
-            DiscordUser moderator = null,
+            DiscordUser? moderator = null,
             [Description("The member who had action taken against them to filter on.")]
-            DiscordUser member = null,
+            DiscordUser? member = null,
             [Description("The kind of action taken to filter on")]
             ModerationActionType action = ModerationActionType.NONE)
         {
@@ -420,7 +427,13 @@ namespace Norm.Modules
                 message.WithModerationActionType(action);
             }
 
-            List<GuildModerationAuditRecord> auditRecords = (await this.mediator.Send(message)).Value.ToList();
+            if (!(await this.mediator.Send(message)).TryGetValue(out var dbAuditRecords))
+            {
+                await context.RespondAsync("There was an error using the filters provided. For more details please contact the bot developer.");
+                return;
+            }
+
+            List<GuildModerationAuditRecord> auditRecords = dbAuditRecords.ToList();
             IReadOnlyCollection<DiscordMember> memberList = await context.Guild.GetAllMembersAsync();
             IDictionary<ulong, DiscordMember> memberDict = memberList.ToDictionary(member => member.Id);
 
@@ -494,7 +507,7 @@ namespace Norm.Modules
 
         private static async Task<DiscordRole> GetOrCreateMutedRole(CommandContext context)
         {
-            DiscordRole mutedRole = context.Guild.Roles.Values.FirstOrDefault(role => role.Name == "Muted");
+            DiscordRole? mutedRole = context.Guild.Roles.Values.FirstOrDefault(role => role.Name == "Muted");
 
             if (mutedRole == null)
             {
@@ -509,9 +522,9 @@ namespace Norm.Modules
             return mutedRole;
         }
 
-        private async Task<DiscordChannel> SendModerationEmbedAndGetLogChannel(DiscordEmbed embed, DiscordMember member, DiscordMember moderator, DiscordGuild guild)
+        private async Task<DiscordChannel?> SendModerationEmbedAndGetLogChannel(DiscordEmbed embed, DiscordMember member, DiscordMember moderator, DiscordGuild guild)
         {
-            DiscordChannel logChannel = await this.GetGuildLogChannelAsync(guild);
+            DiscordChannel? logChannel = await this.GetGuildLogChannelAsync(guild);
 
             try
             {
@@ -538,16 +551,14 @@ namespace Norm.Modules
             return logChannel;
         }
 
-        private async Task<DiscordChannel> GetGuildLogChannelAsync(DiscordGuild guild)
+        private async Task<DiscordChannel?> GetGuildLogChannelAsync(DiscordGuild guild)
         {
-            GuildLogChannel guildLogsChannel = (await this.mediator.Send(new GuildLogChannels.GetGuildLogChannel(guild))).Value;
-            DiscordChannel logChannel = null;
-            if (guildLogsChannel != null)
+            if (!(await this.mediator.Send(new GuildLogChannels.GetGuildLogChannel(guild))).TryGetValue(out GuildLogChannel? guildLogsChannel))
             {
-                logChannel = guild.GetChannel(guildLogsChannel.ChannelId);
+                return null;
             }
-
-            return logChannel;
+            
+            return guild.GetChannel(guildLogsChannel.ChannelId);
         }
 
         [Group("log")]

@@ -25,9 +25,9 @@ namespace Norm.Modules
     public class PrefixModule : BaseCommandModule
     {
         private readonly IMediator mediator;
-        private readonly IBotService bot;
+        private readonly BotService bot;
 
-        public PrefixModule(IMediator mediator, IBotService bot)
+        public PrefixModule(IMediator mediator, BotService bot)
         {
             this.mediator = mediator;
             this.bot = bot;
@@ -39,8 +39,7 @@ namespace Norm.Modules
             string prefixString;
             if (context.Channel.Guild != null)
             {
-                List<GuildPrefix> guildPrefixes = (await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).Value.ToList();
-                if (!guildPrefixes.Any())
+                if (!(await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? guildPrefixes) || !guildPrefixes.Any())
                 {
                     prefixString = "My prefix is `^`";
                 }
@@ -68,8 +67,11 @@ namespace Norm.Modules
             [RemainingText]
             string newPrefix)
         {
-            IEnumerable<GuildPrefix> definedPrefixes = (await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild)))
-                .Value;
+            if (!(await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? definedPrefixes))
+            {
+                definedPrefixes = new List<GuildPrefix>();
+            }
+
             if (definedPrefixes.Count() >= 5)
             {
                 await context.RespondAsync("I'm sorry, but guilds are only allowed to have a maximum of five custom defined prefixes");
@@ -116,10 +118,14 @@ namespace Norm.Modules
             [Description("The specific string prefix to remove from the guild's prefixes.")]
             string prefixToRemove)
         {
-            GuildPrefix guildPrefix = (await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild)))
-                .Value
-                .FirstOrDefault(e => e.Prefix.Equals(prefixToRemove));
-            if (guildPrefix is null)
+
+            if (!(await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? definedPrefixes))
+            {
+                definedPrefixes = new List<GuildPrefix>();
+            }
+
+            GuildPrefix? guildPrefix = definedPrefixes.FirstOrDefault(e => e.Prefix.Equals(prefixToRemove));
+            if (guildPrefix == null)
             {
                 await context.RespondAsync(
                     $"{context.User.Mention}, I'm sorry but the prefix you have given me does not exist for this guild.");
@@ -139,9 +145,7 @@ namespace Norm.Modules
         [RequireGuild]
         public async Task InteractiveRemovePrefix(CommandContext context)
         {
-
-            List<GuildPrefix> guildPrefixes = (await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).Value.ToList();
-            if (!guildPrefixes.Any())
+            if (!(await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out var guildPrefixes) || !guildPrefixes.Any())
             {
                 await context.RespondAsync("You don't have any custom prefixes to remove");
                 return;
@@ -179,8 +183,11 @@ namespace Norm.Modules
                     return Task.FromResult((false, -1));
                 }
             }
+
+            List<GuildPrefix> availablePrefixes = guildPrefixes.ToList();
+
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(
-                GetGuildPrefixPages(guildPrefixes, interactivity, removeEventEmbed),
+                GetGuildPrefixPages(availablePrefixes, interactivity, removeEventEmbed),
                 messageValidationAndReturn,
                 msg: msg);
 
@@ -190,7 +197,7 @@ namespace Norm.Modules
                 return;
             }
 
-            GuildPrefix selectedPrefix = guildPrefixes[result.Result - 1];
+            GuildPrefix selectedPrefix = availablePrefixes[result.Result - 1];
 
             await this.mediator.Send(new GuildPrefixes.Delete(selectedPrefix));
 
@@ -205,7 +212,7 @@ namespace Norm.Modules
             this.bot.PrefixCache.Remove(guild.Id);
         }
 
-        private static IEnumerable<Page> GetGuildPrefixPages(List<GuildPrefix> guildPrefixes, InteractivityExtension interactivity, DiscordEmbedBuilder pageEmbedBase = null)
+        private static IEnumerable<Page> GetGuildPrefixPages(List<GuildPrefix> guildPrefixes, InteractivityExtension interactivity, DiscordEmbedBuilder? pageEmbedBase = null)
         {
             StringBuilder guildPrefixesStringBuilder = new();
             int count = 1;

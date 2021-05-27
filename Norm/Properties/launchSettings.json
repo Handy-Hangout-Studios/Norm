@@ -2,6 +2,9 @@
   "profiles": {
     "Norm": {
       "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
     }
   }
 }

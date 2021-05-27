@@ -20,7 +20,7 @@ namespace Norm.Omdb
         {
             this.restClient = new RestClient("http://www.omdbapi.com/");
             
-            JsonSerializerOptions stjOptions = new JsonSerializerOptions
+            JsonSerializerOptions stjOptions = new()
             {
                 PropertyNameCaseInsensitive = true
             };
@@ -122,7 +122,7 @@ namespace Norm.Omdb
         {
             return services.AddTransient(s =>
             {
-                OmdbClientOptions options = new OmdbClientOptions();
+                OmdbClientOptions options = new();
                 optionsBuilder(s, options);
                 return new OmdbClient(options);
             });

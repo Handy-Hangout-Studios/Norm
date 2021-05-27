@@ -10,6 +10,7 @@ using Norm.Database.Entities;
 using Norm.Database.Requests;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
@@ -19,9 +20,9 @@ namespace Norm.Services
     public class AnnouncementService
     {
         private readonly IMediator mediator;
-        private readonly IBotService bot;
+        private readonly BotService bot;
 
-        public AnnouncementService(IMediator mediator, IBotService bot)
+        public AnnouncementService(IMediator mediator, BotService bot)
         {
             this.mediator = mediator;
             this.bot = bot;
@@ -48,9 +49,9 @@ namespace Norm.Services
                             DiscordGuild guild = await client.GetGuildAsync(registration.GuildId);
                             DiscordMember clientMember = await guild.GetMemberAsync(client.CurrentUser.Id);
                             DiscordChannel channel = !registration.IsDm ?
-                                guild.GetChannel(registration.AnnouncementChannelId) :
+                                guild.GetChannel((ulong)registration.AnnouncementChannelId) :
                                 await (await guild.GetMemberAsync((ulong)registration.MemberId)).CreateDmChannelAsync();
-                            DiscordRole role = registration.RoleId == null ? null : guild.Roles[(ulong)registration.RoleId];
+                            DiscordRole? role = registration.RoleId == null ? null : guild.Roles[(ulong)registration.RoleId];
                             string mentionString = GenerateMentionString(registration, role);
                             try
                             {
@@ -88,20 +89,24 @@ namespace Norm.Services
             }
         }
 
-        private static string GenerateMentionString(GuildNovelRegistration registration, DiscordRole role)
+        private static string GenerateMentionString(GuildNovelRegistration registration, DiscordRole? role)
         {
-            string mentionString;
+            string? mentionString;
             if (registration.PingNoOne)
             {
-                mentionString = null;
+                mentionString = string.Empty;
             }
             else if (registration.PingEveryone)
             {
                 mentionString = "@everyone";
             }
-            else
+            else if (role != null)
             {
                 mentionString = $"{role.Mention ?? "@everyone"}";
+            }
+            else
+            {
+                mentionString = string.Empty;
             }
 
             return mentionString;
@@ -131,18 +136,15 @@ namespace Norm.Services
 
             DbResult<IEnumerable<NovelInfo>> result = await this.mediator.Send(new NovelInfos.GetAllNovelsInfo());
 
-            if (!result.Success)
+            if (!result.TryGetValue(out IEnumerable<NovelInfo>? allNovelsInfo))
             {
                 return new List<ChapterUpdateBucket>();
             }
 
             // Retrieve all updated chapters
-            foreach (NovelInfo novelInfo in result.Value)
+            foreach (NovelInfo novelInfo in allNovelsInfo)
             {
-                ChapterUpdateBucket temp = new()
-                {
-                    Novel = novelInfo
-                };
+                ChapterUpdateBucket temp = new(novelInfo);
 
                 using XmlReader reader = XmlReader.Create(novelInfo.SyndicationUri, new XmlReaderSettings { Async = true, });
                 RssFeedReader feedReader = new(reader);
@@ -181,9 +183,13 @@ namespace Norm.Services
 
     public class ChapterUpdateBucket
     {
+        public ChapterUpdateBucket(NovelInfo novel)
+        {
+            this.Novel = novel;
+        }
         public NovelInfo Novel { get; set; }
         public List<ChapterUpdateItem> ChapterUpdateItems => this.chapterUpdateItems ??= new List<ChapterUpdateItem>();
-        public string NewTitle { get; set; }
+        public string? NewTitle { get; set; }
         public ulong NewMostRecentChapter
         {
             get
@@ -196,7 +202,7 @@ namespace Norm.Services
                 return this.newMostRecentChapter;
             }
         }
-        public string FictionCoverUri
+        public string? FictionCoverUri
         {
             get
             {
@@ -214,9 +220,9 @@ namespace Norm.Services
         }
 
         private bool populated = false;
-        private List<ChapterUpdateItem> chapterUpdateItems;
-        private List<DiscordEmbed> announcementEmbeds;
-        private string fictionCoverUri;
+        private List<ChapterUpdateItem>? chapterUpdateItems;
+        private List<DiscordEmbed>? announcementEmbeds;
+        private string? fictionCoverUri;
         private ulong newMostRecentChapter;
 
         private List<DiscordEmbed> GetAnnouncementEmbeds()
@@ -289,11 +295,11 @@ namespace Norm.Services
         }
     }
 
-    public class ChapterUpdateItem
+    public record ChapterUpdateItem
     {
-        public string Title { get; init; }
-        public string Link { get; init; }
-        public string Description { get; set; }
+        public string Title { get; init; } = string.Empty;
+        public string Link { get; init; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public ulong? Id { get; init; }
         public DateTimeOffset PublishDate { get; init; }
     }

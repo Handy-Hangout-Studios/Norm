@@ -14,22 +14,30 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasName("audit_record_id");
 
             builder.Property(ar => ar.GuildId)
-                .HasColumnName("guild_id");
+                .HasColumnName("guild_id")
+                .IsRequired();
 
             builder.Property(ar => ar.ModeratorUserId)
-                .HasColumnName("moderator_user_id");
+                .HasColumnName("moderator_user_id")
+                .IsRequired();
 
             builder.Property(ar => ar.UserId)
-                .HasColumnName("user_id");
+                .HasColumnName("user_id")
+                .IsRequired();
 
             builder.Property(ar => ar.ModerationAction)
-                .HasColumnName("moderation_action");
+                .HasColumnName("moderation_action")
+                .IsRequired();
 
             builder.Property(ar => ar.Reason)
-                .HasColumnName("reason");
+                .HasColumnName("reason")
+                .IsRequired(false);
 
             builder.Property(ar => ar.Timestamp)
-                .HasColumnName("timestamp");
+                .HasColumnName("timestamp")
+                .IsRequired();
+
+            builder.HasIndex(ar => ar.GuildId);
         }
     }
 }

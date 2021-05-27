@@ -123,7 +123,7 @@ namespace Norm
                     o.Version = opts.Version ?? o.Version;
                 })
                 .AddSingleton<LatexRenderService>()
-                .AddSingleton<IBotService, BotService>()
+                .AddSingleton<BotService, BotService>()
                 .AddTransient<AnnouncementService>()
                 .AddTransient<EventService>()
                 .AddTransient<ModerationService>()

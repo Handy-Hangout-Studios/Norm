@@ -6,14 +6,14 @@ namespace Norm.Omdb.Types
 {
     public class LazyOmdbList
     {
-        private List<OmdbItem> _omdbItems;
+        private readonly List<OmdbItem> _omdbItems;
         public int Count { get; private set; } = 0;
         private readonly OmdbClient _client;
         private int _currentIndex = 0;
         private int _currentPage = 1;
-        private string _search;
-        private OmdbSearchType _resultType;
-        private int? _yearOfRelease;
+        private readonly string _search;
+        private readonly OmdbSearchType _resultType;
+        private readonly int? _yearOfRelease;
 
         /// <summary>
         /// 
@@ -43,16 +43,28 @@ namespace Norm.Omdb.Types
             return this;
         }
 
+        /// <summary>
+        /// Retrieve the current OmdbItem
+        /// </summary>
+        /// <returns>The current OmdbItem</returns>
         public OmdbItem CurrentItem()
         {
             return this._omdbItems[this._currentIndex];
         }
 
+        /// <summary>
+        /// Check if there is a next OmdbItem
+        /// </summary>
+        /// <returns></returns>
         public bool HasNext()
         {
             return this._currentIndex + 1 < this.Count;
         }
 
+        /// <summary>
+        /// Move to the next OmdbItem
+        /// </summary>
+        /// <returns></returns>
         public async Task MoveNext()
         {
             this._currentIndex += 1;
@@ -75,11 +87,19 @@ namespace Norm.Omdb.Types
             }
         }
 
+        /// <summary>
+        /// Check if there is a previous OmdbItem
+        /// </summary>
+        /// <returns></returns>
         public bool HasPrev()
         {
             return this._currentIndex - 1 >= 0;
         }
 
+        /// <summary>
+        /// Move to the previous OmdbItem
+        /// </summary>
+        /// <returns></returns>
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task MovePrev()
         {

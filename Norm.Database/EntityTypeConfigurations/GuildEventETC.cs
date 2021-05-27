@@ -14,13 +14,18 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasName("guild_event_id");
 
             builder.Property(e => e.GuildId)
-                .HasColumnName("guild_id");
+                .HasColumnName("guild_id")
+                .IsRequired();
 
             builder.Property(e => e.EventName)
-                .HasColumnName("event_name");
+                .HasColumnName("event_name")
+                .IsRequired();
 
             builder.Property(e => e.EventDesc)
-                .HasColumnName("event_desc");
+                .HasColumnName("event_desc")
+                .IsRequired();
+
+            builder.HasIndex(e => e.GuildId);
         }
     }
 }

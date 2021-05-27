@@ -15,16 +15,16 @@ namespace Norm.Utilities
 {
     public static class ExtensionMethods
     {
-        private static TaskCompletionSource<DiscordEventArgs> DiscordEventSubscriber { get; set; }
+        private static TaskCompletionSource<DiscordEventArgs>? DiscordEventSubscriber { get; set; }
 
         public static async Task<CustomResult<T>> WaitForMessageAndPaginateOnMsg<T>(
                this CommandContext context,
                IEnumerable<Page> pages,
                Func<MessageCreateEventArgs, Task<(bool, T)>> messageValidationAndReturn,
-               PaginationEmojis paginationEmojis = null,
+               PaginationEmojis? paginationEmojis = null,
                PaginationBehaviour behaviour = PaginationBehaviour.WrapAround,
                PaginationDeletion deletion = PaginationDeletion.KeepEmojis,
-               DiscordMessage msg = null)
+               DiscordMessage? msg = null)
         {
             List<Page> pagesList = pages.ToList();
             paginationEmojis ??= new PaginationEmojis();

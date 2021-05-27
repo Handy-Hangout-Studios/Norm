@@ -20,14 +20,7 @@ namespace Norm.Database.Requests
         {
             public Add(string imdbId, ulong suggestorId, string title, ulong guildId, OmdbParentalRating parentalRating)
             {
-                this.MovieSuggestion = new GuildMovieSuggestion
-                {
-                    ImdbId = imdbId,
-                    SuggesterId = suggestorId,
-                    Title = title,
-                    GuildId = guildId,
-                    Rating = parentalRating,
-                };
+                this.MovieSuggestion = new GuildMovieSuggestion(imdbId, suggestorId, title, guildId, parentalRating);
             }
 
             public Add(string imdbId, DiscordUser suggestor, string title, DiscordGuild guild, OmdbParentalRating parentalRating) :
@@ -133,7 +126,12 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult<GuildMovieSuggestion>> Handle(GetMovieSuggestion request, CancellationToken cancellationToken)
             {
-                GuildMovieSuggestion? gms = await this.DbContext.GuildMovieSuggestions.FirstOrDefaultAsync(gms => gms.ImdbId == request.MovieSuggestionImdbId, cancellationToken: cancellationToken);
+                GuildMovieSuggestion? gms = 
+                    await this.DbContext.GuildMovieSuggestions
+                        .Include(gms => gms.MovieNightAndSuggestions)
+                        .ThenInclude(row => row.MovieNight)
+                        .FirstOrDefaultAsync(gms => gms.ImdbId == request.MovieSuggestionImdbId, cancellationToken: cancellationToken);
+
                 return new DbResult<GuildMovieSuggestion>
                 {
                     Success = gms != null,
@@ -172,10 +170,13 @@ namespace Norm.Database.Requests
                 {
                     IEnumerable<GuildMovieSuggestion> movieNights = await this.DbContext
                         .GuildMovieSuggestions
+                        .Include(gms => gms.MovieNightAndSuggestions)
+                        .ThenInclude(row => row.MovieNight)
                         .Where(gms => gms.GuildId == request.GuildId && gms.Rating <= request.MaximumRating)
                         .OrderBy(gms => EF.Functions.Random())
                         .Take(request.NumberOfSuggestions)
                         .ToListAsync(cancellationToken: cancellationToken);
+
                     return new DbResult<IEnumerable<GuildMovieSuggestion>>
                     {
                         Success = true,

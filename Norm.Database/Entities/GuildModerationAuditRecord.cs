@@ -4,6 +4,20 @@ namespace Norm.Database.Entities
 {
     public class GuildModerationAuditRecord
     {
+        public GuildModerationAuditRecord(
+            ulong guildId, 
+            ulong moderatorUserId, 
+            ulong userId, 
+            ModerationActionType moderationAction, 
+            string? reason)
+        {
+            this.GuildId = guildId;
+            this.ModeratorUserId = moderatorUserId;
+            this.UserId = userId;
+            this.ModerationAction = moderationAction;
+            this.Reason = reason;
+        }
+
         public int Id { get; set; }
 
         public ulong GuildId { get; set; }
@@ -14,9 +28,9 @@ namespace Norm.Database.Entities
 
         public ModerationActionType ModerationAction { get; set; }
 
-        public string Reason { get; set; }
+        public string? Reason { get; set; }
 
-        public Instant Timestamp { get; set; }
+        public Instant? Timestamp { get; set; }
     }
 
     public enum ModerationActionType
@@ -28,6 +42,5 @@ namespace Norm.Database.Entities
         MUTE,
         TEMPMUTE,
         KICK,
-        NEGATEKARMA,
     }
 }

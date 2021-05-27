@@ -8,9 +8,9 @@ namespace Norm.Services
 {
     public class ModerationService
     {
-        private readonly IBotService bot;
+        private readonly BotService bot;
         private readonly ILogger logger;
-        public ModerationService(IBotService bot, ILogger<ModerationService> logger)
+        public ModerationService(BotService bot, ILogger<ModerationService> logger)
         {
             this.bot = bot;
             this.logger = logger;

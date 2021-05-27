@@ -17,16 +17,15 @@ namespace Norm.Database.Requests
     {
         public class Add : DbRequest<GuildModerationAuditRecord>
         {
-            public Add(ulong guildId, ulong modUserId, ulong userId, ModerationActionType action, string reason)
+            public Add(ulong guildId, ulong modUserId, ulong userId, ModerationActionType action, string? reason)
             {
-                this.Record = new GuildModerationAuditRecord
-                {
-                    GuildId = guildId,
-                    ModeratorUserId = modUserId,
-                    UserId = userId,
-                    ModerationAction = action,
-                    Reason = reason
-                };
+                this.Record = new GuildModerationAuditRecord(guildId, modUserId, userId, action, reason);
+            }
+
+            public Add(DiscordGuild guild, DiscordUser modUser, DiscordUser user, ModerationActionType action, string? reason)
+                : this(guild.Id, modUser.Id, user.Id, action, reason)
+            {
+
             }
 
             internal GuildModerationAuditRecord Record { get; }

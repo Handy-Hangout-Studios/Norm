@@ -14,10 +14,14 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasName("user_timezone_id");
 
             builder.Property(u => u.UserId)
-                .HasColumnName("user_id");
+                .HasColumnName("user_id")
+                .IsRequired();
 
             builder.Property(u => u.TimeZoneId)
-                .HasColumnName("timezone_id");
+                .HasColumnName("timezone_id")
+                .IsRequired();
+
+            builder.HasIndex(u => u.UserId);
         }
     }
 }

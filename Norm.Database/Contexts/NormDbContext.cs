@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Norm.Database.Entities;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Norm.Database.Contexts
 {
@@ -13,23 +14,21 @@ namespace Norm.Database.Contexts
             base.OnModelCreating(builder);
         }
 
-        public DbContext Context => this;
-
         // Novel Tables
-        public DbSet<NovelInfo> AllNovelInfo { get; private set; }
-        public DbSet<GuildNovelRegistration> GuildNovelRegistrations { get; private set; }
+        public DbSet<NovelInfo> AllNovelInfo => Set<NovelInfo>();
+        public DbSet<GuildNovelRegistration> GuildNovelRegistrations => Set<GuildNovelRegistration>();
 
         // Guild Tables
-        public DbSet<GuildEvent> GuildEvents { get; private set; }
-        public DbSet<GuildPrefix> GuildPrefixes { get; private set; }
-        public DbSet<GuildBackgroundJob> GuildBackgroundJobs { get; private set; }
-        public DbSet<GuildLogChannel> GuildLogChannels { get; private set; }
-        public DbSet<GuildModerationAuditRecord> GuildModerationAuditRecords { get; private set; }
-        public DbSet<GuildWelcomeMessageSettings> GuildWelcomeMessages { get; private set; }
-        public DbSet<GuildMovieNight> GuildMovieNights { get; private set; }
-        public DbSet<GuildMovieSuggestion> GuildMovieSuggestions { get; private set; }
-        
+        public DbSet<GuildEvent> GuildEvents => Set<GuildEvent>();
+        public DbSet<GuildPrefix> GuildPrefixes => Set<GuildPrefix>();
+        public DbSet<GuildBackgroundJob> GuildBackgroundJobs => Set<GuildBackgroundJob>();
+        public DbSet<GuildLogChannel> GuildLogChannels => Set<GuildLogChannel>();
+        public DbSet<GuildModerationAuditRecord> GuildModerationAuditRecords => Set<GuildModerationAuditRecord>();
+        public DbSet<GuildWelcomeMessageSettings> GuildWelcomeMessages => Set<GuildWelcomeMessageSettings>();
+        public DbSet<GuildMovieNight> GuildMovieNights => Set<GuildMovieNight>();
+        public DbSet<GuildMovieSuggestion> GuildMovieSuggestions => Set<GuildMovieSuggestion>();
+
         // User Tables
-        public DbSet<UserTimeZone> UserTimeZones { get; private set; }
+        public DbSet<UserTimeZone> UserTimeZones => Set<UserTimeZone>();
     }
 }

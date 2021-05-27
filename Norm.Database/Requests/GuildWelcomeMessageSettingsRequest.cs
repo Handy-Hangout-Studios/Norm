@@ -17,12 +17,7 @@ namespace Norm.Database.Requests
 
             public Upsert(ulong guildId, bool shouldWelcomeMembers = false, bool shouldPing = false)
             {
-                this.GuildWelcomeMessage = new GuildWelcomeMessageSettings
-                {
-                    GuildId = guildId,
-                    ShouldWelcomeMembers = shouldWelcomeMembers,
-                    ShouldPing = shouldPing,
-                };
+                this.GuildWelcomeMessage = new GuildWelcomeMessageSettings(guildId, shouldWelcomeMembers, shouldPing);
             }
 
             public GuildWelcomeMessageSettings GuildWelcomeMessage { get; }

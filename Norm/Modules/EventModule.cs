@@ -69,8 +69,14 @@ namespace Norm.Modules
                 return;
             }
 
-            List<GuildEvent> guildEvents = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.ToList();
-            GuildEvent selectedEvent = guildEvents[Random.Next(guildEvents.Count)];
+            DbResult<IEnumerable<GuildEvent>> getEventsResult = await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild));
+            if (!getEventsResult.TryGetValue(out IEnumerable<GuildEvent>? guildEvents))
+            {
+                throw new Exception("An error occured while retrieving guild events");
+            }
+
+            List<GuildEvent> events = guildEvents.ToList();
+            GuildEvent selectedEvent = events[Random.Next(events.Count)];
             DiscordEmbedBuilder eventEmbedBuilder = new();
             eventEmbedBuilder
                 .WithTitle(selectedEvent.EventName)
@@ -93,13 +99,13 @@ namespace Norm.Modules
             [Description("The channel to announce the event in")]
             DiscordChannel announcementChannel,
             [Description("The role to announce the event to")]
-            DiscordRole role,
+            DiscordRole? role,
             [Description("The date to schedule the event for")]
             [RemainingText]
             string datetimeString
         )
         {
-            (bool success, DateTimeZone schedulerTimeZone) = await context.User.TryGetDateTimeZoneAsync(this.mediator, this.timeZoneProvider);
+            (bool success, DateTimeZone? schedulerTimeZone) = await context.User.TryGetDateTimeZoneAsync(this.mediator, this.timeZoneProvider);
 
             if (!success)
             {
@@ -114,7 +120,7 @@ namespace Norm.Modules
             }
 
             ZonedDateTime zonedMessageDateTime = ZonedDateTime.FromDateTimeOffset(context.Message.CreationTimestamp);
-            DateTime senderRefTime = zonedMessageDateTime.WithZone(schedulerTimeZone).ToDateTimeOffset().DateTime;
+            DateTime senderRefTime = zonedMessageDateTime.WithZone(schedulerTimeZone!).ToDateTimeOffset().DateTime;
 
             LocalDateTime datetime = Recognizers.RecognizeDateTime(datetimeString, senderRefTime, DateTimeV2Type.DateTime)
                 .First()
@@ -134,14 +140,20 @@ namespace Norm.Modules
 
             CustomResult<DiscordMessage> addResult = await this.AddGuildEventInteractive(context, interactivity);
 
-            if (addResult.TimedOut || addResult.Cancelled)
+            if (!addResult.Success)
             {
                 return;
             }
 
-            GuildEvent selectedEvent = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.OrderByDescending(e => e.Id).First();
+            DbResult<IEnumerable<GuildEvent>> getEventsResult = await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild));
+            if (!getEventsResult.TryGetValue(out IEnumerable<GuildEvent>? guildEvents))
+            {
+                throw new Exception("An error occured while retrieving guild events");
+            }
 
-            Instant eventDateTime = datetime.InZoneStrictly(schedulerTimeZone).ToInstant();
+            GuildEvent selectedEvent = guildEvents.OrderByDescending(e => e.Id).First();
+
+            Instant eventDateTime = datetime.InZoneStrictly(schedulerTimeZone!).ToInstant();
             DiscordEmbed embed = new DiscordEmbedBuilder()
                 .WithAuthor(context.Member.DisplayName, iconUrl: context.Member.AvatarUrl)
                 .WithDescription(selectedEvent.EventDesc)
@@ -175,13 +187,13 @@ namespace Norm.Modules
             [Description("The channel to announce the event in")]
             DiscordChannel announcementChannel,
             [Description("The role to announce the event to")]
-            DiscordRole role,
+            DiscordRole? role,
             [Description("The date to schedule the event for")]
             [RemainingText]
             string datetimeString
         )
         {
-            (bool success, DateTimeZone schedulerTimeZone) = await context.User.TryGetDateTimeZoneAsync(this.mediator, this.timeZoneProvider);
+            (bool success, DateTimeZone? schedulerTimeZone) = await context.User.TryGetDateTimeZoneAsync(this.mediator, this.timeZoneProvider);
 
             if (!success)
             {
@@ -196,7 +208,7 @@ namespace Norm.Modules
             }
 
             ZonedDateTime zonedMessageDateTime = ZonedDateTime.FromDateTimeOffset(context.Message.CreationTimestamp);
-            DateTime senderRefTime = zonedMessageDateTime.WithZone(schedulerTimeZone).ToDateTimeOffset().DateTime;
+            DateTime senderRefTime = zonedMessageDateTime.WithZone(schedulerTimeZone!).ToDateTimeOffset().DateTime;
 
             LocalDateTime datetime = Recognizers.RecognizeDateTime(datetimeString, senderRefTime, DateTimeV2Type.DateTime)
                 .First()
@@ -221,9 +233,15 @@ namespace Norm.Modules
             msg = await context.RespondAsync("Loading...");
             await context.TriggerTypingAsync();
             await Task.Delay(1000);
-            GuildEvent selectedEvent = await this.SelectPredefinedEvent(context, msg, interactivity, scheduleEmbedBase);
+            GuildEvent? selectedEvent = await this.SelectPredefinedEvent(context, msg, interactivity, scheduleEmbedBase);
 
-            Instant eventDateTime = datetime.InZoneStrictly(schedulerTimeZone).ToInstant();
+            if (selectedEvent == null)
+            {
+                await context.RespondAsync("You have no predefined events");
+                return;
+            }
+
+            Instant eventDateTime = datetime.InZoneStrictly(schedulerTimeZone!).ToInstant();
             DiscordEmbed embed = new DiscordEmbedBuilder()
                 .WithAuthor(context.Member.DisplayName, iconUrl: context.Member.AvatarUrl)
                 .WithDescription(selectedEvent.EventDesc)
@@ -246,7 +264,7 @@ namespace Norm.Modules
             await this.ScheduleGuildEvent(context, announcementChannel, null, datetimeString);
         }
 
-        private async Task ScheduleEventsForRoleAsync(CommandContext context, DiscordChannel announcementChannel, GuildEvent selectedEvent, Instant eventDateTime, DiscordRole role)
+        private async Task ScheduleEventsForRoleAsync(CommandContext context, DiscordChannel announcementChannel, GuildEvent selectedEvent, Instant eventDateTime, DiscordRole? role)
         {
             Duration eventScheduleDuration = eventDateTime - this.clock.GetCurrentInstant();
             string scheduledJobId = BackgroundJob.Schedule<EventService>(
@@ -277,13 +295,18 @@ namespace Norm.Modules
             await this.mediator.Send(new GuildBackgroundJobs.Add(scheduledJobId, context.Guild.Id, $"{selectedEvent.EventName} - 10 Min Announcement", eventDateTime - Duration.FromMinutes(10), GuildJobType.SCHEDULED_EVENT));
         }
 
-        private async Task<GuildEvent> SelectPredefinedEvent(CommandContext context, DiscordMessage msg, InteractivityExtension interactivity, DiscordEmbedBuilder scheduleEmbedBase)
+        private async Task<GuildEvent?> SelectPredefinedEvent(CommandContext context, DiscordMessage msg, InteractivityExtension interactivity, DiscordEmbedBuilder scheduleEmbedBase)
         {
+            DbResult<IEnumerable<GuildEvent>> getEventsResult = await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild));
+            if (!getEventsResult.TryGetValue(out IEnumerable<GuildEvent>? guildEvents))
+            {
+                throw new Exception("An error occured while retrieving guild events");
+            }
 
-            List<GuildEvent> guildEvents = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.ToList();
+            List<GuildEvent> events = guildEvents.ToList();
             IEnumerable<Page> pages = GetGuildEventsPages(guildEvents, interactivity, scheduleEmbedBase);
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(pages,
-                PaginationMessageFunction.CreateWaitForMessageWithIntInRange(context.User, context.Channel, 1, guildEvents.Count + 1),
+                PaginationMessageFunction.CreateWaitForMessageWithIntInRange(context.User, context.Channel, 1, events.Count + 1),
                 msg: msg
             );
             if (result.TimedOut || result.Cancelled)
@@ -292,7 +315,7 @@ namespace Norm.Modules
                 return null;
             }
 
-            return guildEvents[result.Result - 1];
+            return events[result.Result - 1];
         }
 
         [Command("unschedule")]
@@ -314,10 +337,22 @@ namespace Norm.Modules
             }
 
 
-            DateTimeZone memberTimeZone = this.timeZoneProvider[(await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User))).Value.TimeZoneId];
+            DbResult<UserTimeZone> getUserTimeZoneResult = await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User));
+            if (!getUserTimeZoneResult.TryGetValue(out UserTimeZone? memberUserTimeZone))
+            {
+                throw new Exception("An error occured while retrieving guild events");
+            }
 
-            List<GuildBackgroundJob> guildEventJobs = (await this.mediator.Send(new GuildBackgroundJobs.GetGuildJobs(context.Guild)))
-                .Value
+            DateTimeZone memberTimeZone = this.timeZoneProvider[memberUserTimeZone.TimeZoneId];
+
+            DbResult<IEnumerable<GuildBackgroundJob>> getGuildJobsResult = await this.mediator.Send(new GuildBackgroundJobs.GetGuildJobs(context.Guild));
+
+            if (!getGuildJobsResult.TryGetValue(out IEnumerable<GuildBackgroundJob>? jobs))
+            {
+                throw new Exception("An error occurred while retrieving guild background jobs.");
+            }
+
+            List<GuildBackgroundJob> guildEventJobs = jobs
                 .Where(x => x.GuildJobType == GuildJobType.SCHEDULED_EVENT)
                 .OrderBy(x => x.ScheduledTime)
                 .ToList();
@@ -370,7 +405,7 @@ namespace Norm.Modules
             await this.AddGuildEventInteractive(context, interactivity, msg);
         }
 
-        private async Task<CustomResult<DiscordMessage>> AddGuildEventInteractive(CommandContext context, InteractivityExtension interactivity, DiscordMessage msg = null)
+        private async Task<CustomResult<DiscordMessage>> AddGuildEventInteractive(CommandContext context, InteractivityExtension interactivity, DiscordMessage? msg = null)
         {
 
             if (msg == null)
@@ -453,11 +488,15 @@ namespace Norm.Modules
                 }
             }
 
+            DbResult<IEnumerable<GuildEvent>> getEventsResult = await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild));
+            if (!getEventsResult.TryGetValue(out IEnumerable<GuildEvent>? guildEvents))
+            {
+                throw new Exception("An error occured while retrieving guild events");
+            }
 
-            List<GuildEvent> guildEvents = (await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value.ToList();
-
+            List<GuildEvent> events = guildEvents.ToList();
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(
-                GetGuildEventsPages(guildEvents, interactivity, removeEventEmbed),
+                GetGuildEventsPages(events, interactivity, removeEventEmbed),
                 messageValidationAndReturn);
 
             if (result.TimedOut || result.Cancelled)
@@ -466,7 +505,7 @@ namespace Norm.Modules
                 return;
             }
 
-            GuildEvent selectedEvent = guildEvents[result.Result - 1];
+            GuildEvent selectedEvent = events[result.Result - 1];
 
             await this.mediator.Send(new GuildEvents.Delete(selectedEvent));
             await context.RespondAsync($"You have deleted the \"{selectedEvent.EventName}\" event from the guild's event list.", embed: null);
@@ -476,12 +515,18 @@ namespace Norm.Modules
         [Description("Shows a listing of all events currently available for this guild.")]
         public async Task ShowGuildEvents(CommandContext context)
         {
+            DbResult<IEnumerable<GuildEvent>> getEventsResult = await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild));
+            if (!getEventsResult.TryGetValue(out IEnumerable<GuildEvent>? guildEvents))
+            {
+                throw new Exception("An error occured while retrieving guild events");
+            }
+
             await context.Client.GetInteractivity().SendPaginatedMessageAsync(context.Channel, context.User,
-                GetGuildEventsPages((await this.mediator.Send(new GuildEvents.GetGuildEvents(context.Guild))).Value, context.Client.GetInteractivity()),
+                GetGuildEventsPages(guildEvents, context.Client.GetInteractivity()),
                 behaviour: PaginationBehaviour.WrapAround, deletion: PaginationDeletion.DeleteMessage, timeoutoverride: TimeSpan.FromMinutes(1));
         }
 
-        private static IEnumerable<Page> GetGuildEventsPages(IEnumerable<GuildEvent> guildEvents, InteractivityExtension interactivity, DiscordEmbedBuilder pageEmbedBase = null)
+        private static IEnumerable<Page> GetGuildEventsPages(IEnumerable<GuildEvent> guildEvents, InteractivityExtension interactivity, DiscordEmbedBuilder? pageEmbedBase = null)
         {
             StringBuilder guildEventsStringBuilder = new();
 
@@ -500,7 +545,7 @@ namespace Norm.Modules
             return interactivity.GeneratePagesInEmbed(guildEventsStringBuilder.ToString(), SplitType.Line, embedbase: pageEmbedBase);
         }
 
-        private static IEnumerable<Page> GetScheduledEventsPages(IEnumerable<GuildBackgroundJob> guildEventJobs, DateTimeZone timeZone, InteractivityExtension interactivity, DiscordEmbedBuilder pageEmbedBase = null)
+        private static IEnumerable<Page> GetScheduledEventsPages(IEnumerable<GuildBackgroundJob> guildEventJobs, DateTimeZone timeZone, InteractivityExtension interactivity, DiscordEmbedBuilder? pageEmbedBase = null)
         {
             StringBuilder guildEventsStringBuilder = new();
 

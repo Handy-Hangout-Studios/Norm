@@ -8,9 +8,9 @@ namespace Norm.Services
 {
     internal class EventService
     {
-        private readonly IBotService _bot;
+        private readonly BotService _bot;
         private readonly ILogger _logger;
-        public EventService(IBotService bot, ILogger<EventService> logger)
+        public EventService(BotService bot, ILogger<EventService> logger)
         {
             this._bot = bot;
             this._logger = logger;

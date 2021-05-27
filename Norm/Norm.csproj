@@ -4,6 +4,7 @@
 	  <Nullable>enable</Nullable>
     <TargetFramework>net5.0</TargetFramework>
     <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,6 +42,7 @@
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="6.0.0-preview.3.21201.4" />
     <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.6.0" />
     <PackageReference Include="Microsoft.SyndicationFeed.ReaderWriter" Version="1.0.2" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.13" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0-preview3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.0-preview3" />
     <PackageReference Include="Owoify.Net" Version="1.1.0" />

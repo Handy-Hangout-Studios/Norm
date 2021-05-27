@@ -112,8 +112,8 @@ namespace Norm.Modules
         public async Task SayAsAuthorAsync(CommandContext context, [RemainingText][Description("The message to say as you as well as the options you want used in the message")] string message = "")
         {
             message = await CheckAndDeleteOnHide(context, message);
-            DiscordWebhook webhook = (await context.Channel.GetWebhooksAsync()).FirstOrDefault(wbhk => wbhk.Name.Equals("Norm"));
-            if (webhook is null)
+            DiscordWebhook? webhook = (await context.Channel.GetWebhooksAsync()).FirstOrDefault(wbhk => wbhk.Name.Equals("Norm"));
+            if (webhook == null)
             {
                 webhook = await context.Channel.CreateWebhookAsync("Norm");
             }

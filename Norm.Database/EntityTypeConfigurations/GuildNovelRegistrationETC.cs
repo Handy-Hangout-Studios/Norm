@@ -18,7 +18,7 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasColumnName("guild_id");
 
             builder.Property(g => g.AnnouncementChannelId)
-                .IsRequired(false)
+                .IsRequired()
                 .HasColumnName("announcement_channel_id");
 
             builder.Property(g => g.PingEveryone)

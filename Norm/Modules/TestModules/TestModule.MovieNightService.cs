@@ -22,7 +22,7 @@ namespace Norm.Modules
     [RequireOwner]
     public partial class TestModule : BaseCommandModule
     {
-        [Group("movie night service")]
+        [Group("movie_night_service")]
         [Aliases("mns")]
         public class TestMovieNightGroup : BaseCommandModule
         {
@@ -37,7 +37,7 @@ namespace Norm.Modules
                 this.options = options.Value;
             }
 
-            [Command("start voting")]
+            [Command("start_voting")]
             [Aliases("sv")]
             public async Task StartVotingAsync(CommandContext context)
             {
@@ -81,11 +81,16 @@ namespace Norm.Modules
                 List<GuildMovieSuggestion> testSuggestions = new();
                 foreach (var value in testMoviesIdTitleAndRating)
                 {
-                    DbResult<GuildMovieSuggestion> addResult = await this.mediator.Send(new GuildMovieSuggestions.Add(value.Item1, suggestor, value.Item2, guild, value.Item3));
-                    if (!addResult.TryGetValue(out GuildMovieSuggestion? gms))
-                        throw new Exception("Error occurred while adding movie suggestions");
-                    testSuggestions.Add(gms);
+                    DbResult<GuildMovieSuggestion> getResult = await this.mediator.Send(new GuildMovieSuggestions.GetMovieSuggestion(value.Item1, guild.Id));
+                    if (!getResult.TryGetValue(out GuildMovieSuggestion? gms))
+                    {
+                        DbResult<GuildMovieSuggestion> addResult = await this.mediator.Send(new GuildMovieSuggestions.Add(value.Item1, suggestor, value.Item2, guild, value.Item3));
+                        if (!addResult.TryGetValue(out GuildMovieSuggestion? gms2))
+                            throw new Exception("Error occurred while adding movie suggestions");
+                        testSuggestions.Add(gms2);
+                    }
                 }
+
                 return testSuggestions;
             }
 

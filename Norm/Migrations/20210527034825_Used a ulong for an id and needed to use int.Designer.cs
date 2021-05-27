@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Norm.Database.Contexts;
@@ -10,9 +11,10 @@ using Norm.Database.Contexts;
 namespace Norm.Migrations
 {
     [DbContext(typeof(NormDbContext))]
-    partial class NormDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210527034825_Used a ulong for an id and needed to use int")]
+    partial class Usedaulongforanidandneededtouseint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -109,12 +109,12 @@ namespace Norm.Database.Requests
 
         public class GetMovieNight : DbRequest<GuildMovieNight>
         {
-            public GetMovieNight(ulong movieNightId)
+            public GetMovieNight(int movieNightId)
             {
                 this.MovieNightId = movieNightId;
             }
 
-            internal ulong MovieNightId { get; }
+            internal int MovieNightId { get; }
         }
 
         public class GetMovieNightHandler : DbRequestHandler<GetMovieNight, GuildMovieNight>

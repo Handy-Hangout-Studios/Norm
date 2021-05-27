@@ -21,13 +21,20 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasColumnName("emoji_id")
                 .IsRequired();
 
+            // System.InvalidOperationException: 'The relationship from 'MovieNightAndSuggestion.MovieSuggestion'
+            // to 'GuildMovieSuggestion.MovieNightAndSuggestions' with foreign key properties
+            // {'MovieSuggestionId' : string} cannot target the primary key {'ImdbId' : string, 'GuildId' : ulong}
+            // because it is not compatible. Configure a principal key or a set of foreign key properties with
+            // compatible types for this relationship.'
+
+
             builder.HasOne(mns => mns.MovieNight)
                 .WithMany(mn => mn.MovieNightAndSuggestions)
                 .HasForeignKey(mns => mns.MovieNightId);
 
             builder.HasOne(mns => mns.MovieSuggestion)
                 .WithMany(ms => ms.MovieNightAndSuggestions)
-                .HasForeignKey(mns => mns.MovieSuggestionId);
+                .HasForeignKey(mns => new { mns.MovieSuggestionId, mns.GuildId });
         }
     }
 }

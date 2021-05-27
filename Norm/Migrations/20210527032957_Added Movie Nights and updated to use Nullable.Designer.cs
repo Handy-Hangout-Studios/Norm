@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Norm.Database.Contexts;
@@ -10,9 +11,10 @@ using Norm.Database.Contexts;
 namespace Norm.Migrations
 {
     [DbContext(typeof(NormDbContext))]
-    partial class NormDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210527032957_Added Movie Nights and updated to use Nullable")]
+    partial class AddedMovieNightsandupdatedtouseNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -144,10 +146,9 @@ namespace Norm.Migrations
 
             modelBuilder.Entity("Norm.Database.Entities.GuildMovieNight", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<decimal>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<decimal>("AnnouncementChannelId")
                         .HasColumnType("numeric(20,0)")
@@ -318,8 +319,8 @@ namespace Norm.Migrations
 
             modelBuilder.Entity("Norm.Database.Entities.MovieNightAndSuggestion", b =>
                 {
-                    b.Property<int>("MovieNightId")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("MovieNightId")
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<string>("MovieSuggestionId")
                         .HasColumnType("text");

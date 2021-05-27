@@ -33,7 +33,7 @@ namespace Norm.Services
         /// </summary>
         /// <param name="movieNightId">ID for the movie night in the data store</param>
         /// <exception cref="ArgumentException">Thrown when an unknown movie night ID is provided</exception>
-        public async Task StartVoting(ulong movieNightId)
+        public async Task StartVoting(int movieNightId)
         {
             DbResult<GuildMovieNight> movieNightResult = await this.mediator.Send(new GuildMovieNights.GetMovieNight(movieNightId));
             if (!movieNightResult.TryGetValue(out GuildMovieNight? movieNight))
@@ -76,7 +76,7 @@ namespace Norm.Services
             DiscordEmbed eBuilder = new DiscordEmbedBuilder()
                 .WithTitle($"Time to vote for a movie!")
                 .WithDescription(description)
-                .AddField("Date and Time of Movie", zdt.ToString("mm/dd/yyyy hh:mm x", null), true)
+                .AddField("Date and Time of Movie", zdt.ToString("MM/dd/yyyy hh:mm x", null), true)
                 .AddField("Maximum Parental Rating", movieNight.MaximumRating.ToQueryValue(), true);
 
             DiscordMessageBuilder mBuilder = new DiscordMessageBuilder()
@@ -110,7 +110,7 @@ namespace Norm.Services
             StringBuilder descriptionBuilder = new();
             foreach ((GuildMovieSuggestion gms, DiscordEmoji emoji) in suggestions.Zip(numbers))
             {
-                movieNight.MovieNightAndSuggestions.Add(new MovieNightAndSuggestion(movieNight.Id, gms.ImdbId, emoji.Id));
+                movieNight.MovieNightAndSuggestions.Add(new MovieNightAndSuggestion(movieNight.Id, gms.ImdbId, emoji.Id, gms.GuildId));
                 descriptionBuilder.AppendLine($"{emoji}. {gms.Title}");
             }
 

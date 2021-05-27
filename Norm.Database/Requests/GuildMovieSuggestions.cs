@@ -109,12 +109,14 @@ namespace Norm.Database.Requests
 
         public class GetMovieSuggestion : DbRequest<GuildMovieSuggestion>
         {
-            public GetMovieSuggestion(string movieSuggestionImdbId)
+            public GetMovieSuggestion(string movieSuggestionImdbId, ulong guildId)
             {
                 this.MovieSuggestionImdbId = movieSuggestionImdbId;
+                this.GuildId = guildId;
             }
 
             internal string MovieSuggestionImdbId { get; }
+            internal ulong GuildId { get; }
         }
 
         public class GetMovieSuggestionHandler : DbRequestHandler<GetMovieSuggestion, GuildMovieSuggestion>
@@ -130,7 +132,7 @@ namespace Norm.Database.Requests
                     await this.DbContext.GuildMovieSuggestions
                         .Include(gms => gms.MovieNightAndSuggestions)
                         .ThenInclude(row => row.MovieNight)
-                        .FirstOrDefaultAsync(gms => gms.ImdbId == request.MovieSuggestionImdbId, cancellationToken: cancellationToken);
+                        .FirstOrDefaultAsync(gms => gms.ImdbId == request.MovieSuggestionImdbId && gms.GuildId == request.GuildId, cancellationToken: cancellationToken);
 
                 return new DbResult<GuildMovieSuggestion>
                 {

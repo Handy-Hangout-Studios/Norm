@@ -106,6 +106,11 @@ namespace Norm
                 .ValidateDataAnnotations();
 
             services
+                .AddOptions<OmdbClientOptions>()
+                .Bind(context.Configuration.GetSection("OmdbClient"))
+                .ValidateDataAnnotations();
+
+            services
                 .AddSingleton<IClock>((p) => SystemClock.Instance)
                 .AddSingleton<IDateTimeZoneSource>((p) => TzdbDateTimeZoneSource.Default)
                 .AddSingleton<IDateTimeZoneProvider, DateTimeZoneCache>()
@@ -113,7 +118,7 @@ namespace Norm
                 {
                     DatabaseConfig db = s.GetRequiredService<IOptions<BotOptions>>().Value.Database;
                     ILoggerFactory lf = s.GetRequiredService<ILoggerFactory>();
-                    o.UseNpgsql(db.AsNpgsqlConnectionString(), o => o.UseNodaTime())
+                    o.UseNpgsql(db.AsNpgsqlConnectionString(), o => o.UseNodaTime().MigrationsAssembly("Norm"))
                      .UseLoggerFactory(lf);
                 })
                 .AddOmdbClient((s, o) =>
@@ -122,8 +127,9 @@ namespace Norm
                     o.ApiKey = opts.ApiKey;
                     o.Version = opts.Version ?? o.Version;
                 })
-                .AddSingleton<LatexRenderService>()
-                .AddSingleton<BotService, BotService>()
+                .AddTransient<MovieNightService>()
+                .AddTransient<LatexRenderService>()
+                .AddSingleton<BotService>()
                 .AddTransient<AnnouncementService>()
                 .AddTransient<EventService>()
                 .AddTransient<ModerationService>()

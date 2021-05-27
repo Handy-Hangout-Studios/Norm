@@ -127,6 +127,7 @@ namespace Norm.Services
                 commands.RegisterCommands<WelcomeMessageSettingsModule>();
                 commands.RegisterCommands<FunModule>();
                 commands.RegisterCommands<EvaluationModule>();
+                commands.RegisterCommands<TestModule>();
 
                 commands.CommandErrored += ChecksFailedError;
                 commands.CommandErrored += this.CheckCommandExistsError;
@@ -170,7 +171,6 @@ namespace Norm.Services
                 this.BotDeveloper = await botDevGuild.GetMemberAsync(this.config.DevId);
                 this.ClockEmoji = DiscordEmoji.FromName(client, ":clock:");
                 RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "0/15 * * * *");
-
 
                 await this.BotDeveloper.SendMessageAsync("I'm up and running Prof. :smile:");
             });

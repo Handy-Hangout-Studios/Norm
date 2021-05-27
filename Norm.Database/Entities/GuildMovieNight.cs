@@ -26,7 +26,7 @@ namespace Norm.Database.Entities
         }
 
         // Initial Data
-        public ulong Id { get; set; }
+        public int Id { get; set; }
         public string VotingStartHangfireId { get; set; }
         public string VotingEndHangfireId { get; set; }
         public string MovieNightStartHangfireId { get; set; }

@@ -9,16 +9,18 @@ namespace Norm.Database.Entities
 {
     public class MovieNightAndSuggestion
     {
-        public MovieNightAndSuggestion(ulong movieNightId, string movieSuggestionId, ulong emojiId)
+        public MovieNightAndSuggestion(int movieNightId, string movieSuggestionId, ulong emojiId, ulong guildId)
         {
             this.MovieNightId = movieNightId;
             this.MovieSuggestionId = movieSuggestionId;
             this.EmojiId = emojiId;
+            this.GuildId = guildId;
         }
 
         // Composite key
-        public ulong MovieNightId { get; set; }
+        public int MovieNightId { get; set; }
         public string MovieSuggestionId { get; set; }
+        public ulong GuildId { get; set; }
         
         // Data
         public ulong EmojiId { get; set; }

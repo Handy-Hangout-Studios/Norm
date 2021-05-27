@@ -14,10 +14,14 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasName("guild_prefix_id");
 
             builder.Property(gp => gp.Prefix)
-                .HasColumnName("prefix");
+                .HasColumnName("prefix")
+                .IsRequired();
 
             builder.Property(gp => gp.GuildId)
-                .HasColumnName("guild_id");
+                .HasColumnName("guild_id")
+                .IsRequired();
+
+            builder.HasIndex(gp => gp.GuildId);
         }
     }
 }

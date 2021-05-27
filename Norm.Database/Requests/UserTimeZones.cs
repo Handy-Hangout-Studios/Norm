@@ -17,11 +17,7 @@ namespace Norm.Database.Requests
 
             public Add(ulong userId, string timeZoneId)
             {
-                this.UserTimeZone = new UserTimeZone
-                {
-                    UserId = userId,
-                    TimeZoneId = timeZoneId,
-                };
+                this.UserTimeZone = new UserTimeZone(userId, timeZoneId);
             }
 
             internal UserTimeZone UserTimeZone { get; }

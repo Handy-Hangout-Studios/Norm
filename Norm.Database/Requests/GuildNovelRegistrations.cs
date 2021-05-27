@@ -16,19 +16,9 @@ namespace Norm.Database.Requests
     {
         public class Add : DbRequest<GuildNovelRegistration>
         {
-            public Add(ulong guildId, ulong announcementChannelId, bool pingEveryone, bool pingNoOne, ulong? roleId, int novelInfoId, ulong? memberId, bool isDm)
+            public Add(ulong guildId, ulong? announcementChannelId, bool pingEveryone, bool pingNoOne, ulong? roleId, int novelInfoId, ulong? memberId, bool isDm)
             {
-                this.NovelRegistration = new GuildNovelRegistration
-                {
-                    GuildId = guildId,
-                    AnnouncementChannelId = announcementChannelId,
-                    PingEveryone = pingEveryone,
-                    PingNoOne = pingNoOne,
-                    MemberId = memberId,
-                    IsDm = isDm,
-                    RoleId = roleId,
-                    NovelInfoId = novelInfoId,
-                };
+                this.NovelRegistration = new GuildNovelRegistration(guildId, announcementChannelId, pingEveryone, pingNoOne, memberId, isDm, roleId, novelInfoId);
             }
 
             public GuildNovelRegistration NovelRegistration { get; }

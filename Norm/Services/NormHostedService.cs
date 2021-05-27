@@ -9,11 +9,11 @@ namespace Norm.Services
 {
     public class NormHostedService : IHostedService
     {
-        private readonly IBotService bot;
+        private readonly BotService bot;
         private readonly IMediator mediator;
         private readonly LatexRenderService latexRenderService;
 
-        public NormHostedService(IBotService bot, IMediator mediator, LatexRenderService renderer)
+        public NormHostedService(BotService bot, IMediator mediator, LatexRenderService renderer)
         {
             this.bot = bot;
             this.mediator = mediator;

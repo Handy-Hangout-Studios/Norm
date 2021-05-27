@@ -17,7 +17,7 @@ namespace Norm.Database.Requests
         {
             public Add(ulong guildId, string eventName, string eventDesc)
             {
-                this.Event = new GuildEvent { GuildId = guildId, EventName = eventName, EventDesc = eventDesc };
+                this.Event = new GuildEvent(guildId, eventName, eventDesc);
             }
 
             public GuildEvent Event { get; }

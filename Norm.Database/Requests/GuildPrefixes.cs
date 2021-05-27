@@ -18,11 +18,7 @@ namespace Norm.Database.Requests
         {
             public Add(ulong guildId, string prefix)
             {
-                this.Prefix = new GuildPrefix
-                {
-                    GuildId = guildId,
-                    Prefix = prefix,
-                };
+                this.Prefix = new GuildPrefix(prefix, guildId);
             }
 
             public GuildPrefix Prefix { get; }

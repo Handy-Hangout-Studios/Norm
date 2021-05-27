@@ -19,14 +19,7 @@ namespace Norm.Database.Requests
         {
             public Add(string hangfireJobId, ulong guildId, string jobName, Instant scheduledTime, GuildJobType guildJobType)
             {
-                this.Job = new GuildBackgroundJob
-                {
-                    HangfireJobId = hangfireJobId,
-                    GuildId = guildId,
-                    JobName = jobName,
-                    ScheduledTime = scheduledTime,
-                    GuildJobType = guildJobType,
-                };
+                this.Job = new GuildBackgroundJob(hangfireJobId, guildId, jobName, scheduledTime, guildJobType);
             }
 
             public GuildBackgroundJob Job { get; }

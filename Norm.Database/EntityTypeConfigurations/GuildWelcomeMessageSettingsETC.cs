@@ -14,10 +14,12 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasName("guild_id");
 
             builder.Property(gw => gw.ShouldPing)
-                .HasColumnName("should_ping");
+                .HasColumnName("should_ping")
+                .IsRequired();
 
             builder.Property(gw => gw.ShouldWelcomeMembers)
-                .HasColumnName("should_welcome_members");
+                .HasColumnName("should_welcome_members")
+                .IsRequired();
         }
     }
 }

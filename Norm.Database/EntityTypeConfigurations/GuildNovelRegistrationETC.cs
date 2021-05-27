@@ -18,7 +18,7 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasColumnName("guild_id");
 
             builder.Property(g => g.AnnouncementChannelId)
-                .IsRequired()
+                .IsRequired(false)
                 .HasColumnName("announcement_channel_id");
 
             builder.Property(g => g.PingEveryone)
@@ -30,6 +30,7 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasColumnName("ping_no_one");
 
             builder.Property(g => g.MemberId)
+                .IsRequired(false)
                 .HasDefaultValue(null)
                 .HasColumnName("member_id");
 
@@ -39,6 +40,7 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasColumnName("is_dm");
 
             builder.Property(g => g.RoleId)
+                .IsRequired(false)
                 .HasColumnName("role_id");
 
             builder.Property(g => g.NovelInfoId)

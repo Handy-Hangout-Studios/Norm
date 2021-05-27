@@ -46,7 +46,7 @@ namespace Norm.Services
             }
 
             color ??= DiscordColor.Black;
-            string dump = $"formula=Unneccesary&fsize={fsize}px&fcolor={color.ToString()[1..]}&mode=0&out=1&remhost=localhost&preamble={Uri.EscapeDataString(latex)}";
+            string dump = $"formula=Unneccesary&fsize={fsize}px&fcolor={color.ToString()![1..]}&mode=0&out=1&remhost=localhost&preamble={Uri.EscapeDataString(latex)}";
             HttpResponseMessage response = await this.quickLatexHttpClient.PostAsync(
                 "/latex3.f",
                 new StringContent(dump)
@@ -59,7 +59,7 @@ namespace Norm.Services
 
             string picture_url =
                 (await response.Content.ReadAsStringAsync())
-                    .Split((char[])null, StringSplitOptions.RemoveEmptyEntries)[1][this.quickLatexHttpClient.BaseAddress.OriginalString.Length..];
+                    .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)[1][this.quickLatexHttpClient.BaseAddress!.OriginalString.Length..];
             return await this.quickLatexHttpClient.GetStreamAsync(picture_url);
         }
 

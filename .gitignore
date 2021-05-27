@@ -344,3 +344,4 @@ config.json
 bin
 config.test.json
 movie_text.txt
+test.runsettings

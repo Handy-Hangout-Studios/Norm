@@ -54,6 +54,25 @@ namespace Norm.Modules
                 await this.DeleteTestMovieSuggestions(testMovieSuggestions);
             }
 
+            [Command("calculate_votes")]
+            [Aliases("cv")]
+            public async Task CalculateVotesAsync(CommandContext context)
+            {
+                if (options.DevGuildId != context.Guild.Id)
+                {
+                    await context.RespondAsync("I'm sorry, but these commands should only be run in the bot dev guild");
+                    return;
+                }
+
+                GuildMovieNight testMovieNight = await this.AddTestMovieNight(context.Guild, context.Channel, context.User);
+                IEnumerable<GuildMovieSuggestion> testMovieSuggestions = await this.AddTestMovies(context.User, context.Guild);
+                await this.mns.StartVoting(testMovieNight.Id);
+                await Task.Delay(5*1000);
+                await this.mns.CalculateVotes(testMovieNight.Id);
+                await this.DeleteTestMovieNight(testMovieNight);
+                await this.DeleteTestMovieSuggestions(testMovieSuggestions);
+            }
+
             private async Task DeleteTestMovieSuggestions(IEnumerable<GuildMovieSuggestion> testMovieSuggestions)
             {
                 foreach (GuildMovieSuggestion gms in testMovieSuggestions)

@@ -38,17 +38,17 @@ namespace Norm.Omdb
             };
         }
 
-        public async Task<OmdbMovie?> GetByImdbIdAsync(
+        public async Task<OmdbMovie> GetByImdbIdAsync(
             string imdbId, OmdbSearchType resultType = OmdbSearchType.NONE,
             int? yearOfRelease = null, OmdbPlotOption omdbPlotOption = OmdbPlotOption.SHORT)
             => await this.GetByIdOrTitleAsync(imdbId, null, resultType, yearOfRelease, omdbPlotOption);
 
-        public async Task<OmdbMovie?> GetByMovieTitleAsync(
+        public async Task<OmdbMovie> GetByMovieTitleAsync(
             string title, OmdbSearchType resultType = OmdbSearchType.NONE,
             int? yearOfRelease = null, OmdbPlotOption omdbPlotOption = OmdbPlotOption.SHORT)
             => await this.GetByIdOrTitleAsync(null, title, resultType, yearOfRelease, omdbPlotOption);
 
-        private async Task<OmdbMovie?> GetByIdOrTitleAsync(
+        private async Task<OmdbMovie> GetByIdOrTitleAsync(
             string? imdbId,
             string? title,
             OmdbSearchType resultType = OmdbSearchType.NONE,

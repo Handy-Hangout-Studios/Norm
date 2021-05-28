@@ -9,7 +9,14 @@ namespace Norm.Database.Entities
 {
     public class MovieNightAndSuggestion
     {
-        public MovieNightAndSuggestion(int movieNightId, string movieSuggestionId, ulong emojiId, ulong guildId)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="movieNightId"></param>
+        /// <param name="movieSuggestionId"></param>
+        /// <param name="emojiId">Expects a default Discord Emoji with a Unicode representation</param>
+        /// <param name="guildId"></param>
+        public MovieNightAndSuggestion(int movieNightId, string movieSuggestionId, string emojiId, ulong guildId)
         {
             this.MovieNightId = movieNightId;
             this.MovieSuggestionId = movieSuggestionId;
@@ -23,7 +30,7 @@ namespace Norm.Database.Entities
         public ulong GuildId { get; set; }
         
         // Data
-        public ulong EmojiId { get; set; }
+        public string EmojiId { get; set; }
 
         // Navigation Paths
         public GuildMovieNight MovieNight { get; set; } = null!;

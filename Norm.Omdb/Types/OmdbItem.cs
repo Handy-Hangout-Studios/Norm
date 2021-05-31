@@ -1,11 +1,14 @@
 ﻿using Norm.Omdb.Enums;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Norm.Omdb.Types
 {
     public class OmdbItem
     {
+        [NotNull]
         public string? Title { get; init; }
-        public int? Year { get; init; }
+        public int Year { get; init; }
+        [NotNull]
         public string? ImdbId { get; init; }
         public OmdbSearchType Type { get; init; }
         public string? Poster { get; init; }

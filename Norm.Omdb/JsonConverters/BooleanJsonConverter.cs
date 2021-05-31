@@ -21,7 +21,7 @@ namespace Norm.Omdb.JsonConverters
                 return reader.GetBoolean();
             }
 
-            throw new JsonException();
+            throw new JsonException($"Failed to parse the boolean: {reader.GetString()}");
         }
 
         public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options)

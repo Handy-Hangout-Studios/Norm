@@ -24,7 +24,7 @@ namespace Norm.Services
         {
             await this.mediator.Send(new Database.Requests.Database.Migrate(), cancellationToken);
             using IStorageConnection connection = JobStorage.Current.GetConnection();
-            foreach (RecurringJobDto rJob in StorageConnectionExtensions.GetRecurringJobs(connection))
+            foreach (RecurringJobDto rJob in connection.GetRecurringJobs())
             {
                 RecurringJob.RemoveIfExists(rJob.Id);
             }

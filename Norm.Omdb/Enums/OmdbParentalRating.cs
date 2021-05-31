@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 
 namespace Norm.Omdb.Enums
 {
@@ -25,5 +26,21 @@ namespace Norm.Omdb.Enums
                 OmdbParentalRating.NR => "Not Rated",
                 _ => throw new ArgumentException("Unknown OmdbParentalRating used"),
             };
+
+
+
+        public static OmdbParentalRating ToOmdbParentalRating(this string switcher)
+        {
+            return switcher.ToLower() switch
+            {
+                "g" => OmdbParentalRating.G,
+                "tv-pg" or "pg" => OmdbParentalRating.PG,
+                "approved" or "pg-13" or "tv-14" => OmdbParentalRating.PG_13,
+                "r" or "tv-ma" => OmdbParentalRating.R,
+                "nc-17" => OmdbParentalRating.NC_17,
+                "not rated" or "n/a" or "unrated" => OmdbParentalRating.NR,
+                _ => throw new JsonException($"Unknown rating read: {switcher}")
+            };
+        }
     }
 }

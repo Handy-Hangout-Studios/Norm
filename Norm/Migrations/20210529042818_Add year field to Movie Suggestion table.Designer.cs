@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Norm.Database.Contexts;
@@ -10,9 +11,10 @@ using Norm.Database.Contexts;
 namespace Norm.Migrations
 {
     [DbContext(typeof(NormDbContext))]
-    partial class NormDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210529042818_Add year field to Movie Suggestion table")]
+    partial class AddyearfieldtoMovieSuggestiontable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -210,10 +212,6 @@ namespace Norm.Migrations
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("guild_id");
 
-                    b.Property<Instant?>("InstantWatched")
-                        .HasColumnType("timestamp")
-                        .HasColumnName("instant_watched");
-
                     b.Property<int>("Rating")
                         .HasColumnType("integer")
                         .HasColumnName("rating");
@@ -327,12 +325,10 @@ namespace Norm.Migrations
             modelBuilder.Entity("Norm.Database.Entities.MovieNightAndSuggestion", b =>
                 {
                     b.Property<int>("MovieNightId")
-                        .HasColumnType("integer")
-                        .HasColumnName("movie_night_id");
+                        .HasColumnType("integer");
 
                     b.Property<string>("MovieSuggestionId")
-                        .HasColumnType("text")
-                        .HasColumnName("movie_suggestion_id");
+                        .HasColumnType("text");
 
                     b.Property<string>("EmojiId")
                         .IsRequired()
@@ -340,8 +336,7 @@ namespace Norm.Migrations
                         .HasColumnName("emoji_id");
 
                     b.Property<decimal>("GuildId")
-                        .HasColumnType("numeric(20,0)")
-                        .HasColumnName("guild_id");
+                        .HasColumnType("numeric(20,0)");
 
                     b.HasKey("MovieNightId", "MovieSuggestionId");
 

@@ -21,7 +21,7 @@ namespace Norm.Omdb.JsonConverters
                 return reader.GetInt32();
             }
 
-            throw new JsonException();
+            throw new JsonException($"Failed to parse the integer: {reader.GetString()}");
         }
 
         public override void Write(Utf8JsonWriter writer, int value, JsonSerializerOptions options)

@@ -84,29 +84,34 @@ namespace Norm.Services
             }
         }
 
-        private async Task LogExceptions(CommandsNextExtension c, CommandErrorEventArgs e)
+        public async Task LogCommandExceptions(CommandsNextExtension c, CommandErrorEventArgs e)
+        {
+            await this.LogExceptions(e.Exception);
+        }
+
+        public async Task LogExceptions(Exception exception)
         {
             try
             {
                 DiscordEmbedBuilder commandErrorEmbed = new DiscordEmbedBuilder()
                     .WithTitle("Command Exception");
 
-                if (e.Exception.Message != null)
+                if (exception.Message != null)
                 {
-                    AddSanitizedAndShortenedField(commandErrorEmbed, "Message", e.Exception.Message);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "Message", exception.Message);
                 }
 
-                if (e.Exception.StackTrace != null)
+                if (exception.StackTrace != null)
                 {
-                    AddSanitizedAndShortenedField(commandErrorEmbed, "StackTrace", e.Exception.StackTrace);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "StackTrace", exception.StackTrace);
                 }
 
-                if (e.Exception is DSharpPlus.Exceptions.UnauthorizedException u && u.JsonMessage is not null)
+                if (exception is DSharpPlus.Exceptions.UnauthorizedException u && u.JsonMessage is not null)
                 {
                     AddSanitizedAndShortenedField(commandErrorEmbed, "JsonMessage", u.JsonMessage);
                 }
 
-                if (e.Exception is DSharpPlus.Exceptions.BadRequestException b)
+                if (exception is DSharpPlus.Exceptions.BadRequestException b)
                 {
                     commandErrorEmbed.AddField("Bad Request Code", b.Code.ToString(), true);
                     if (b.JsonMessage is not null)
@@ -119,17 +124,17 @@ namespace Norm.Services
                     }
                 }
 
-                if (e.Exception.GetType() != null)
+                if (exception.GetType() != null)
                 {
-                    AddSanitizedAndShortenedField(commandErrorEmbed, "ExceptionType", e.Exception.GetType().FullName!);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "ExceptionType", exception.GetType().FullName!);
                 }
 
-                this.Logger.LogError(e.Exception, "Exception from Command Errored");
+                this.Logger.LogError(exception, "Exception from Command Errored");
                 await this.BotDeveloper!.SendMessageAsync(embed: commandErrorEmbed);
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
-                this.Logger.LogError(exception, "An error occurred in sending the exception to the Dev");
+                this.Logger.LogError(e, "An error occurred in sending the exception to the Dev");
             }
         }
 

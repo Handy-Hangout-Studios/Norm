@@ -128,10 +128,11 @@ namespace Norm.Services
                 commands.RegisterCommands<FunModule>();
                 commands.RegisterCommands<EvaluationModule>();
                 commands.RegisterCommands<TestModule>();
+                commands.RegisterCommands<MovieNightModule>();
 
                 commands.CommandErrored += ChecksFailedError;
                 commands.CommandErrored += this.CheckCommandExistsError;
-                commands.CommandErrored += this.LogExceptions;
+                commands.CommandErrored += this.LogCommandExceptions;
 
                 commands.SetHelpFormatter<CategoryHelpFormatter>();
 

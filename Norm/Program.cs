@@ -133,6 +133,7 @@ namespace Norm
                 .AddTransient<AnnouncementService>()
                 .AddTransient<EventService>()
                 .AddTransient<ModerationService>()
+                .AddTransient<NodaTimeConverterService>()
                 .AddHostedService<NormHostedService>();
         }
     }

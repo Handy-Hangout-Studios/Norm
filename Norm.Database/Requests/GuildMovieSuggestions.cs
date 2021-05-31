@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using NodaTime;
 using Norm.Database.Contexts;
 using Norm.Database.Entities;
 using Norm.Database.Requests.BaseClasses;
@@ -18,13 +19,13 @@ namespace Norm.Database.Requests
     {
         public class Add : DbRequest<GuildMovieSuggestion>
         {
-            public Add(string imdbId, ulong suggestorId, string title, ulong guildId, OmdbParentalRating parentalRating)
+            public Add(string imdbId, ulong suggestorId, string title, ulong guildId, int year, OmdbParentalRating parentalRating)
             {
-                this.MovieSuggestion = new GuildMovieSuggestion(imdbId, suggestorId, title, guildId, parentalRating);
+                this.MovieSuggestion = new GuildMovieSuggestion(imdbId, suggestorId, title, guildId, year, parentalRating);
             }
 
-            public Add(string imdbId, DiscordUser suggestor, string title, DiscordGuild guild, OmdbParentalRating parentalRating) :
-                this(imdbId, suggestor.Id, title, guild.Id, parentalRating)
+            public Add(string imdbId, DiscordUser suggestor, string title, DiscordGuild guild, int year, OmdbParentalRating parentalRating) :
+                this(imdbId, suggestor.Id, title, guild.Id, year, parentalRating)
             {
 
             }
@@ -115,6 +116,11 @@ namespace Norm.Database.Requests
                 this.GuildId = guildId;
             }
 
+            public GetMovieSuggestion(string movieSuggestionImdbId, DiscordGuild guild) : this(movieSuggestionImdbId, guild.Id)
+            {
+
+            }
+
             internal string MovieSuggestionImdbId { get; }
             internal ulong GuildId { get; }
         }
@@ -164,17 +170,25 @@ namespace Norm.Database.Requests
 
         public class GetAllGuildsMovieNightsHandler : DbRequestHandler<GetRandomGuildMovieSuggestions, IEnumerable<GuildMovieSuggestion>>
         {
-            public GetAllGuildsMovieNightsHandler(NormDbContext context) : base(context) { }
+            private readonly IClock clock;
+            public GetAllGuildsMovieNightsHandler(NormDbContext context, IClock clock) : base(context) 
+            {
+                this.clock = clock;
+            }
 
             public override async Task<DbResult<IEnumerable<GuildMovieSuggestion>>> Handle(GetRandomGuildMovieSuggestions request, CancellationToken cancellationToken)
             {
                 try
                 {
+                    Instant oneYearAgo = this.clock.GetCurrentInstant() - Duration.FromDays(365);
                     IEnumerable<GuildMovieSuggestion> movieNights = await this.DbContext
                         .GuildMovieSuggestions
                         .Include(gms => gms.MovieNightAndSuggestions)
                         .ThenInclude(row => row.MovieNight)
-                        .Where(gms => gms.GuildId == request.GuildId && gms.Rating <= request.MaximumRating)
+                        .Where(gms => gms.GuildId == request.GuildId && 
+                            (gms.Rating <= request.MaximumRating || gms.Year <= 1968) && 
+                            (gms.InstantWatched == null || gms.InstantWatched > oneYearAgo)
+                        )
                         .OrderBy(gms => EF.Functions.Random())
                         .Take(request.NumberOfSuggestions)
                         .ToListAsync(cancellationToken: cancellationToken);

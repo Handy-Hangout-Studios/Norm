@@ -30,6 +30,14 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasColumnName("title")
                 .IsRequired();
 
+            builder.Property(b => b.Year)
+                .HasColumnName("year")
+                .IsRequired();
+
+            builder.Property(b => b.InstantWatched)
+                .HasColumnName("instant_watched")
+                .IsRequired(false);
+
             // Configuration for the MovieNightAndSuggestions Navigation
             // Path is in the MovieNightAndSuggestionETC.cs file. 
         }

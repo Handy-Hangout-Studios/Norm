@@ -38,7 +38,7 @@ namespace Norm.Database.Entities
         
         // Voting Data
         public ulong? VotingMessageId { get; set; }
-        public int? SelectedMovieIndex { get; set; }
+        public string? WinningMovieImdbId { get; set; }
 
         // Navigation Properties
         public ICollection<MovieNightAndSuggestion> MovieNightAndSuggestions { get; set; } = null!;

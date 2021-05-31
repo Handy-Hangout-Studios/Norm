@@ -49,7 +49,7 @@ namespace Norm.Database.EntityTypeConfigurations
                 .HasColumnName("voting_message_id")
                 .IsRequired(false);
 
-            builder.Property(b => b.SelectedMovieIndex)
+            builder.Property(b => b.WinningMovieImdbId)
                 .HasColumnName("selected_movie_index")
                 .IsRequired(false);
 

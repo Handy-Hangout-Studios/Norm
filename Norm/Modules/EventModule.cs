@@ -304,7 +304,7 @@ namespace Norm.Modules
             }
 
             List<GuildEvent> events = guildEvents.ToList();
-            IEnumerable<Page> pages = GetGuildEventsPages(guildEvents, interactivity, scheduleEmbedBase);
+            IEnumerable<Page> pages = GetGuildEventsPages(events, interactivity, scheduleEmbedBase);
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(pages,
                 PaginationMessageFunction.CreateWaitForMessageWithIntInRange(context.User, context.Channel, 1, events.Count + 1),
                 msg: msg
@@ -534,7 +534,7 @@ namespace Norm.Modules
             foreach (GuildEvent guildEvent in guildEvents)
             {
                 guildEventsStringBuilder.AppendLine($"{count}. {guildEvent.EventName}");
-                count++;
+                count += 1;
             }
 
             if (!guildEvents.Any())

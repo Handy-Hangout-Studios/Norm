@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CronEspresso" Version="3.0.0" />
+    <PackageReference Include="CronExpressionDescriptor" Version="2.16.0" />
     <PackageReference Include="CSharpMath" Version="0.5.1" />
     <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
     <PackageReference Include="DSharpPlus" Version="4.1.0-nightly-00862" />

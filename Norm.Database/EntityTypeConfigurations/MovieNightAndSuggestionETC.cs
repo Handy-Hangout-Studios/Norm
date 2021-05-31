@@ -17,8 +17,18 @@ namespace Norm.Database.EntityTypeConfigurations
 
             builder.HasKey(mns => new { mns.MovieNightId, mns.MovieSuggestionId });
 
+            builder.Property(mns => mns.MovieNightId)
+                .HasColumnName("movie_night_id");
+
+            builder.Property(mns => mns.MovieSuggestionId)
+                .HasColumnName("movie_suggestion_id");
+
             builder.Property(mns => mns.EmojiId)
                 .HasColumnName("emoji_id")
+                .IsRequired();
+
+            builder.Property(mns => mns.GuildId)
+                .HasColumnName("guild_id")
                 .IsRequired();
 
             // System.InvalidOperationException: 'The relationship from 'MovieNightAndSuggestion.MovieSuggestion'

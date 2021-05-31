@@ -9,10 +9,9 @@ using DSharpPlus.Interactivity.Extensions;
 using Hangfire;
 using Hangfire.Storage;
 using MediatR;
-using NodaTime;
-using NodaTime.TimeZones;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
+using Norm.Modules.Exceptions;
 using Norm.Omdb;
 using Norm.Omdb.Enums;
 using Norm.Omdb.Types;
@@ -37,15 +36,13 @@ namespace Norm.Modules
         private readonly IMediator mediator;
         private readonly BotService bot;
         private readonly NodaTimeConverterService nodaTimeConverterService;
-        private readonly IClock clock;
 
-        public MovieNightModule(OmdbClient omdbClient, IMediator mediator, BotService bot, NodaTimeConverterService nodaTimeConverterService, IClock clock)
+        public MovieNightModule(OmdbClient omdbClient, IMediator mediator, BotService bot, NodaTimeConverterService nodaTimeConverterService)
         {
             this.omdbClient = omdbClient;
             this.mediator = mediator;
             this.bot = bot;
             this.nodaTimeConverterService = nodaTimeConverterService;
-            this.clock = clock;
         }
         
         [Command("suggest")]
@@ -87,20 +84,10 @@ namespace Norm.Modules
             List<(OmdbMovie, DiscordEmbedBuilder)> omdbMovies = new();
             int currentIndex = 0;
 
-            await context.RespondAsync(
-@"Select a movie by reacting with the :white_check_mark:
-Go back to the beginning of your results by reacting with the :rewind:
-Go back to the previous result by reacting with the :arrow_left:
-Go to the next result by reacting with the :arrow_right:
-Cancel the search by reacting with the :stop_button:");
+            await context.RespondAsync(SELECT_MOVIE_TEXT);
             DiscordMessage msg = await context.Channel.SendMessageAsync($"{DiscordEmoji.FromGuildEmote(context.Client, 848012958851399710)} {Formatter.Bold(context.Guild.CurrentMember.DisplayName)} is getting your search results");
-            _ = Task.Run(async () =>
-            {
-                foreach (string emojiName in paginationEmojiNames)
-                {
-                    await msg.CreateReactionAsync(DiscordEmoji.FromUnicode(emojiName));
-                }
-            });
+            _ = Task.Run(AddPaginationEmojis(msg));
+
             InteractivityExtension interactivity = context.Client.GetInteractivity();
             bool selected = false;
             do
@@ -128,8 +115,8 @@ Cancel the search by reacting with the :stop_button:");
                 }
 
                 await msg.ModifyAsync(content: string.Empty, embed: omdbMovies[currentIndex].Item2.Build());
-                
-                InteractivityResult<MessageReactionAddEventArgs> waitForReactionResult = await interactivity.WaitForReactionAsync(ReactionIsPaginationEmoji, msg, context.Member);
+
+                InteractivityResult<MessageReactionAddEventArgs> waitForReactionResult = await interactivity.WaitForReactionAsync(this.ReactionIsPaginationEmoji, msg, context.Member);
                 if (waitForReactionResult.TimedOut)
                 {
                     await context.RespondAsync("You idled for too long and this search has been cancelled.");
@@ -144,38 +131,75 @@ Cancel the search by reacting with the :stop_button:");
                         currentIndex = 0;
                         break;
                     case "⬅️":
-                        if (movieList.HasPrev())
-                        {
-                            currentIndex -= 1;
-                            await movieList.MovePrev();
-                        }
+                        currentIndex = await MoveLeft(movieList, currentIndex);
                         break;
                     case "✅":
                         selected = true;
                         break;
                     case "➡️":
-                        if (movieList.HasNext())
-                        {
-                            currentIndex += 1;
-                            await movieList.MoveNext();
-                        }
+                        currentIndex = await MoveRight(movieList, currentIndex);
                         break;
                     case "⏹️":
                         await context.RespondAsync("Stopping the search.");
                         return null;
                     default:
-                        DiscordMessage invalidMsg = await context.RespondAsync("Invalid selection");
-                        _ = Task.Run(async () =>
-                        {
-                            await Task.Delay(3000);
-                            await invalidMsg.DeleteAsync();
-                        });
+                        await SendInvalidSelectionMessage(context);
                         break;
                 }
             }
-            while(!selected);
+            while (!selected);
 
             return omdbMovies[currentIndex].Item1;
+        }
+
+        private const string SELECT_MOVIE_TEXT =
+@"Select a movie by reacting with the :white_check_mark:
+Go back to the beginning of your results by reacting with the :rewind:
+Go back to the previous result by reacting with the :arrow_left:
+Go to the next result by reacting with the :arrow_right:
+Cancel the search by reacting with the :stop_button:";
+
+        private static async Task<int> MoveLeft(LazyOmdbList movieList, int currentIndex)
+        {
+            if (movieList.HasPrev())
+            {
+                currentIndex -= 1;
+                await movieList.MovePrev();
+            }
+
+            return currentIndex;
+        }
+
+        private static async Task<int> MoveRight(LazyOmdbList movieList, int currentIndex)
+        {
+            if (movieList.HasNext())
+            {
+                currentIndex += 1;
+                await movieList.MoveNext();
+            }
+
+            return currentIndex;
+        }
+
+        private static async Task SendInvalidSelectionMessage(CommandContext context)
+        {
+            DiscordMessage invalidMsg = await context.RespondAsync("Invalid selection");
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                await invalidMsg.DeleteAsync();
+            });
+        }
+
+        private static Func<Task> AddPaginationEmojis(DiscordMessage msg)
+        {
+            return async () =>
+            {
+                foreach (string emojiName in paginationEmojiNames)
+                {
+                    await msg.CreateReactionAsync(DiscordEmoji.FromUnicode(emojiName));
+                }
+            };
         }
 
         private static readonly string[] paginationEmojiNames = new string[] { "⏪", "⬅️", "✅", "➡️", "⏹️" };
@@ -191,15 +215,7 @@ Cancel the search by reacting with the :stop_button:");
         [Description("Start the interactive movie night creation process for the movie night that will be announced in the announcement channel you specify.")]
         public async Task CreateAsync(CommandContext context, [Description("The channel in which to announce the movie night")]DiscordChannel announcementChannel)
         {
-            DbResult<UserTimeZone> getUserTimeZoneResult = await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.Member));
-
-            if (!getUserTimeZoneResult.TryGetValue(out UserTimeZone? userTimeZone))
-            {
-                await context.RespondAsync("You do not currently have your timezone set up. This command requires your timezone in order to work. Please run `time init` to begin the process of setting up your timezone.");
-                return;
-            }
-
-            TimeZoneInfo hostTimeZoneInfo = this.nodaTimeConverterService.ConvertToTimeZoneInfo(userTimeZone.TimeZoneId);
+            TimeZoneInfo hostTimeZoneInfo = await GetUserTimeZoneInfoAsync(context);
 
             DiscordMessage confirmationMessage = await context.RespondAsync("Hi, you'd like to schedule a recurring movie night?");
             InteractivityExtension interactivity = context.Client.GetInteractivity();
@@ -211,158 +227,31 @@ Cancel the search by reacting with the :stop_button:");
                 return;
             }
 
-            await context.Channel.SendMessageAsync("What day of the week would you like to show the movie? (respond with the full day name or the three letter abbreviation)");
-            DayOfWeek? movieStartDayOfWeek = null;
-            while (movieStartDayOfWeek == null)
-            {
-                InteractivityResult<DiscordMessage> getDayOfWeekResult = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
-                if (getDayOfWeekResult.TimedOut)
-                {
-                    await context.Channel.SendMessageAsync("You took too long to respond. The movie night creation has been cancelled");
-                    return;
-                }
-
-                movieStartDayOfWeek = ParseDayOfWeek(getDayOfWeekResult.Result.Content);
-
-                if (movieStartDayOfWeek == null)
-                {
-                    await context.Channel.SendMessageAsync("Invalid input. Please try again.");
-                }
-            }
-
-            await context.Channel.SendMessageAsync("What time would you like to show the movie? (respond with the time in 24h format. Ex: 13:20 for 1:20 pm)");
-            TimeSpan? movieStartTimeOfDay = null;
-            while (movieStartTimeOfDay == null)
-            {
-                InteractivityResult<DiscordMessage> getTimeResult = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
-                if (getTimeResult.TimedOut)
-                {
-                    await context.Channel.SendMessageAsync("You took too long to respond. The movie night creation has been cancelled");
-                    return;
-                }
-
-                if (!TimeSpan.TryParseExact(getTimeResult.Result.Content, @"hh\:mm", null, out TimeSpan parsedTimeSpan))
-                {
-                    await context.Channel.SendMessageAsync("Invalid input. Please try again.");
-                }
-                else if (parsedTimeSpan.TotalHours >= 0 && parsedTimeSpan.TotalHours < 24)
-                {
-                    movieStartTimeOfDay = parsedTimeSpan;
-                }
-                else
-                {
-                    await context.Channel.SendMessageAsync("You must provide a time within 00:00-23:59.");
-                }
-            }
+            DayOfWeek movieStartDayOfWeek = await GetMovieStartDayOfWeek(context, interactivity);
+            TimeSpan movieStartTimeOfDay = await GetMovieStartTimeOfDay(context, interactivity);
 
             await context.Channel.SendMessageAsync("How many days and hours before the movie starts do you want voting to end? Format: 0d0h");
-            int? voteEndDays = null;
-            int? voteEndHours = null;
-            while (voteEndDays == null && voteEndHours == null)
-            {
-                InteractivityResult<DiscordMessage> getVoteEnd = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
-                if (getVoteEnd.TimedOut)
-                {
-                    await context.Channel.SendMessageAsync("You took too long to respond. The movie night creation has been cancelled");
-                    return;
-                }
-
-                if (!TimeSpan.TryParseExact(getVoteEnd.Result.Content, @"d\d%h\h", null, out TimeSpan parsedTimeSpan))
-                {
-                    await context.Channel.SendMessageAsync("Invalid input. Please try again.");
-                }
-                else if (parsedTimeSpan.TotalDays >= 0 && parsedTimeSpan.TotalDays < 7)
-                {
-                    voteEndDays = parsedTimeSpan.Days;
-                    voteEndHours = parsedTimeSpan.Hours;
-                }
-                else
-                {
-                    await context.Channel.SendMessageAsync("You must provide a time within 0d0h-6d23h.");
-                }
-            }
-
-            (DayOfWeek voteEndDayOfWeek, TimeSpan voteEndTimeSpan) = GenerateCronEspressoVariables(movieStartDayOfWeek.Value, movieStartTimeOfDay.Value, voteEndDays!.Value, voteEndHours!.Value);
+            (int voteEndDays, int voteEndHours) = await GetDaysAndHours(context, interactivity);
+            (DayOfWeek voteEndDayOfWeek, TimeSpan voteEndTimeSpan) = GenerateCronEspressoVariables(movieStartDayOfWeek, movieStartTimeOfDay, voteEndDays, voteEndHours);
 
             await context.Channel.SendMessageAsync("How many days and hours before the movie starts do you want voting to start? Format: 0d0h");
-            int? voteStartDays = null;
-            int? voteStartHours = null;
-            while (voteStartDays == null && voteStartHours == null)
-            {
-                InteractivityResult<DiscordMessage> getVoteStart = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
-                if (getVoteStart.TimedOut)
-                {
-                    await context.Channel.SendMessageAsync("You took too long to respond. The movie night creation has been cancelled");
-                    return;
-                }
+            (int voteStartDays, int voteStartHours) = await GetDaysAndHours(context, interactivity);
+            (DayOfWeek voteStartDayOfWeek, TimeSpan voteStartTimeSpan) = GenerateCronEspressoVariables(movieStartDayOfWeek, movieStartTimeOfDay, voteStartDays, voteStartHours);
 
-                if (!TimeSpan.TryParseExact(getVoteStart.Result.Content, @"d\d%h\h", null, out TimeSpan parsedTimeSpan))
-                {
-                    await context.Channel.SendMessageAsync("Invalid input. Please try again.");
-                }
-                else if (parsedTimeSpan.TotalDays >= 0 && parsedTimeSpan.TotalDays < 7)
-                {
-                    voteStartDays = parsedTimeSpan.Days;
-                    voteStartHours = parsedTimeSpan.Hours;
-                }
-                else
-                {
-                    await context.Channel.SendMessageAsync("You must provide a time within 0d0h-6d23h.");
-                }
-            }
+            OmdbParentalRating maxParentalRating = await GetMaxParentalRating(context, interactivity);
 
-            (DayOfWeek voteStartDayOfWeek, TimeSpan voteStartTimeSpan) = GenerateCronEspressoVariables(movieStartDayOfWeek.Value, movieStartTimeOfDay.Value, voteStartDays!.Value, voteStartHours!.Value);
-
-            await context.Channel.SendMessageAsync("What is the maximum parental rating you want included in the movie night?");
-            OmdbParentalRating? maxParentalRating = null;
-            while (maxParentalRating == null)
-            {
-                InteractivityResult<DiscordMessage> getParentalRating = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
-                if (getParentalRating.TimedOut)
-                {
-                    await context.Channel.SendMessageAsync("You took too long to respond. The movie night creation has been cancelled");
-                    return;
-                }
-
-                try { maxParentalRating = getParentalRating.Result.Content.ToOmdbParentalRating(); } catch (JsonException) { }
-
-                if (maxParentalRating == null)
-                {
-                    await context.Channel.SendMessageAsync("Invalid Input. Please try again with an MPA Parental Rating. If you are sure that the rating exists, please contact the developer.");
-                }
-            }
-
-            await context.Channel.SendMessageAsync("How many suggestions do you want pulled to vote on? (3-10)");
-            int? maximumNumberOfSuggestions = null;
-            while (maximumNumberOfSuggestions == null)
-            {
-                InteractivityResult<DiscordMessage> getMaxNumSuggestions = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
-                if (getMaxNumSuggestions.TimedOut)
-                {
-                    await context.Channel.SendMessageAsync("You took too long to respond. The movie night creation has been cancelled");
-                    return;
-                }
-
-                if (int.TryParse(getMaxNumSuggestions.Result.Content, out int maxNumSuggestions) && maxNumSuggestions <= 10 && maxNumSuggestions >= 3)
-                {
-                    maximumNumberOfSuggestions = maxNumSuggestions;
-                }
-                else
-                {
-                    await context.Channel.SendMessageAsync("Invalid Input. Please try again.");
-                }
-            }
+            int maximumNumberOfSuggestions = await GetMaximumNumberOfSuggestions(context, interactivity);
 
             string voteStartCron = GenerateCronExpression(voteStartTimeSpan, voteStartDayOfWeek);
             string voteEndCron = GenerateCronExpression(voteEndTimeSpan, voteEndDayOfWeek);
-            string movieStartCron = GenerateCronExpression(movieStartTimeOfDay.Value, movieStartDayOfWeek.Value);
+            string movieStartCron = GenerateCronExpression(movieStartTimeOfDay, movieStartDayOfWeek);
 
             string guid = Guid.NewGuid().ToString();
             string voteStartJobId = $"{context.Guild.Id}-{context.Member.Id}-{guid}-voting-start";
             string voteEndJobId = $"{context.Guild.Id}-{context.Member.Id}-{guid}-voting-end";
             string startMovieJobId = $"{context.Guild.Id}-{context.Member.Id}-{guid}-start-movie";
 
-            DbResult<GuildMovieNight> addMovieNightResult = await this.mediator.Send(new GuildMovieNights.Add(voteStartJobId, voteEndJobId, startMovieJobId, maximumNumberOfSuggestions.Value, maxParentalRating.Value, context.Guild, announcementChannel, context.Member));
+            DbResult<GuildMovieNight> addMovieNightResult = await this.mediator.Send(new GuildMovieNights.Add(voteStartJobId, voteEndJobId, startMovieJobId, maximumNumberOfSuggestions, maxParentalRating, context.Guild, announcementChannel, context.Member));
 
             if (!addMovieNightResult.TryGetValue(out GuildMovieNight? movieNight))
             {
@@ -371,8 +260,8 @@ Cancel the search by reacting with the :stop_button:");
 $@"voteStartJobId: {voteStartJobId}
 voteEndJobId: {voteEndJobId}
 startMovieJobId: {startMovieJobId}
-maximumNumberOfSuggestions: {maximumNumberOfSuggestions.Value}
-maxParentalRating: {maxParentalRating.Value}
+maximumNumberOfSuggestions: {maximumNumberOfSuggestions}
+maxParentalRating: {maxParentalRating}
 guild: {context.Guild.Id}
 announcementChannel: {announcementChannel.Id}
 host: {context.Member.Id}");
@@ -403,6 +292,147 @@ host: {context.Member.Id}");
             }
         }
 
+        private async Task<int> GetMaximumNumberOfSuggestions(CommandContext context, InteractivityExtension interactivity)
+        {
+            await context.Channel.SendMessageAsync("How many suggestions do you want pulled to vote on? (3-10)");
+            int? maximumNumberOfSuggestions = null;
+            while (maximumNumberOfSuggestions == null)
+            {
+                InteractivityResult<DiscordMessage> getMaxNumSuggestions = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
+                if (getMaxNumSuggestions.TimedOut)
+                {
+                    throw new UserTimeoutException("movie night creation");
+                }
+
+                if (int.TryParse(getMaxNumSuggestions.Result.Content, out int maxNumSuggestions) && maxNumSuggestions <= 10 && maxNumSuggestions >= 3)
+                {
+                    maximumNumberOfSuggestions = maxNumSuggestions;
+                }
+                else
+                {
+                    await context.Channel.SendMessageAsync("Invalid Input. Please try again.");
+                }
+            }
+
+            return maximumNumberOfSuggestions.Value;
+        }
+
+        private async Task<OmdbParentalRating> GetMaxParentalRating(CommandContext context, InteractivityExtension interactivity)
+        {
+            await context.Channel.SendMessageAsync("What is the maximum parental rating you want included in the movie night?");
+            OmdbParentalRating? maxParentalRating = null;
+            while (maxParentalRating == null)
+            {
+                InteractivityResult<DiscordMessage> getParentalRating = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
+                if (getParentalRating.TimedOut)
+                {
+                    throw new UserTimeoutException("movie night creation");
+                }
+
+                try { maxParentalRating = getParentalRating.Result.Content.ToOmdbParentalRating(); } catch (JsonException) { }
+
+                if (maxParentalRating == null)
+                {
+                    await context.Channel.SendMessageAsync("Invalid Input. Please try again with an MPA Parental Rating. If you are sure that the rating exists, please contact the developer.");
+                }
+            }
+
+            return maxParentalRating.Value;
+        }
+
+        private async Task<(int, int)> GetDaysAndHours(CommandContext context, InteractivityExtension interactivity)
+        {
+            int? voteEndDays = null;
+            int? voteEndHours = null;
+            while (voteEndDays == null || voteEndHours == null)
+            {
+                InteractivityResult<DiscordMessage> getVoteEnd = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
+                if (getVoteEnd.TimedOut)
+                {
+                    throw new UserTimeoutException("movie night creation");
+                }
+
+                if (!TimeSpan.TryParseExact(getVoteEnd.Result.Content, @"d\d%h\h", null, out TimeSpan parsedTimeSpan))
+                {
+                    await context.Channel.SendMessageAsync("Invalid input. Please try again.");
+                }
+                else if (parsedTimeSpan.TotalDays >= 0 && parsedTimeSpan.TotalDays < 7)
+                {
+                    voteEndDays = parsedTimeSpan.Days;
+                    voteEndHours = parsedTimeSpan.Hours;
+                }
+                else
+                {
+                    await context.Channel.SendMessageAsync("You must provide a time within 0d0h-6d23h.");
+                }
+            }
+
+            return (voteEndDays.Value, voteEndHours.Value);
+        }
+
+        private async Task<TimeSpan> GetMovieStartTimeOfDay(CommandContext context, InteractivityExtension interactivity)
+        {
+            await context.Channel.SendMessageAsync("What time would you like to show the movie? (respond with the time in 24h format. Ex: 13:20 for 1:20 pm)");
+            TimeSpan? movieStartTimeOfDay = null;
+            while (movieStartTimeOfDay == null)
+            {
+                InteractivityResult<DiscordMessage> getTimeResult = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
+                if (getTimeResult.TimedOut)
+                {
+                    throw new UserTimeoutException("movie night creation");
+                }
+
+                if (!TimeSpan.TryParseExact(getTimeResult.Result.Content, @"hh\:mm", null, out TimeSpan parsedTimeSpan))
+                {
+                    await context.Channel.SendMessageAsync("Invalid input. Please try again.");
+                }
+                else if (parsedTimeSpan.TotalHours >= 0 && parsedTimeSpan.TotalHours < 24)
+                {
+                    movieStartTimeOfDay = parsedTimeSpan;
+                }
+                else
+                {
+                    await context.Channel.SendMessageAsync("You must provide a time within 00:00-23:59.");
+                }
+            }
+
+            return movieStartTimeOfDay.Value;
+        }
+
+        private async Task<DayOfWeek> GetMovieStartDayOfWeek(CommandContext context, InteractivityExtension interactivity)
+        {
+            await context.Channel.SendMessageAsync("What day of the week would you like to show the movie? (respond with the full day name or the three letter abbreviation)");
+            DayOfWeek? movieStartDayOfWeek = null;
+            while (movieStartDayOfWeek == null)
+            {
+                InteractivityResult<DiscordMessage> getDayOfWeekResult = await interactivity.WaitForMessageAsync(m => m.ChannelId == context.Channel.Id && m.Author.Id == context.Member.Id);
+                if (getDayOfWeekResult.TimedOut)
+                {
+                    throw new UserTimeoutException("movie night creation");
+                }
+
+                movieStartDayOfWeek = ParseDayOfWeek(getDayOfWeekResult.Result.Content);
+
+                if (movieStartDayOfWeek == null)
+                {
+                    await context.Channel.SendMessageAsync("Invalid input. Please try again.");
+                }
+            }
+
+            return movieStartDayOfWeek.Value;
+        }
+
+        private async Task<TimeZoneInfo> GetUserTimeZoneInfoAsync(CommandContext context)
+        {
+            DbResult<UserTimeZone> getUserTimeZoneResult = await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.Member));
+
+            if (!getUserTimeZoneResult.TryGetValue(out UserTimeZone? userTimeZone))
+            {
+                throw new TimezoneNotSetupException();
+            }
+
+            return this.nodaTimeConverterService.ConvertToTimeZoneInfo(userTimeZone.TimeZoneId);
+        }
 
         [Command("delete")]
         [Aliases("d")]
@@ -487,7 +517,7 @@ host: {context.Member.Id}");
             return expression.Substring(0, expression.LastIndexOf(' '));
         }
 
-        private (DayOfWeek, TimeSpan) GenerateCronEspressoVariables(DayOfWeek movieStartDayOfWeek, TimeSpan movieStartTimeOfDay, int numDaysBack, int numHoursBack)
+        private static (DayOfWeek, TimeSpan) GenerateCronEspressoVariables(DayOfWeek movieStartDayOfWeek, TimeSpan movieStartTimeOfDay, int numDaysBack, int numHoursBack)
         {
             int hourTime = movieStartTimeOfDay.Hours - numHoursBack;
             if (hourTime < 0)
@@ -502,7 +532,7 @@ host: {context.Member.Id}");
             return (newDoW, newTS);
         }
 
-        public DayOfWeek? ParseDayOfWeek(string content)
+        private static DayOfWeek? ParseDayOfWeek(string content)
         {
             return content.Trim().ToLower() switch
             {

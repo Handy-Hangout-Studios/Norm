@@ -48,6 +48,11 @@ namespace Norm.Services
                 return;
             }
 
+            if (e.Channel.IsPrivate)
+            {
+                return;
+            }
+
             DiscordChannel channel = await c.GetChannelAsync(e.Channel.Id);
             _ = Task.Run(async () =>
             {

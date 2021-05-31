@@ -132,6 +132,7 @@ namespace Norm.Services
 
                 commands.CommandErrored += ChecksFailedError;
                 commands.CommandErrored += this.CheckCommandExistsError;
+                commands.CommandErrored += this.CheckForFailExceptions;
                 commands.CommandErrored += this.LogCommandExceptions;
 
                 commands.SetHelpFormatter<CategoryHelpFormatter>();

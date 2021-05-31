@@ -35,7 +35,7 @@ namespace Norm.Database.Entities
         public ulong GuildId { get; set; }
         public ulong AnnouncementChannelId { get; set; }
         public ulong HostId { get; set; }
-        
+
         // Voting Data
         public ulong? VotingMessageId { get; set; }
         public string? WinningMovieImdbId { get; set; }

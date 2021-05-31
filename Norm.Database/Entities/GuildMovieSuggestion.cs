@@ -1,11 +1,6 @@
 ﻿using NodaTime;
 using Norm.Omdb.Enums;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Norm.Database.Entities
 {
@@ -25,7 +20,7 @@ namespace Norm.Database.Entities
         public ulong GuildId { get; set; }
         public ulong SuggesterId { get; set; }
         public string Title { get; set; }
-        public OmdbParentalRating  Rating { get; set; }
+        public OmdbParentalRating Rating { get; set; }
         public ICollection<MovieNightAndSuggestion> MovieNightAndSuggestions { get; set; } = null!;
         public int Year { get; set; }
         public Instant? InstantWatched { get; set; }

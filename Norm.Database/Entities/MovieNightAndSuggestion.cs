@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Norm.Database.Entities
+﻿namespace Norm.Database.Entities
 {
     public class MovieNightAndSuggestion
     {
@@ -28,7 +21,7 @@ namespace Norm.Database.Entities
         public int MovieNightId { get; set; }
         public string MovieSuggestionId { get; set; }
         public ulong GuildId { get; set; }
-        
+
         // Data
         public string EmojiId { get; set; }
 

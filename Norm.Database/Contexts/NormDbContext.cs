@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Norm.Database.Entities;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Norm.Database.Contexts
 {
-    public class NormDbContext : DbContext 
+    public class NormDbContext : DbContext
     {
         public NormDbContext(DbContextOptions options) : base(options) { }
 

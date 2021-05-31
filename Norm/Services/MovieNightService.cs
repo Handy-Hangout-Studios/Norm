@@ -2,7 +2,6 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.EventHandling;
 using DSharpPlus.Interactivity.Extensions;
 using Hangfire;
 using Hangfire.Storage;
@@ -166,7 +165,7 @@ namespace Norm.Services
         }
 
         // Private Async Methods
-        private async Task<GuildMovieSuggestion> DoTiebreaker(DiscordClient client, DiscordGuild guild, DiscordMember host, GuildMovieNight movieNight, Dictionary<string, DiscordReaction> mostReactedReactions)
+        private static async Task<GuildMovieSuggestion> DoTiebreaker(DiscordClient client, DiscordMember host, GuildMovieNight movieNight, Dictionary<string, DiscordReaction> mostReactedReactions)
         {
             StringBuilder descriptionBuilder = new();
             var tiedSuggestions = movieNight.MovieNightAndSuggestions.Where(mns => mostReactedReactions.ContainsKey(mns.EmojiId)).Select(mns => mns.MovieSuggestion).ToList().Zip(GetNumberEmojis(client));
@@ -241,12 +240,12 @@ namespace Norm.Services
 
             return hostDTZ;
         }
-        private async Task<GuildMovieSuggestion> GetWinningSuggestion(DiscordClient client, DiscordGuild guild, DiscordMember host, GuildMovieNight movieNight, Dictionary<string, DiscordReaction> mostReactedReactions)
+        private static async Task<GuildMovieSuggestion> GetWinningSuggestion(DiscordClient client, DiscordGuild guild, DiscordMember host, GuildMovieNight movieNight, Dictionary<string, DiscordReaction> mostReactedReactions)
         {
             GuildMovieSuggestion winningSuggestion;
             if (mostReactedReactions.Count > 1)
             {
-                winningSuggestion = await DoTiebreaker(client, guild, host, movieNight, mostReactedReactions);
+                winningSuggestion = await DoTiebreaker(client, host, movieNight, mostReactedReactions);
             }
             else
             {

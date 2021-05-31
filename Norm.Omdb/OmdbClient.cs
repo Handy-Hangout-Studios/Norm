@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Norm.Omdb;
 using Norm.Omdb.Enums;
+using Norm.Omdb.JsonConverters;
+using Norm.Omdb.Types;
 using RestSharp;
 using RestSharp.Serializers.SystemTextJson;
 using System;
-using System.Threading.Tasks;
 using System.Text.Json;
-using Norm.Omdb.JsonConverters;
-using Norm.Omdb.Types;
+using System.Threading.Tasks;
 
 namespace Norm.Omdb
 {
@@ -19,7 +18,7 @@ namespace Norm.Omdb
         public OmdbClient(OmdbClientOptions options)
         {
             this.restClient = new RestClient("http://www.omdbapi.com/");
-            
+
             JsonSerializerOptions stjOptions = new()
             {
                 PropertyNameCaseInsensitive = true
@@ -74,7 +73,7 @@ namespace Norm.Omdb
                 request.AddParameter("y", yearOfRelease);
 
             request.AddParameter("plot", omdbPlotOption.ToQueryValue());
-            
+
             return await this.restClient.GetAsync<OmdbMovie>(request);
         }
 

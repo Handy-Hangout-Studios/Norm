@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Norm.Omdb.JsonConverters
 {
-    public class BooleanJsonConverter: JsonConverter<bool>
+    public class BooleanJsonConverter : JsonConverter<bool>
     {
         public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

@@ -1,5 +1,4 @@
 ﻿using NodaTime;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Norm.Database.Entities
 {
@@ -7,10 +6,10 @@ namespace Norm.Database.Entities
     {
 
         public GuildBackgroundJob(
-            string hangfireJobId, 
-            ulong guildId, 
-            string jobName, 
-            Instant scheduledTime, 
+            string hangfireJobId,
+            ulong guildId,
+            string jobName,
+            Instant scheduledTime,
             GuildJobType guildJobType)
         {
             this.HangfireJobId = hangfireJobId;

@@ -9,7 +9,6 @@ using Norm.Omdb.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -134,7 +133,7 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult<GuildMovieSuggestion>> Handle(GetMovieSuggestion request, CancellationToken cancellationToken)
             {
-                GuildMovieSuggestion? gms = 
+                GuildMovieSuggestion? gms =
                     await this.DbContext.GuildMovieSuggestions
                         .Include(gms => gms.MovieNightAndSuggestions)
                         .ThenInclude(row => row.MovieNight)
@@ -171,7 +170,7 @@ namespace Norm.Database.Requests
         public class GetAllGuildsMovieNightsHandler : DbRequestHandler<GetRandomGuildMovieSuggestions, IEnumerable<GuildMovieSuggestion>>
         {
             private readonly IClock clock;
-            public GetAllGuildsMovieNightsHandler(NormDbContext context, IClock clock) : base(context) 
+            public GetAllGuildsMovieNightsHandler(NormDbContext context, IClock clock) : base(context)
             {
                 this.clock = clock;
             }
@@ -185,8 +184,8 @@ namespace Norm.Database.Requests
                         .GuildMovieSuggestions
                         .Include(gms => gms.MovieNightAndSuggestions)
                         .ThenInclude(row => row.MovieNight)
-                        .Where(gms => gms.GuildId == request.GuildId && 
-                            (gms.Rating <= request.MaximumRating || gms.Year <= 1968) && 
+                        .Where(gms => gms.GuildId == request.GuildId &&
+                            (gms.Rating <= request.MaximumRating || gms.Year <= 1968) &&
                             (gms.InstantWatched == null || gms.InstantWatched > oneYearAgo)
                         )
                         .OrderBy(gms => EF.Functions.Random())

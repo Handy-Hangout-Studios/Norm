@@ -38,7 +38,7 @@ namespace Norm.Omdb.Types
                 this._omdbItems.AddRange(results.Search);
 
             if (results.TotalResults != null)
-                this.Count = (int) results.TotalResults;
+                this.Count = (int)results.TotalResults;
 
             return this;
         }

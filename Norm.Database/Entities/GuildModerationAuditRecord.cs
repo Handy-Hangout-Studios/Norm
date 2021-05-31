@@ -5,10 +5,10 @@ namespace Norm.Database.Entities
     public class GuildModerationAuditRecord
     {
         public GuildModerationAuditRecord(
-            ulong guildId, 
-            ulong moderatorUserId, 
-            ulong userId, 
-            ModerationActionType moderationAction, 
+            ulong guildId,
+            ulong moderatorUserId,
+            ulong userId,
+            ModerationActionType moderationAction,
             string? reason)
         {
             this.GuildId = guildId;

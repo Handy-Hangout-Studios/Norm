@@ -64,7 +64,7 @@ namespace Norm.Modules
                 GuildMovieNight testMovieNight = await this.AddTestMovieNight(context.Guild, context.Channel, context.User);
                 IEnumerable<GuildMovieSuggestion> testMovieSuggestions = await this.AddTestMovies(context.User, context.Guild);
                 await this.mns.StartVoting(testMovieNight.Id);
-                await Task.Delay(5*1000);
+                await Task.Delay(5 * 1000);
                 await this.mns.CalculateVotes(testMovieNight.Id);
                 await this.DeleteTestMovieNight(testMovieNight);
                 await this.DeleteTestMovieSuggestions(testMovieSuggestions);
@@ -154,7 +154,7 @@ namespace Norm.Modules
                         channel,
                         user)
                     );
-                
+
                 if (addResult.TryGetValue(out GuildMovieNight? movieNight))
                 {
                     return movieNight;

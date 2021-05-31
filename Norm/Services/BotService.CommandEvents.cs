@@ -4,7 +4,6 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
-using Norm.Modules;
 using Norm.Modules.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -73,7 +72,7 @@ namespace Norm.Services
             }
         }
 
-        public async Task CheckForFailExceptions(CommandsNextExtension c, CommandErrorEventArgs e)
+        public static async Task CheckForFailExceptions(CommandsNextExtension c, CommandErrorEventArgs e)
         {
             string? exceptionMessage = GetExceptionMessage(e.Exception);
             if (exceptionMessage != null)

@@ -1,12 +1,6 @@
 ﻿using DSharpPlus.Entities;
-using Microsoft.Extensions.Hosting;
-using Norm.Omdb.Types;
 using Norm.Omdb.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Norm.Omdb.Types;
 
 namespace Norm.Utilities
 {

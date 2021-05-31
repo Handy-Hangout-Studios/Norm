@@ -44,7 +44,7 @@ namespace Norm.Modules
             this.bot = bot;
             this.nodaTimeConverterService = nodaTimeConverterService;
         }
-        
+
         [Command("suggest")]
         [Aliases("s")]
         [Description("Start the interactive search process with the query you provide.")]
@@ -70,7 +70,7 @@ namespace Norm.Modules
             }
 
             DbResult<GuildMovieSuggestion> addMovieSuggestionResult = await this.mediator.Send(new GuildMovieSuggestions.Add(selectedMovie.ImdbId, context.Member, selectedMovie.Title, context.Guild, selectedMovie.Year, selectedMovie.Rated ?? OmdbParentalRating.NR));
-            if (!addMovieSuggestionResult.TryGetValue(out GuildMovieSuggestion? movieSuggestion))
+            if (!addMovieSuggestionResult.TryGetValue(out GuildMovieSuggestion? _))
             {
                 await context.RespondAsync("There was a failure adding your movie suggestion to the data store. Reach out to your developer.");
                 return;
@@ -213,7 +213,7 @@ Cancel the search by reacting with the :stop_button:";
         [Aliases("c")]
         [RequireUserPermissions(Permissions.ManageGuild)]
         [Description("Start the interactive movie night creation process for the movie night that will be announced in the announcement channel you specify.")]
-        public async Task CreateAsync(CommandContext context, [Description("The channel in which to announce the movie night")]DiscordChannel announcementChannel)
+        public async Task CreateAsync(CommandContext context, [Description("The channel in which to announce the movie night")] DiscordChannel announcementChannel)
         {
             TimeZoneInfo hostTimeZoneInfo = await GetUserTimeZoneInfoAsync(context);
 
@@ -272,14 +272,14 @@ host: {context.Member.Id}");
             RecurringJob.AddOrUpdate<MovieNightService>(startMovieJobId, mns => mns.StartMovie(movieNight.Id), movieStartCron, hostTimeZoneInfo);
             Dictionary<string, RecurringJobDto>? rJobDtos = JobStorage.Current
                 .GetConnection()
-                .GetRecurringJobs(new List<string>() { voteStartJobId, voteEndJobId, startMovieJobId})
+                .GetRecurringJobs(new List<string>() { voteStartJobId, voteEndJobId, startMovieJobId })
                 .ToDictionary(x => x.Id);
 
             await context.Channel.SendMessageAsync("Your movie night has been scheduled.");
             if (rJobDtos[voteStartJobId].NextExecution!.Value > rJobDtos[startMovieJobId].NextExecution!.Value)
             {
                 await context.Channel.SendMessageAsync($"{context.Member.Mention}, the next scheduled voting will happen after the movie night is supposed to happen. To handle this, we are going to open voting now and close voting at the normal scheduled time. If the normal scheduled time to close voting can't be used, we will cancel the next movie night altogether and will not open voting.");
-                
+
                 if (rJobDtos[voteEndJobId].NextExecution!.Value > rJobDtos[startMovieJobId].NextExecution!.Value)
                 {
                     JobStorage.Current.GetConnection().SetRangeInHash(
@@ -292,7 +292,7 @@ host: {context.Member.Id}");
             }
         }
 
-        private async Task<int> GetMaximumNumberOfSuggestions(CommandContext context, InteractivityExtension interactivity)
+        private static async Task<int> GetMaximumNumberOfSuggestions(CommandContext context, InteractivityExtension interactivity)
         {
             await context.Channel.SendMessageAsync("How many suggestions do you want pulled to vote on? (3-10)");
             int? maximumNumberOfSuggestions = null;
@@ -317,7 +317,7 @@ host: {context.Member.Id}");
             return maximumNumberOfSuggestions.Value;
         }
 
-        private async Task<OmdbParentalRating> GetMaxParentalRating(CommandContext context, InteractivityExtension interactivity)
+        private static async Task<OmdbParentalRating> GetMaxParentalRating(CommandContext context, InteractivityExtension interactivity)
         {
             await context.Channel.SendMessageAsync("What is the maximum parental rating you want included in the movie night?");
             OmdbParentalRating? maxParentalRating = null;
@@ -340,7 +340,7 @@ host: {context.Member.Id}");
             return maxParentalRating.Value;
         }
 
-        private async Task<(int, int)> GetDaysAndHours(CommandContext context, InteractivityExtension interactivity)
+        private static async Task<(int, int)> GetDaysAndHours(CommandContext context, InteractivityExtension interactivity)
         {
             int? voteEndDays = null;
             int? voteEndHours = null;
@@ -370,7 +370,7 @@ host: {context.Member.Id}");
             return (voteEndDays.Value, voteEndHours.Value);
         }
 
-        private async Task<TimeSpan> GetMovieStartTimeOfDay(CommandContext context, InteractivityExtension interactivity)
+        private static async Task<TimeSpan> GetMovieStartTimeOfDay(CommandContext context, InteractivityExtension interactivity)
         {
             await context.Channel.SendMessageAsync("What time would you like to show the movie? (respond with the time in 24h format. Ex: 13:20 for 1:20 pm)");
             TimeSpan? movieStartTimeOfDay = null;
@@ -399,7 +399,7 @@ host: {context.Member.Id}");
             return movieStartTimeOfDay.Value;
         }
 
-        private async Task<DayOfWeek> GetMovieStartDayOfWeek(CommandContext context, InteractivityExtension interactivity)
+        private static async Task<DayOfWeek> GetMovieStartDayOfWeek(CommandContext context, InteractivityExtension interactivity)
         {
             await context.Channel.SendMessageAsync("What day of the week would you like to show the movie? (respond with the full day name or the three letter abbreviation)");
             DayOfWeek? movieStartDayOfWeek = null;
@@ -526,7 +526,7 @@ host: {context.Member.Id}");
                 hourTime.Modulo(24);
             }
 
-            TimeSpan newTS = new TimeSpan(hourTime, movieStartTimeOfDay.Minutes, 0);
+            TimeSpan newTS = new(hourTime, movieStartTimeOfDay.Minutes, 0);
             DayOfWeek newDoW = (DayOfWeek)((int)movieStartDayOfWeek - numDaysBack).Modulo(7);
 
             return (newDoW, newTS);

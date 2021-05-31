@@ -8,6 +8,7 @@ using NodaTime;
 using Norm.Attributes;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
+using Norm.Modules.Exceptions;
 using System;
 using System.Threading.Tasks;
 
@@ -32,11 +33,10 @@ namespace Norm.Modules
         [GroupCommand]
         public async Task CurrentTimeAsync(CommandContext context)
         {
-            DbResult<UserTimeZone> memberTimeZoneResult = (await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User)));
+            DbResult<UserTimeZone> memberTimeZoneResult = await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User));
             if (!memberTimeZoneResult.TryGetValue(out UserTimeZone? memberTimeZone))
             {
-                await context.RespondAsync("You don't have a timezone set up. Please try again after using `time init`");
-                return;
+                throw new TimezoneNotSetupException();
             }
 
             DateTimeZone memberDateTimeZone = this.timeZoneProvider[memberTimeZone.TimeZoneId];
@@ -114,9 +114,7 @@ namespace Norm.Modules
             DbResult<UserTimeZone> memberTimeZoneResult = await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.User));
             if (!memberTimeZoneResult.TryGetValue(out UserTimeZone? memberTimeZone))
             {
-                await context.RespondAsync(
-                    $"{context.User.Mention}, you don't have a timezone set up. To initialize your timezone please type `time init`.");
-                return;
+                throw new TimezoneNotSetupException();
             }
             await context.RespondAsync(
                 "Please navigate to https://kevinnovak.github.io/Time-Zone-Picker/ and select your timezone. After you do please hit the copy button and paste the contents into the chat.");

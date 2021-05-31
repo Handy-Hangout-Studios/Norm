@@ -13,6 +13,7 @@ using NodaTime;
 using Norm.Attributes;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
+using Norm.Modules.Exceptions;
 using Norm.Services;
 using Norm.Utilities;
 using System;
@@ -109,8 +110,7 @@ namespace Norm.Modules
 
             if (!success)
             {
-                await context.RespondAsync(NoTimeZoneErrorMessage);
-                return;
+                throw new TimezoneNotSetupException();
             }
 
             if (!announcementChannel.PermissionsFor(context.Guild.CurrentMember).HasPermission(Permissions.SendMessages | Permissions.MentionEveryone))
@@ -197,8 +197,7 @@ namespace Norm.Modules
 
             if (!success)
             {
-                await context.RespondAsync(NoTimeZoneErrorMessage);
-                return;
+                throw new TimezoneNotSetupException();
             }
 
             if (!announcementChannel.PermissionsFor(context.Guild.CurrentMember).HasPermission(Permissions.SendMessages | Permissions.MentionEveryone))
@@ -563,7 +562,5 @@ namespace Norm.Modules
 
             return interactivity.GeneratePagesInEmbed(guildEventsStringBuilder.ToString(), SplitType.Line, embedbase: pageEmbedBase);
         }
-
-        private static readonly string NoTimeZoneErrorMessage = "You must have a time zone set up to use this command. Set up your time zone using `time init`.";
     }
 }

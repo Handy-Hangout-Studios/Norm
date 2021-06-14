@@ -71,20 +71,21 @@ namespace Norm.Modules
 
         [Command("tex")]
         [Description("Produce a PNG of the LaTeX that is in the code block. If you have `\\begin{document}` in your tex, then it assumes that you have a full preamble and doesn't add anything. If you do not, then it provides the following preamble. \n```\n\\documentclass[border=10pt]{standalone}\n\\usepackage{amsmath}\n\\usepackage{amsfonts}\n\\usepackage{amssymb}\n\\usepackage{nopageno}\n\\begin{document}\nYour code here\n\\end{document}\n```Note that the LaTeX must be in a code block like so\n\\`\\`\\`\nLaTeX here\n\\`\\`\\`")]
+        [BotCategory(BotCategory.Evaluation)]
         public async Task RenderTexAsync(CommandContext context, [RemainingText][Description("The latex to render")] string content)
         {
             int upperBound = content.IndexOf("```", StringComparison.Ordinal) + 3;
             upperBound = content.IndexOf('\n', upperBound) + 1;
             int lowerBound = content.LastIndexOf("```", StringComparison.Ordinal);
-            bool lightMode = content.Contains("--light");
+            bool lightMode = content.Contains("--black");
 
             if (upperBound == -1 || lowerBound == -1)
             {
                 upperBound = 0;
                 lowerBound = content.Length;
             }
-
-            using Stream renderedLatex = await this.latexRenderer.RenderLatex(content[upperBound..lowerBound]);
+            
+            using Stream renderedLatex = await this.latexRenderer.RenderLatex(content[upperBound..lowerBound], lightMode ? DiscordColor.Black : DiscordColor.White);
             DiscordEmbedBuilder imgEmbed = new DiscordEmbedBuilder().WithImageUrl("attachment://latex.png").WithDescription("Pʀᴏᴅᴜᴄᴇᴅ ʙʏ [QᴜɪᴄᴋLᴀTᴇX](http://quicklatex.com/)");
             DiscordMessageBuilder builder = new DiscordMessageBuilder().WithEmbed(imgEmbed.Build()).WithFile("latex.png", renderedLatex);
 

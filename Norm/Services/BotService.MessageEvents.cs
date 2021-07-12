@@ -48,6 +48,11 @@ namespace Norm.Services
                 return;
             }
 
+            if (e.Channel.IsPrivate)
+            {
+                return;
+            }
+
             DiscordChannel channel = await c.GetChannelAsync(e.Channel.Id);
             _ = Task.Run(async () =>
             {
@@ -99,7 +104,7 @@ namespace Norm.Services
 
                         DiscordEmbedBuilder reactorTimeEmbed = new DiscordEmbedBuilder().WithTitle("You requested a timezone conversion");
 
-                        
+
 
                         IEnumerable<(string, DateTimeV2Value)> results = parserList.SelectMany(x => x.Values.Select(y => (x.Text, y)));
                         foreach ((string parsedText, DateTimeV2Value result) in results)

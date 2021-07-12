@@ -13,6 +13,7 @@ using NodaTime;
 using Norm.Attributes;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
+using Norm.Modules.Exceptions;
 using Norm.Services;
 using Norm.Utilities;
 using System;
@@ -109,8 +110,7 @@ namespace Norm.Modules
 
             if (!success)
             {
-                await context.RespondAsync(NoTimeZoneErrorMessage);
-                return;
+                throw new TimezoneNotSetupException();
             }
 
             if (!announcementChannel.PermissionsFor(context.Guild.CurrentMember).HasPermission(Permissions.SendMessages | Permissions.MentionEveryone))
@@ -197,8 +197,7 @@ namespace Norm.Modules
 
             if (!success)
             {
-                await context.RespondAsync(NoTimeZoneErrorMessage);
-                return;
+                throw new TimezoneNotSetupException();
             }
 
             if (!announcementChannel.PermissionsFor(context.Guild.CurrentMember).HasPermission(Permissions.SendMessages | Permissions.MentionEveryone))
@@ -304,14 +303,14 @@ namespace Norm.Modules
             }
 
             List<GuildEvent> events = guildEvents.ToList();
-            IEnumerable<Page> pages = GetGuildEventsPages(guildEvents, interactivity, scheduleEmbedBase);
+            IEnumerable<Page> pages = GetGuildEventsPages(events, interactivity, scheduleEmbedBase);
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(pages,
                 PaginationMessageFunction.CreateWaitForMessageWithIntInRange(context.User, context.Channel, 1, events.Count + 1),
                 msg: msg
             );
             if (result.TimedOut || result.Cancelled)
             {
-                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return null;
             }
 
@@ -367,7 +366,7 @@ namespace Norm.Modules
 
             if (result.TimedOut || result.Cancelled)
             {
-                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return;
             }
 
@@ -422,7 +421,7 @@ namespace Norm.Modules
             if (result.TimedOut)
             {
                 DiscordMessage snark = await context.RespondAsync(
-                    content: "You failed to provide a valid event title within the time limit, so thanks for wasting a minute of myyyy time. :triumph:");
+                    content: "You failed to provide a valid event title within the time limit. Please try again if so desired.");
                 return new CustomResult<DiscordMessage>(timedOut: true);
             }
 
@@ -433,7 +432,7 @@ namespace Norm.Modules
             if (result.TimedOut)
             {
                 DiscordMessage snark = await context.RespondAsync(
-                    content: "You failed to provide a valid event description within the time limit, so thanks for wasting a minute of myyyy time. :triumph:");
+                    content: "You failed to provide a valid event description within the time limit. Please try again if so desired.");
                 return new CustomResult<DiscordMessage>(timedOut: true);
             }
 
@@ -501,7 +500,7 @@ namespace Norm.Modules
 
             if (result.TimedOut || result.Cancelled)
             {
-                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return;
             }
 
@@ -534,7 +533,7 @@ namespace Norm.Modules
             foreach (GuildEvent guildEvent in guildEvents)
             {
                 guildEventsStringBuilder.AppendLine($"{count}. {guildEvent.EventName}");
-                count++;
+                count += 1;
             }
 
             if (!guildEvents.Any())
@@ -563,7 +562,5 @@ namespace Norm.Modules
 
             return interactivity.GeneratePagesInEmbed(guildEventsStringBuilder.ToString(), SplitType.Line, embedbase: pageEmbedBase);
         }
-
-        private static readonly string NoTimeZoneErrorMessage = "You must have a time zone set up to use this command. Set up your time zone using `time init`.";
     }
 }

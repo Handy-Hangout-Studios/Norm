@@ -1,22 +1,22 @@
 ﻿using Hangfire;
 using Hangfire.PostgreSql;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NodaTime;
 using NodaTime.TimeZones;
 using Norm.Configuration;
 using Norm.Database.Contexts;
 using Norm.Database.TypeHandlers;
+using Norm.Omdb;
 using Norm.Services;
 using Serilog;
 using Serilog.Formatting.Json;
 using System;
-using Norm.Omdb;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 
 namespace Norm
 {
@@ -133,6 +133,7 @@ namespace Norm
                 .AddTransient<AnnouncementService>()
                 .AddTransient<EventService>()
                 .AddTransient<ModerationService>()
+                .AddTransient<NodaTimeConverterService>()
                 .AddHostedService<NormHostedService>();
         }
     }

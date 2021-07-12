@@ -156,7 +156,7 @@ namespace Norm.Modules
                 return;
             }
 
-            Duration duration = (Duration?)durationResult.Values.FirstOrDefault()?.Value ?? Duration.FromMinutes(5);            
+            Duration duration = (Duration?)durationResult.Values.FirstOrDefault()?.Value ?? Duration.FromMinutes(5);
             string durationString = Period.FromSeconds((long)duration.TotalSeconds).AsHumanReadableString();
 
             DiscordEmbedBuilder messageEmbed = new DiscordEmbedBuilder()
@@ -557,7 +557,7 @@ namespace Norm.Modules
             {
                 return null;
             }
-            
+
             return guild.GetChannel(guildLogsChannel.ChannelId);
         }
 

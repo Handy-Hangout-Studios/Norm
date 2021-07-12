@@ -11,14 +11,14 @@ namespace Norm.Omdb.JsonConverters
         {
             if (reader.TokenType is not JsonTokenType.String)
                 throw new ArgumentException("Must have a string to parse");
-
-            return reader.GetString()!.ToLower() switch
+            string switcher = reader.GetString()!.ToLower();
+            return switcher switch
             {
                 "movie" => OmdbSearchType.MOVIE,
                 "series" => OmdbSearchType.SERIES,
                 "episode" => OmdbSearchType.EPISODE,
                 "game" => OmdbSearchType.GAME,
-                _ => throw new NotImplementedException("An unknown OMDB search type was used")
+                _ => throw new JsonException($"An unknown OMDB search type was used: {switcher}")
             };
         }
 

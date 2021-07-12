@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Norm.Omdb;
 using Norm.Omdb.Enums;
+using Norm.Omdb.JsonConverters;
+using Norm.Omdb.Types;
 using RestSharp;
 using RestSharp.Serializers.SystemTextJson;
 using System;
-using System.Threading.Tasks;
 using System.Text.Json;
-using Norm.Omdb.JsonConverters;
-using Norm.Omdb.Types;
+using System.Threading.Tasks;
 
 namespace Norm.Omdb
 {
@@ -19,7 +18,7 @@ namespace Norm.Omdb
         public OmdbClient(OmdbClientOptions options)
         {
             this.restClient = new RestClient("http://www.omdbapi.com/");
-            
+
             JsonSerializerOptions stjOptions = new()
             {
                 PropertyNameCaseInsensitive = true
@@ -38,17 +37,17 @@ namespace Norm.Omdb
             };
         }
 
-        public async Task<OmdbMovie?> GetByImdbIdAsync(
+        public async Task<OmdbMovie> GetByImdbIdAsync(
             string imdbId, OmdbSearchType resultType = OmdbSearchType.NONE,
             int? yearOfRelease = null, OmdbPlotOption omdbPlotOption = OmdbPlotOption.SHORT)
             => await this.GetByIdOrTitleAsync(imdbId, null, resultType, yearOfRelease, omdbPlotOption);
 
-        public async Task<OmdbMovie?> GetByMovieTitleAsync(
+        public async Task<OmdbMovie> GetByMovieTitleAsync(
             string title, OmdbSearchType resultType = OmdbSearchType.NONE,
             int? yearOfRelease = null, OmdbPlotOption omdbPlotOption = OmdbPlotOption.SHORT)
             => await this.GetByIdOrTitleAsync(null, title, resultType, yearOfRelease, omdbPlotOption);
 
-        private async Task<OmdbMovie?> GetByIdOrTitleAsync(
+        private async Task<OmdbMovie> GetByIdOrTitleAsync(
             string? imdbId,
             string? title,
             OmdbSearchType resultType = OmdbSearchType.NONE,
@@ -74,7 +73,7 @@ namespace Norm.Omdb
                 request.AddParameter("y", yearOfRelease);
 
             request.AddParameter("plot", omdbPlotOption.ToQueryValue());
-            
+
             return await this.restClient.GetAsync<OmdbMovie>(request);
         }
 

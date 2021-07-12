@@ -35,10 +35,10 @@ namespace Norm.Database.Entities
         public ulong GuildId { get; set; }
         public ulong AnnouncementChannelId { get; set; }
         public ulong HostId { get; set; }
-        
+
         // Voting Data
         public ulong? VotingMessageId { get; set; }
-        public int? SelectedMovieIndex { get; set; }
+        public string? WinningMovieImdbId { get; set; }
 
         // Navigation Properties
         public ICollection<MovieNightAndSuggestion> MovieNightAndSuggestions { get; set; } = null!;

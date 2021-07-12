@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
+using Norm.Modules.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,50 +16,37 @@ namespace Norm.Services
     {
         private static async Task ChecksFailedError(CommandsNextExtension c, CommandErrorEventArgs e)
         {
-            if (e.Exception is ChecksFailedException checksFailed)
+            if (e.Exception is not ChecksFailedException checksFailed)
             {
-                IReadOnlyList<CheckBaseAttribute> failedChecks = checksFailed.FailedChecks;
-
-                string DetermineMessage()
-                {
-                    if (failedChecks.Any(x => x is RequireBotPermissionsAttribute))
-                    {
-                        return "I don't have the permissions necessary";
-                    }
-                    if (failedChecks.Any(x => x is RequireUserPermissionsAttribute))
-                    {
-                        return "you don't have the permissions necessary";
-                    }
-                    if (failedChecks.Any(x => x is RequirePermissionsAttribute))
-                    {
-                        return "either you or I don't have the permissions necessary";
-                    }
-                    if (failedChecks.Any(x => x is CooldownAttribute))
-                    {
-                        CheckBaseAttribute cooldown = failedChecks.FirstOrDefault(x => x is CooldownAttribute)!;
-
-                        return $"this command is on cooldown for {(cooldown as CooldownAttribute)!.GetRemainingCooldown(e.Context):hh\\:mm\\:ss}";
-                    }
-                    if (failedChecks.Any(x => x is RequireOwnerAttribute))
-                    {
-                        return "this command can only be used by the Bot's owner";
-                    }
-                    if (failedChecks.Any(x => x is RequireGuildAttribute))
-                    {
-                        return "this command must be used in a server that I'm also in";
-                    }
-                    if (failedChecks.Any(x => x is RequireDirectMessageAttribute))
-                    {
-                        return "this command must be used in the direct messages";
-                    }
-
-                    return "of an unknown failed check";
-                }
-
-                await e.Context.RespondAsync($"You can't use `{e.Command.QualifiedName}` because {DetermineMessage()}.");
-                e.Handled = true;
+                return;
             }
+
+            IReadOnlyList<CheckBaseAttribute> failedChecks = checksFailed.FailedChecks;
+
+            if (!failedChecks.Any())
+                return;
+
+            await e.Context.RespondAsync($"You can't use `{e.Command.QualifiedName}` because of the following reason(s):\n - {DetermineMessage(failedChecks, e.Context)}.");
+            e.Handled = true;
         }
+
+        private static string DetermineMessage(IReadOnlyList<CheckBaseAttribute> failedChecks, CommandContext context)
+        {
+            return string.Join("\n - ", failedChecks.Select(fc => GetFailedCheckMessage(fc, context)).Distinct());
+        }
+
+        private static string? GetFailedCheckMessage(CheckBaseAttribute failedCheck, CommandContext context) =>
+            failedCheck switch
+            {
+                RequireBotPermissionsAttribute => "I don't have the permissions necessary",
+                RequireUserPermissionsAttribute => "You don't have the permissions necessary",
+                RequirePermissionsAttribute => "Either you or I don't have the permissions necessary",
+                CooldownAttribute cooldownAttribute => $"This command is on cooldown for {cooldownAttribute.GetRemainingCooldown(context):hh\\:mm\\:ss}",
+                RequireOwnerAttribute => "This command can only be used by the Bot's owner",
+                RequireGuildAttribute => "This command must be used in a server that I'm also in",
+                RequireDirectMessageAttribute => "This command must be used in a DM with me",
+                _ => "An unknown failed check. To find out more please contact your bot developer."
+            };
 
         private async Task CheckCommandExistsError(CommandsNextExtension c, CommandErrorEventArgs e)
         {
@@ -84,29 +72,52 @@ namespace Norm.Services
             }
         }
 
-        private async Task LogExceptions(CommandsNextExtension c, CommandErrorEventArgs e)
+        public static async Task CheckForFailExceptions(CommandsNextExtension c, CommandErrorEventArgs e)
+        {
+            string? exceptionMessage = GetExceptionMessage(e.Exception);
+            if (exceptionMessage != null)
+            {
+                await e.Context.RespondAsync(exceptionMessage);
+                e.Handled = true;
+            }
+        }
+
+        private static string? GetExceptionMessage(Exception exception) =>
+            exception switch
+            {
+                TimezoneNotSetupException => $"You do not currently have your timezone set up. This command requires your timezone in order to work. Please run `time init` to begin the process of setting up your timezone.",
+                UserTimeoutException ute => $"You ran out of time during {ute.Context}. The command has been cancelled.",
+                _ => null
+            };
+
+        public async Task LogCommandExceptions(CommandsNextExtension c, CommandErrorEventArgs e)
+        {
+            await this.LogExceptions(e.Exception);
+        }
+
+        public async Task LogExceptions(Exception exception)
         {
             try
             {
                 DiscordEmbedBuilder commandErrorEmbed = new DiscordEmbedBuilder()
                     .WithTitle("Command Exception");
 
-                if (e.Exception.Message != null)
+                if (exception.Message != null)
                 {
-                    AddSanitizedAndShortenedField(commandErrorEmbed, "Message", e.Exception.Message);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "Message", exception.Message);
                 }
 
-                if (e.Exception.StackTrace != null)
+                if (exception.StackTrace != null)
                 {
-                    AddSanitizedAndShortenedField(commandErrorEmbed, "StackTrace", e.Exception.StackTrace);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "StackTrace", exception.StackTrace);
                 }
 
-                if (e.Exception is DSharpPlus.Exceptions.UnauthorizedException u && u.JsonMessage is not null)
+                if (exception is DSharpPlus.Exceptions.UnauthorizedException u && u.JsonMessage is not null)
                 {
                     AddSanitizedAndShortenedField(commandErrorEmbed, "JsonMessage", u.JsonMessage);
                 }
 
-                if (e.Exception is DSharpPlus.Exceptions.BadRequestException b)
+                if (exception is DSharpPlus.Exceptions.BadRequestException b)
                 {
                     commandErrorEmbed.AddField("Bad Request Code", b.Code.ToString(), true);
                     if (b.JsonMessage is not null)
@@ -119,17 +130,17 @@ namespace Norm.Services
                     }
                 }
 
-                if (e.Exception.GetType() != null)
+                if (exception.GetType() != null)
                 {
-                    AddSanitizedAndShortenedField(commandErrorEmbed, "ExceptionType", e.Exception.GetType().FullName!);
+                    AddSanitizedAndShortenedField(commandErrorEmbed, "ExceptionType", exception.GetType().FullName!);
                 }
 
-                this.Logger.LogError(e.Exception, "Exception from Command Errored");
+                this.Logger.LogError(exception, "Exception from Command Errored");
                 await this.BotDeveloper!.SendMessageAsync(embed: commandErrorEmbed);
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
-                this.Logger.LogError(exception, "An error occurred in sending the exception to the Dev");
+                this.Logger.LogError(e, "An error occurred in sending the exception to the Dev");
             }
         }
 

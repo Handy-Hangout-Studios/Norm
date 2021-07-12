@@ -1,11 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Norm.Database.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Norm.Database.EntityTypeConfigurations
 {
@@ -17,8 +12,18 @@ namespace Norm.Database.EntityTypeConfigurations
 
             builder.HasKey(mns => new { mns.MovieNightId, mns.MovieSuggestionId });
 
+            builder.Property(mns => mns.MovieNightId)
+                .HasColumnName("movie_night_id");
+
+            builder.Property(mns => mns.MovieSuggestionId)
+                .HasColumnName("movie_suggestion_id");
+
             builder.Property(mns => mns.EmojiId)
                 .HasColumnName("emoji_id")
+                .IsRequired();
+
+            builder.Property(mns => mns.GuildId)
+                .HasColumnName("guild_id")
                 .IsRequired();
 
             // System.InvalidOperationException: 'The relationship from 'MovieNightAndSuggestion.MovieSuggestion'

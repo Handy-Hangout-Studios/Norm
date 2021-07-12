@@ -8,7 +8,6 @@ using Norm.Omdb.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,12 +23,12 @@ namespace Norm.Database.Requests
             }
 
             public Add(string votingStartId, string votingEndId, string movieNightStartId, int numSuggestions, OmdbParentalRating maxRating, DiscordGuild guild, DiscordChannel announcementChannel, DiscordUser host) :
-                this(votingStartId, votingEndId, movieNightStartId, numSuggestions, maxRating, guild.Id, announcementChannel.Id, host.Id) 
+                this(votingStartId, votingEndId, movieNightStartId, numSuggestions, maxRating, guild.Id, announcementChannel.Id, host.Id)
             {
-                
+
             }
 
-            internal GuildMovieNight MovieNight { get; } 
+            internal GuildMovieNight MovieNight { get; }
         }
 
         public class AddHandler : DbRequestHandler<Add, GuildMovieNight>
@@ -47,7 +46,7 @@ namespace Norm.Database.Requests
                     Success = entity.Entity != null && entity.State.Equals(EntityState.Added),
                     Value = entity.Entity,
                 };
-                
+
                 await this.DbContext.SaveChangesAsync(cancellationToken);
 
                 return result;
@@ -126,7 +125,7 @@ namespace Norm.Database.Requests
 
             public override async Task<DbResult<GuildMovieNight>> Handle(GetMovieNight request, CancellationToken cancellationToken)
             {
-                GuildMovieNight? gmn = 
+                GuildMovieNight? gmn =
                     await this.DbContext.GuildMovieNights
                         .Include(gmn => gmn.MovieNightAndSuggestions)
                         .ThenInclude(row => row.MovieSuggestion)
@@ -158,7 +157,7 @@ namespace Norm.Database.Requests
             {
                 try
                 {
-                    IEnumerable<GuildMovieNight> movieNights = 
+                    IEnumerable<GuildMovieNight> movieNights =
                         await this.DbContext.GuildMovieNights
                             .Include(gmn => gmn.MovieNightAndSuggestions)
                             .ThenInclude(row => row.MovieSuggestion)

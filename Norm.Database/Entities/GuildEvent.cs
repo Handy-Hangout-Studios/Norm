@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Norm.Database.Entities
+﻿namespace Norm.Database.Entities
 {
     public class GuildEvent
     {

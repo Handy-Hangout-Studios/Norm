@@ -193,7 +193,7 @@ namespace Norm.Modules
 
             if (result.TimedOut || result.Cancelled)
             {
-                DiscordMessage snark = await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
+                DiscordMessage snark = await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return;
             }
 

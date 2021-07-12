@@ -21,7 +21,13 @@ namespace Norm.Omdb.JsonConverters
                 throw new ArgumentException("the token type must be of type string");
 
             string dateToParse = reader.GetString()!;
-            return this.pattern.Parse(dateToParse).Value;
+            ParseResult<LocalDate> pr = this.pattern.Parse(dateToParse);
+            if (!pr.Success)
+            {
+                throw new JsonException($"Failed to parse the date: {dateToParse}", pr.Exception);
+            }
+
+            return pr.Value;
         }
 
         public override void Write(Utf8JsonWriter writer, LocalDate value, JsonSerializerOptions options)

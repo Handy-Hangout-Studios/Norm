@@ -2,10 +2,10 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Norm.Database.Contexts;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Norm.Migrations
 {
@@ -17,7 +17,7 @@ namespace Norm.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("ProductVersion", "6.0.0-preview.3.21201.2")
+                .HasAnnotation("ProductVersion", "6.0.0-preview.5.21301.9")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
             modelBuilder.Entity("Norm.Database.Entities.GuildBackgroundJob", b =>
@@ -174,10 +174,6 @@ namespace Norm.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("number_of_suggestions");
 
-                    b.Property<int?>("SelectedMovieIndex")
-                        .HasColumnType("integer")
-                        .HasColumnName("selected_movie_index");
-
                     b.Property<string>("VotingEndHangfireId")
                         .IsRequired()
                         .HasColumnType("text")
@@ -191,6 +187,10 @@ namespace Norm.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("voting_start_hangfire_id");
+
+                    b.Property<string>("WinningMovieImdbId")
+                        .HasColumnType("text")
+                        .HasColumnName("winning_movie_imdb_id");
 
                     b.HasKey("Id")
                         .HasName("movie_night_id");
@@ -210,6 +210,10 @@ namespace Norm.Migrations
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("guild_id");
 
+                    b.Property<Instant?>("InstantWatched")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("instant_watched");
+
                     b.Property<int>("Rating")
                         .HasColumnType("integer")
                         .HasColumnName("rating");
@@ -222,6 +226,10 @@ namespace Norm.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("title");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("year");
 
                     b.HasKey("ImdbId", "GuildId");
 
@@ -319,17 +327,21 @@ namespace Norm.Migrations
             modelBuilder.Entity("Norm.Database.Entities.MovieNightAndSuggestion", b =>
                 {
                     b.Property<int>("MovieNightId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("movie_night_id");
 
                     b.Property<string>("MovieSuggestionId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("movie_suggestion_id");
 
-                    b.Property<decimal>("EmojiId")
-                        .HasColumnType("numeric(20,0)")
+                    b.Property<string>("EmojiId")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("emoji_id");
 
                     b.Property<decimal>("GuildId")
-                        .HasColumnType("numeric(20,0)");
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guild_id");
 
                     b.HasKey("MovieNightId", "MovieSuggestionId");
 

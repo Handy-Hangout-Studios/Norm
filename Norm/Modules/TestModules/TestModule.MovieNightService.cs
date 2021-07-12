@@ -13,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Norm.Modules
+namespace Norm.Modules.TestModules
 {
     [Group("test")]
     [RequireOwner]

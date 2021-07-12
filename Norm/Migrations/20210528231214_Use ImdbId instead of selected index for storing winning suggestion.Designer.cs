@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Norm.Database.Contexts;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Norm.Migrations
 {

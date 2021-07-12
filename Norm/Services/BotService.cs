@@ -17,6 +17,7 @@ using Norm.Database.Entities;
 using Norm.Database.Requests;
 using Norm.Formatters;
 using Norm.Modules;
+using Norm.Modules.TestModules;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -128,7 +129,7 @@ namespace Norm.Services
                 commands.RegisterCommands<FunModule>();
                 commands.RegisterCommands<EvaluationModule>();
                 commands.RegisterCommands<TestModule>();
-                commands.RegisterCommands<MovieNightModule>();
+                //commands.RegisterCommands<MovieNightModule>();
 
                 commands.CommandErrored += ChecksFailedError;
                 commands.CommandErrored += this.CheckCommandExistsError;
@@ -172,7 +173,7 @@ namespace Norm.Services
                 DiscordGuild botDevGuild = await client.GetGuildAsync(this.config.DevGuildId);
                 this.BotDeveloper = await botDevGuild.GetMemberAsync(this.config.DevId);
                 this.ClockEmoji = DiscordEmoji.FromName(client, ":clock:");
-                RecurringJob.AddOrUpdate<AnnouncementService>(service => service.AnnounceUpdates(), "0/15 * * * *");
+                RecurringJob.AddOrUpdate<AnnouncementService>("rr_announcement_job", service => service.AnnounceUpdates(), "0/15 * * * *");
 
                 await this.BotDeveloper.SendMessageAsync("I'm up and running Prof. :smile:");
             });

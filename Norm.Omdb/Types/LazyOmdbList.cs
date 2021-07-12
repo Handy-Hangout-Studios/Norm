@@ -31,9 +31,20 @@ namespace Norm.Omdb.Types
             this._omdbItems = new();
         }
 
+        /// <summary>
+        /// Initialize the Lazy Omdb Search List with all of the known contents. 
+        /// </summary>
+        /// <returns>The initalized Omdb List so that it can be chained if so desired</returns>
+        /// <exception cref="OmdbException">Thrown when the search fails for some reason</exception>
         internal async Task<LazyOmdbList> InitializeAsync()
         {
             OmdbSearchResults results = await this._client.InternalSearchByTitleAsync(this._search, this._resultType, this._yearOfRelease, this._currentPage);
+            
+            if (results.Response is false)
+            {
+                throw new OmdbException(results.Error);
+            }
+
             if (results.Search != null)
                 this._omdbItems.AddRange(results.Search);
 

@@ -19,7 +19,7 @@ namespace Norm.Utilities
 
             if (interactivityResult.TimedOut || interactivityResult.Result.Emoji.Equals(DiscordEmoji.FromName(client, ":regional_indicator_n:")))
             {
-                await interactivityResult.Result.Channel.SendMessageAsync($"{user.Mention}, well then why did you get my attention! Thanks for wasting my time. :triumph:");
+                await interactivityResult.Result.Channel.SendMessageAsync($"{user.Mention}, ok, have a great day!");
                 return interactivityResult.TimedOut ? Reaction.None : Reaction.No;
             }
 

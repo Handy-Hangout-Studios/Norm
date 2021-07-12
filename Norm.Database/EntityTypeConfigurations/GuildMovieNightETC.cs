@@ -50,7 +50,7 @@ namespace Norm.Database.EntityTypeConfigurations
                 .IsRequired(false);
 
             builder.Property(b => b.WinningMovieImdbId)
-                .HasColumnName("selected_movie_index")
+                .HasColumnName("winning_movie_imdb_id")
                 .IsRequired(false);
 
             builder.HasIndex(b => b.GuildId);

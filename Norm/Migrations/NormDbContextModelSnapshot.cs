@@ -2,10 +2,10 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Norm.Database.Contexts;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Norm.Migrations
 {
@@ -17,7 +17,7 @@ namespace Norm.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("ProductVersion", "6.0.0-preview.3.21201.2")
+                .HasAnnotation("ProductVersion", "6.0.0-preview.5.21301.9")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
             modelBuilder.Entity("Norm.Database.Entities.GuildBackgroundJob", b =>
@@ -190,7 +190,7 @@ namespace Norm.Migrations
 
                     b.Property<string>("WinningMovieImdbId")
                         .HasColumnType("text")
-                        .HasColumnName("selected_movie_index");
+                        .HasColumnName("winning_movie_imdb_id");
 
                     b.HasKey("Id")
                         .HasName("movie_night_id");

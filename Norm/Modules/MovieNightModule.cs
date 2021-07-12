@@ -56,7 +56,17 @@ namespace Norm.Modules
                 return;
             }
 
-            LazyOmdbList movieList = await this.omdbClient.SearchByTitleAsync(query);
+            LazyOmdbList movieList;
+            try
+            {
+                movieList = await this.omdbClient.SearchByTitleAsync(query);
+            }
+            catch (OmdbException oe)
+            {
+                await context.RespondAsync($"There was some failure with your search: {oe.Message}");
+                return;
+            }
+
             OmdbMovie? selectedMovie = await SelectMovieWithPaginatedEmbed(movieList, context);
             if (selectedMovie == null)
                 return;
@@ -209,9 +219,92 @@ Cancel the search by reacting with the :stop_button:";
             return paginationEmojiNames.Contains(eventArgs.Emoji.Name);
         }
 
+        [Command("unsuggest")]
+        [Aliases("u")]
+        [Description("Start the interactive movie suggestion deletion process")]
+        public async Task UnsuggestAsync(CommandContext context)
+        {
+            DbResult<IEnumerable<GuildMovieSuggestion>> suggestionsResult = await GetSuggestionsResult(context);
+            if (!suggestionsResult.TryGetValue(out IEnumerable<GuildMovieSuggestion>? result))
+            {
+                await context.RespondAsync("Something went wrong while attempting to get the suggestions. Please contact the developer.");
+                return;
+            }
+
+            if (!result.Any())
+            {
+                await context.RespondAsync("You do not have any suggestions to delete.");
+                return;
+            }
+
+            List<GuildMovieSuggestion> suggestions = result.ToList();
+            InteractivityExtension interactivity = context.Client.GetInteractivity();
+            IEnumerable<Page> pages = GetGuildMovieSuggestionsPages(suggestions.ToList(), interactivity);
+
+            CustomResult<int> waitResult = await context.WaitForMessageAndPaginateOnMsg(pages,
+                PaginationMessageFunction.CreateWaitForMessageWithIntInRange(context.User, context.Channel, 1, suggestions.Count + 1)
+            );
+
+            if (waitResult.Cancelled)
+            {
+                await context.RespondAsync("Ok, I won't delete any suggestion. Please try again if so desired.");
+                return;
+            }
+
+            if (waitResult.TimedOut)
+            {
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
+                return;
+            }
+
+            Reaction reaction = await interactivity.AddAndWaitForYesNoReaction(
+                await context.Channel.SendMessageAsync($"You want me to do delete the suggestion `{suggestions[waitResult.Result - 1].Title}`?"), 
+                context.Member
+            );
+
+            if (reaction != Reaction.Yes)
+            {
+                await context.Channel.SendMessageAsync("Ok!");
+                return;
+            }
+
+            GuildMovieSuggestion chosen = suggestions[waitResult.Result - 1];
+            await this.mediator.Send(new GuildMovieSuggestions.Delete(chosen));
+            await context.Channel.SendMessageAsync($"{context.Member.Mention}, I have deleted the suggestion `{suggestions[waitResult.Result - 1].Title}`");
+        }
+
+        private async Task<DbResult<IEnumerable<GuildMovieSuggestion>>> GetSuggestionsResult(CommandContext context)
+        {
+            DbResult<IEnumerable<GuildMovieSuggestion>> suggestionsResult;
+            if (context.Member.PermissionsIn(context.Channel).HasPermission(Permissions.ManageGuild))
+            {
+                suggestionsResult = await this.mediator.Send(new GuildMovieSuggestions.GetGuildMovieSuggestions(context.Guild));
+            }
+            else
+            {
+                suggestionsResult = await this.mediator.Send(new GuildMovieSuggestions.GetUsersGuildMovieSuggestions(context.Guild, context.Member));
+            }
+
+            return suggestionsResult;
+        }
+
+        private static IEnumerable<Page> GetGuildMovieSuggestionsPages(List<GuildMovieSuggestion> suggestions, InteractivityExtension interactivity)
+        {
+            StringBuilder builder = new StringBuilder();
+            int count = 1;
+            foreach (GuildMovieSuggestion suggestion in suggestions)
+            {
+                builder.AppendLine($"{count}. {suggestion.Title}");
+                count += 1;
+            }
+
+            DiscordEmbedBuilder embedBase = new DiscordEmbedBuilder().WithTitle("Select a movie night by typing: <number>");
+            return interactivity.GeneratePagesInEmbed(builder.ToString(), DSharpPlus.Interactivity.Enums.SplitType.Line, embedBase);
+        }
+
         [Command("create")]
         [Aliases("c")]
-        [RequireUserPermissions(Permissions.ManageGuild)]
+        [RequireUserPermissions(Permissions.MentionEveryone)]
         [Description("Start the interactive movie night creation process for the movie night that will be announced in the announcement channel you specify.")]
         public async Task CreateAsync(CommandContext context, [Description("The channel in which to announce the movie night")] DiscordChannel announcementChannel)
         {
@@ -267,9 +360,9 @@ announcementChannel: {announcementChannel.Id}
 host: {context.Member.Id}");
             }
 
-            RecurringJob.AddOrUpdate<MovieNightService>(voteStartJobId, mns => mns.StartVoting(movieNight.Id), voteStartCron, hostTimeZoneInfo);
-            RecurringJob.AddOrUpdate<MovieNightService>(voteEndJobId, mns => mns.CalculateVotes(movieNight.Id), voteEndCron, hostTimeZoneInfo);
-            RecurringJob.AddOrUpdate<MovieNightService>(startMovieJobId, mns => mns.StartMovie(movieNight.Id), movieStartCron, hostTimeZoneInfo);
+            RecurringJob.AddOrUpdate<MovieNightService>(voteStartJobId, mns => mns.StartVoting(movieNight.Id), voteStartCron, new RecurringJobOptions() { TimeZone = hostTimeZoneInfo });
+            RecurringJob.AddOrUpdate<MovieNightService>(voteEndJobId, mns => mns.CalculateVotes(movieNight.Id), voteEndCron, new RecurringJobOptions() { TimeZone = hostTimeZoneInfo });
+            RecurringJob.AddOrUpdate<MovieNightService>(startMovieJobId, mns => mns.StartMovie(movieNight.Id), movieStartCron, new RecurringJobOptions() { TimeZone = hostTimeZoneInfo });
             Dictionary<string, RecurringJobDto>? rJobDtos = JobStorage.Current
                 .GetConnection()
                 .GetRecurringJobs(new List<string>() { voteStartJobId, voteEndJobId, startMovieJobId })
@@ -437,6 +530,7 @@ host: {context.Member.Id}");
         [Command("delete")]
         [Aliases("d")]
         [Description("Start the interactive movie night deletion process")]
+        [RequirePermissions(Permissions.MentionEveryone)]
         public async Task DeleteAsync(CommandContext context)
         {
             DbResult<IEnumerable<GuildMovieNight>> getMovieNightsResult = await this.mediator.Send(new GuildMovieNights.GetAllGuildsMovieNights(context.Guild.Id));
@@ -457,7 +551,7 @@ host: {context.Member.Id}");
             );
             if (result.TimedOut || result.Cancelled)
             {
-                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return;
             }
 

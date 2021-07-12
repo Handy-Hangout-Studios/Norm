@@ -32,7 +32,7 @@ namespace Norm.Database.Requests
             internal GuildMovieSuggestion MovieSuggestion { get; }
         }
 
-        public class AddHandler : DbRequestHandler<Add, GuildMovieSuggestion>
+        internal class AddHandler : DbRequestHandler<Add, GuildMovieSuggestion>
         {
             public AddHandler(NormDbContext dbContext) : base(dbContext)
             {
@@ -64,7 +64,7 @@ namespace Norm.Database.Requests
             internal GuildMovieSuggestion GuildMovieSuggestion { get; }
         }
 
-        public class UpdateHandler : DbRequestHandler<Update, GuildMovieSuggestion>
+        internal class UpdateHandler : DbRequestHandler<Update, GuildMovieSuggestion>
         {
             public UpdateHandler(NormDbContext context) : base(context) { }
 
@@ -91,7 +91,7 @@ namespace Norm.Database.Requests
             internal GuildMovieSuggestion GuildMovieSuggestion { get; }
         }
 
-        public class DeleteHandler : DbRequestHandler<Delete>
+        internal class DeleteHandler : DbRequestHandler<Delete>
         {
             public DeleteHandler(NormDbContext context) : base(context) { }
 
@@ -124,7 +124,7 @@ namespace Norm.Database.Requests
             internal ulong GuildId { get; }
         }
 
-        public class GetMovieSuggestionHandler : DbRequestHandler<GetMovieSuggestion, GuildMovieSuggestion>
+        internal class GetMovieSuggestionHandler : DbRequestHandler<GetMovieSuggestion, GuildMovieSuggestion>
         {
             public GetMovieSuggestionHandler(NormDbContext context) : base(context)
             {
@@ -167,10 +167,10 @@ namespace Norm.Database.Requests
             internal OmdbParentalRating MaximumRating { get; }
         }
 
-        public class GetAllGuildsMovieNightsHandler : DbRequestHandler<GetRandomGuildMovieSuggestions, IEnumerable<GuildMovieSuggestion>>
+        internal class GetRandomGuildMovieSuggestionsHandler : DbRequestHandler<GetRandomGuildMovieSuggestions, IEnumerable<GuildMovieSuggestion>>
         {
             private readonly IClock clock;
-            public GetAllGuildsMovieNightsHandler(NormDbContext context, IClock clock) : base(context)
+            public GetRandomGuildMovieSuggestionsHandler(NormDbContext context, IClock clock) : base(context)
             {
                 this.clock = clock;
             }
@@ -192,6 +192,103 @@ namespace Norm.Database.Requests
                         .Take(request.NumberOfSuggestions)
                         .ToListAsync(cancellationToken: cancellationToken);
 
+                    return new DbResult<IEnumerable<GuildMovieSuggestion>>
+                    {
+                        Success = true,
+                        Value = movieNights,
+                    };
+                }
+                catch (Exception e) when (e is ArgumentNullException or OperationCanceledException)
+                {
+                    return new DbResult<IEnumerable<GuildMovieSuggestion>>
+                    {
+                        Success = false,
+                        Value = null,
+                    };
+                }
+            }
+        }
+
+        public class GetGuildMovieSuggestions : DbRequest<IEnumerable<GuildMovieSuggestion>>
+        {
+            public GetGuildMovieSuggestions(ulong guildId)
+            {
+                this.GuildId = guildId;
+            }
+
+            public GetGuildMovieSuggestions(DiscordGuild guild)
+                : this(guild.Id)
+            {
+
+            }
+
+            internal ulong GuildId { get; }
+        }
+
+        internal class GetGuildMovieSuggestionsHandler : DbRequestHandler<GetGuildMovieSuggestions, IEnumerable<GuildMovieSuggestion>>
+        {
+            public GetGuildMovieSuggestionsHandler(NormDbContext context) : base(context)
+            {
+            }
+
+            public override async Task<DbResult<IEnumerable<GuildMovieSuggestion>>> Handle(GetGuildMovieSuggestions request, CancellationToken cancellationToken)
+            {
+                try
+                {
+                    IEnumerable<GuildMovieSuggestion> movieNights = await this.DbContext
+                        .GuildMovieSuggestions
+                        .Where(gms => gms.GuildId == request.GuildId)
+                        .ToListAsync(cancellationToken: cancellationToken);
+
+                    return new DbResult<IEnumerable<GuildMovieSuggestion>>
+                    {
+                        Success = true,
+                        Value = movieNights,
+                    };
+                }
+                catch (Exception e) when (e is ArgumentNullException or OperationCanceledException)
+                {
+                    return new DbResult<IEnumerable<GuildMovieSuggestion>>
+                    {
+                        Success = false,
+                        Value = null,
+                    };
+                }
+            }
+        }
+
+        public class GetUsersGuildMovieSuggestions : DbRequest<IEnumerable<GuildMovieSuggestion>>
+        {
+            public GetUsersGuildMovieSuggestions(ulong guildId, ulong userId)
+            {
+                this.GuildId = guildId;
+            }
+
+            public GetUsersGuildMovieSuggestions(DiscordGuild guild, DiscordUser user)
+                : this(guild.Id, user.Id)
+            {
+
+            }
+
+            internal ulong GuildId { get; }
+            internal ulong UserId { get; }
+        }
+
+        internal class GetUsersGuildMovieSuggestionsHandler : DbRequestHandler<GetUsersGuildMovieSuggestions, IEnumerable<GuildMovieSuggestion>>
+        {
+            public GetUsersGuildMovieSuggestionsHandler(NormDbContext context) : base(context)
+            {
+            }
+
+            public override async Task<DbResult<IEnumerable<GuildMovieSuggestion>>> Handle(GetUsersGuildMovieSuggestions request, CancellationToken cancellationToken)
+            {
+                try
+                {
+                    IEnumerable<GuildMovieSuggestion> movieNights = await this.DbContext
+                        .GuildMovieSuggestions
+                        .Where(gms => gms.GuildId == request.GuildId && gms.SuggesterId == request.UserId)
+                        .ToListAsync(cancellationToken: cancellationToken);
+                    
                     return new DbResult<IEnumerable<GuildMovieSuggestion>>
                     {
                         Success = true,

@@ -310,7 +310,7 @@ namespace Norm.Modules
             );
             if (result.TimedOut || result.Cancelled)
             {
-                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return null;
             }
 
@@ -366,7 +366,7 @@ namespace Norm.Modules
 
             if (result.TimedOut || result.Cancelled)
             {
-                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return;
             }
 
@@ -421,7 +421,7 @@ namespace Norm.Modules
             if (result.TimedOut)
             {
                 DiscordMessage snark = await context.RespondAsync(
-                    content: "You failed to provide a valid event title within the time limit, so thanks for wasting a minute of myyyy time. :triumph:");
+                    content: "You failed to provide a valid event title within the time limit. Please try again if so desired.");
                 return new CustomResult<DiscordMessage>(timedOut: true);
             }
 
@@ -432,7 +432,7 @@ namespace Norm.Modules
             if (result.TimedOut)
             {
                 DiscordMessage snark = await context.RespondAsync(
-                    content: "You failed to provide a valid event description within the time limit, so thanks for wasting a minute of myyyy time. :triumph:");
+                    content: "You failed to provide a valid event description within the time limit. Please try again if so desired.");
                 return new CustomResult<DiscordMessage>(timedOut: true);
             }
 
@@ -500,7 +500,7 @@ namespace Norm.Modules
 
             if (result.TimedOut || result.Cancelled)
             {
-                await context.RespondAsync("You never gave me a valid input. Thanks for wasting my time. :triumph:");
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return;
             }
 

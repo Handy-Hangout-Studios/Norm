@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using NodaTime;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Norm.Migrations
 {

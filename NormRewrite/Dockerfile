@@ -14,5 +14,7 @@ RUN dotnet publish "NormRewrite.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
+ARG DOTNET_ENV=Development
+ENV DOTNET_ENVIRONMENT=${DOTNET_ENV}
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "NormRewrite.dll"]

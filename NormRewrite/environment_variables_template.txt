@@ -1,0 +1,8 @@
+Logging__LogLevel__Default=Information
+Logging__LogLevel__Microsoft=Warning
+Logging__LogLevel__Microsoft.Hosting.Lifetime=Information
+NormConfig__Token=token
+NormConfig__DevGuildId=123
+NormConfig__MovieEmojiString='_ _\nfoo'
+NormConfig__MovieEmojiGuildId=123
+NormConfig__SupportServerLink="https://discord.gg/link"

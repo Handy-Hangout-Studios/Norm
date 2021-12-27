@@ -17,6 +17,7 @@ public class EvalCommands: BaseCommandModule
     // This Command was yoinked from Emzi0767#1837 and VelvetThePanda.
     [Command("csharp")]
     [Priority(0)]
+    [RequireOwner]
     public async Task EvalCS(CommandContext ctx, [RemainingText] string code)
     {
         DiscordMessage msg;

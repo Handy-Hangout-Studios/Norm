@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <UserSecretsId>dotnet-NormRewrite-EE6C63ED-D538-42EA-B302-257B538BC9B1</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <ImplicitUsings>disable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01054" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01054" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="4.2.0-nightly-01054" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="4.2.0-nightly-01054" />
+        <PackageReference Include="DSharpPlus.VoiceNext" Version="4.2.0-nightly-01054" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.1.0-1.final" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.1.0-1.final" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="CommandOptionEnums" />
+    </ItemGroup>
+</Project>

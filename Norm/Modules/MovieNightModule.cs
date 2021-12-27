@@ -22,8 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Norm.Database.Requests.BaseClasses;
 
 namespace Norm.Modules
 {
@@ -32,17 +32,17 @@ namespace Norm.Modules
     [Description("The group for creating movie nights, making movie suggestions, and deleting movie nights")]
     public class MovieNightModule : BaseCommandModule
     {
-        private readonly OmdbClient omdbClient;
-        private readonly IMediator mediator;
-        private readonly BotService bot;
-        private readonly NodaTimeConverterService nodaTimeConverterService;
+        private readonly OmdbClient _omdbClient;
+        private readonly IMediator _mediator;
+        private readonly BotService _bot;
+        private readonly NodaTimeConverterService _nodaTimeConverterService;
 
         public MovieNightModule(OmdbClient omdbClient, IMediator mediator, BotService bot, NodaTimeConverterService nodaTimeConverterService)
         {
-            this.omdbClient = omdbClient;
-            this.mediator = mediator;
-            this.bot = bot;
-            this.nodaTimeConverterService = nodaTimeConverterService;
+            this._omdbClient = omdbClient;
+            this._mediator = mediator;
+            this._bot = bot;
+            this._nodaTimeConverterService = nodaTimeConverterService;
         }
 
         [Command("suggest")]
@@ -59,7 +59,7 @@ namespace Norm.Modules
             LazyOmdbList movieList;
             try
             {
-                movieList = await this.omdbClient.SearchByTitleAsync(query);
+                movieList = await this._omdbClient.SearchByTitleAsync(query);
             }
             catch (OmdbException oe)
             {
@@ -71,7 +71,7 @@ namespace Norm.Modules
             if (selectedMovie == null)
                 return;
 
-            DbResult getGuildMovieSuggestionResult = await this.mediator.Send(new GuildMovieSuggestions.GetMovieSuggestion(selectedMovie.ImdbId, context.Guild));
+            DbResult getGuildMovieSuggestionResult = await this._mediator.Send(new GuildMovieSuggestions.GetMovieSuggestion(selectedMovie.ImdbId, context.Guild));
 
             if (getGuildMovieSuggestionResult.Success)
             {
@@ -79,7 +79,7 @@ namespace Norm.Modules
                 return;
             }
 
-            DbResult<GuildMovieSuggestion> addMovieSuggestionResult = await this.mediator.Send(new GuildMovieSuggestions.Add(selectedMovie.ImdbId, context.Member, selectedMovie.Title, context.Guild, selectedMovie.Year, selectedMovie.Rated ?? OmdbParentalRating.NR));
+            DbResult<GuildMovieSuggestion> addMovieSuggestionResult = await this._mediator.Send(new GuildMovieSuggestions.Add(selectedMovie.ImdbId, context.Member, selectedMovie.Title, context.Guild, selectedMovie.Year, selectedMovie.Rated ?? OmdbParentalRating.NR));
             if (!addMovieSuggestionResult.TryGetValue(out GuildMovieSuggestion? _))
             {
                 await context.RespondAsync("There was a failure adding your movie suggestion to the data store. Reach out to your developer.");
@@ -94,7 +94,7 @@ namespace Norm.Modules
             List<(OmdbMovie, DiscordEmbedBuilder)> omdbMovies = new();
             int currentIndex = 0;
 
-            await context.RespondAsync(SELECT_MOVIE_TEXT);
+            await context.RespondAsync(SelectMovieText);
             DiscordMessage msg = await context.Channel.SendMessageAsync($"{DiscordEmoji.FromGuildEmote(context.Client, 848012958851399710)} {Formatter.Bold(context.Guild.CurrentMember.DisplayName)} is getting your search results");
             _ = Task.Run(AddPaginationEmojis(msg));
 
@@ -106,12 +106,12 @@ namespace Norm.Modules
                 {
                     try
                     {
-                        OmdbMovie newMovie = await this.omdbClient.GetByImdbIdAsync(movieList.CurrentItem().ImdbId, omdbPlotOption: OmdbPlotOption.SHORT);
+                        OmdbMovie newMovie = await this._omdbClient.GetByImdbIdAsync(movieList.CurrentItem().ImdbId, omdbPlotOption: OmdbPlotOption.SHORT);
                         omdbMovies.Add((newMovie, newMovie.ToDiscordEmbedBuilder()));
                     }
                     catch (JsonException e)
                     {
-                        await this.bot.LogExceptions(e);
+                        await this._bot.LogExceptions(e);
                         if (movieList.HasNext())
                         {
                             await movieList.MoveNext();
@@ -162,7 +162,7 @@ namespace Norm.Modules
             return omdbMovies[currentIndex].Item1;
         }
 
-        private const string SELECT_MOVIE_TEXT =
+        private const string SelectMovieText =
 @"Select a movie by reacting with the :white_check_mark:
 Go back to the beginning of your results by reacting with the :rewind:
 Go back to the previous result by reacting with the :arrow_left:
@@ -205,18 +205,18 @@ Cancel the search by reacting with the :stop_button:";
         {
             return async () =>
             {
-                foreach (string emojiName in paginationEmojiNames)
+                foreach (string emojiName in PaginationEmojiNames)
                 {
                     await msg.CreateReactionAsync(DiscordEmoji.FromUnicode(emojiName));
                 }
             };
         }
 
-        private static readonly string[] paginationEmojiNames = new string[] { "⏪", "⬅️", "✅", "➡️", "⏹️" };
+        private static readonly string[] PaginationEmojiNames = new string[] { "⏪", "⬅️", "✅", "➡️", "⏹️" };
 
         private bool ReactionIsPaginationEmoji(MessageReactionAddEventArgs eventArgs)
         {
-            return paginationEmojiNames.Contains(eventArgs.Emoji.Name);
+            return PaginationEmojiNames.Contains(eventArgs.Emoji.Name);
         }
 
         [Command("unsuggest")]
@@ -269,7 +269,7 @@ Cancel the search by reacting with the :stop_button:";
             }
 
             GuildMovieSuggestion chosen = suggestions[waitResult.Result - 1];
-            await this.mediator.Send(new GuildMovieSuggestions.Delete(chosen));
+            await this._mediator.Send(new GuildMovieSuggestions.Delete(chosen));
             await context.Channel.SendMessageAsync($"{context.Member.Mention}, I have deleted the suggestion `{suggestions[waitResult.Result - 1].Title}`");
         }
 
@@ -278,11 +278,11 @@ Cancel the search by reacting with the :stop_button:";
             DbResult<IEnumerable<GuildMovieSuggestion>> suggestionsResult;
             if (context.Member.PermissionsIn(context.Channel).HasPermission(Permissions.ManageGuild))
             {
-                suggestionsResult = await this.mediator.Send(new GuildMovieSuggestions.GetGuildMovieSuggestions(context.Guild));
+                suggestionsResult = await this._mediator.Send(new GuildMovieSuggestions.GetGuildMovieSuggestions(context.Guild));
             }
             else
             {
-                suggestionsResult = await this.mediator.Send(new GuildMovieSuggestions.GetUsersGuildMovieSuggestions(context.Guild, context.Member));
+                suggestionsResult = await this._mediator.Send(new GuildMovieSuggestions.GetUsersGuildMovieSuggestions(context.Guild, context.Member));
             }
 
             return suggestionsResult;
@@ -344,7 +344,7 @@ Cancel the search by reacting with the :stop_button:";
             string voteEndJobId = $"{context.Guild.Id}-{context.Member.Id}-{guid}-voting-end";
             string startMovieJobId = $"{context.Guild.Id}-{context.Member.Id}-{guid}-start-movie";
 
-            DbResult<GuildMovieNight> addMovieNightResult = await this.mediator.Send(new GuildMovieNights.Add(voteStartJobId, voteEndJobId, startMovieJobId, maximumNumberOfSuggestions, maxParentalRating, context.Guild, announcementChannel, context.Member));
+            DbResult<GuildMovieNight> addMovieNightResult = await this._mediator.Send(new GuildMovieNights.Add(voteStartJobId, voteEndJobId, startMovieJobId, maximumNumberOfSuggestions, maxParentalRating, context.Guild, announcementChannel, context.Member));
 
             if (!addMovieNightResult.TryGetValue(out GuildMovieNight? movieNight))
             {
@@ -517,14 +517,14 @@ host: {context.Member.Id}");
 
         private async Task<TimeZoneInfo> GetUserTimeZoneInfoAsync(CommandContext context)
         {
-            DbResult<UserTimeZone> getUserTimeZoneResult = await this.mediator.Send(new UserTimeZones.GetUsersTimeZone(context.Member));
+            DbResult<UserTimeZone> getUserTimeZoneResult = await this._mediator.Send(new UserTimeZones.GetUsersTimeZone(context.Member));
 
             if (!getUserTimeZoneResult.TryGetValue(out UserTimeZone? userTimeZone))
             {
                 throw new TimezoneNotSetupException();
             }
 
-            return this.nodaTimeConverterService.ConvertToTimeZoneInfo(userTimeZone.TimeZoneId);
+            return this._nodaTimeConverterService.ConvertToTimeZoneInfo(userTimeZone.TimeZoneId);
         }
 
         [Command("delete")]
@@ -533,7 +533,7 @@ host: {context.Member.Id}");
         [RequirePermissions(Permissions.MentionEveryone)]
         public async Task DeleteAsync(CommandContext context)
         {
-            DbResult<IEnumerable<GuildMovieNight>> getMovieNightsResult = await this.mediator.Send(new GuildMovieNights.GetAllGuildsMovieNights(context.Guild.Id));
+            DbResult<IEnumerable<GuildMovieNight>> getMovieNightsResult = await this._mediator.Send(new GuildMovieNights.GetAllGuildsMovieNights(context.Guild.Id));
             if (!getMovieNightsResult.TryGetValue(out IEnumerable<GuildMovieNight>? guildMovieNights))
             {
                 throw new Exception("An error occured while retrieving guild movie nights");
@@ -567,7 +567,7 @@ host: {context.Member.Id}");
             RecurringJob.RemoveIfExists(chosen.MovieNightStartHangfireId);
             RecurringJob.RemoveIfExists(chosen.VotingStartHangfireId);
             RecurringJob.RemoveIfExists(chosen.VotingEndHangfireId);
-            await this.mediator.Send(new GuildMovieNights.Delete(chosen));
+            await this._mediator.Send(new GuildMovieNights.Delete(chosen));
             await context.Channel.SendMessageAsync($"{context.Member.Mention}, I have deleted movie night {result.Result}");
         }
 
@@ -620,10 +620,10 @@ host: {context.Member.Id}");
                 hourTime.Modulo(24);
             }
 
-            TimeSpan newTS = new(hourTime, movieStartTimeOfDay.Minutes, 0);
+            TimeSpan newTimeSpan = new(hourTime, movieStartTimeOfDay.Minutes, 0);
             DayOfWeek newDoW = (DayOfWeek)((int)movieStartDayOfWeek - numDaysBack).Modulo(7);
 
-            return (newDoW, newTS);
+            return (newDoW, newTimeSpan);
         }
 
         private static DayOfWeek? ParseDayOfWeek(string content)

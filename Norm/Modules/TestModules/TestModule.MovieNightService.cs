@@ -4,7 +4,6 @@ using DSharpPlus.Entities;
 using Hangfire;
 using MediatR;
 using Microsoft.Extensions.Options;
-using Norm.Configuration;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
 using Norm.Omdb.Enums;
@@ -12,6 +11,8 @@ using Norm.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Norm.ConfigOptions;
+using Norm.Database.Requests.BaseClasses;
 
 namespace Norm.Modules.TestModules
 {

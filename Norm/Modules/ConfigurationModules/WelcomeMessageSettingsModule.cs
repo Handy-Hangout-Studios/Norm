@@ -1,4 +1,7 @@
-﻿using DSharpPlus;
+﻿using System;
+using System.Text;
+using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -6,30 +9,28 @@ using MediatR;
 using Norm.Attributes;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
-using System;
-using System.Text;
-using System.Threading.Tasks;
+using Norm.Database.Requests.BaseClasses;
 
-namespace Norm.Modules
+namespace Norm.Modules.ConfigurationModules
 {
     [Group("welcome")]
-    [BotCategory(BotCategory.ConfigAndInfo)]
+    [BotCategory(BotCategory.CONFIG_AND_INFO)]
     [Description("All functionalities associated with welcome messages in Norm.\n\nWhen used alone, shows your current welcome message settings for me")]
     [RequireUserPermissions(Permissions.ManageGuild)]
     [Aliases("w", "wel")]
     public class WelcomeMessageSettingsModule : BaseCommandModule
     {
-        private readonly IMediator mediator;
+        private readonly IMediator _mediator;
         public WelcomeMessageSettingsModule(IMediator mediator)
         {
-            this.mediator = mediator;
+            this._mediator = mediator;
         }
 
         [GroupCommand]
         [RequireGuild]
         public async Task ExecuteGroupAsync(CommandContext context)
         {
-            DbResult<GuildWelcomeMessageSettings> result = await this.mediator.Send(new GuildWelcomeMessageSettingsRequest.GetGuildWelcomeMessageSettings(context.Guild));
+            DbResult<GuildWelcomeMessageSettings> result = await this._mediator.Send(new GuildWelcomeMessageSettingsRequest.GetGuildWelcomeMessageSettings(context.Guild));
             DiscordMessageBuilder builder = new();
             if (!result.TryGetValue(out GuildWelcomeMessageSettings? settings) || !settings.ShouldWelcomeMembers)
             {
@@ -53,7 +54,7 @@ namespace Norm.Modules
             [Description("Whether I should ping new members when I send them a welcome message. (true/false)")]
             bool shouldPing = false)
         {
-            DbResult<GuildWelcomeMessageSettings> result = await this.mediator.Send(new GuildWelcomeMessageSettingsRequest.Upsert(context.Guild, shouldWelcomeMembers, shouldPing));
+            DbResult<GuildWelcomeMessageSettings> result = await this._mediator.Send(new GuildWelcomeMessageSettingsRequest.Upsert(context.Guild, shouldWelcomeMembers, shouldPing));
             if (!result.TryGetValue(out GuildWelcomeMessageSettings? settings))
             {
                 await context.RespondAsync("I failed to update your welcome message settings. A report has been sent to the developer. Please try again later.");

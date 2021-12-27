@@ -12,7 +12,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NodaTime;
-using Norm.Configuration;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
 using Norm.Formatters;
@@ -23,6 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using Norm.ConfigOptions;
+using Norm.Database.Requests.BaseClasses;
+using Norm.Modules.ConfigurationModules;
 
 namespace Norm.Services
 {

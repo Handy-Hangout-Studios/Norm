@@ -1,4 +1,4 @@
-﻿namespace Norm.Configuration
+﻿namespace Norm.ConfigOptions
 {
 #nullable disable
     public class NormHangfireOptions

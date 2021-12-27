@@ -4,6 +4,7 @@ using DSharpPlus.EventArgs;
 using Norm.Database.Entities;
 using Norm.Database.Requests;
 using System.Threading.Tasks;
+using Norm.Database.Requests.BaseClasses;
 
 namespace Norm.Services
 {

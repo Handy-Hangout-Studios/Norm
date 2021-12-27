@@ -37,7 +37,6 @@ namespace Norm.Database.Requests
                     Value = entity.Entity,
                 };
                 await this.DbContext.SaveChangesAsync(cancellationToken);
-
                 return result;
             }
         }

@@ -17,7 +17,7 @@ namespace Norm.Database.TypeHandlers
             {
                 return i.ToDateTimeUtc();
             }
-            throw new ArgumentException($"Invalid value of type '{value?.GetType().FullName}' given. DateTime or NodaTime.Instant values are supported.", nameof(value));
+            throw new ArgumentException($"Invalid value of type '{value.GetType().FullName}' given. DateTime or NodaTime.Instant values are supported.", nameof(value));
         }
 
 #pragma warning disable CA1061 // Do not hide base class methods

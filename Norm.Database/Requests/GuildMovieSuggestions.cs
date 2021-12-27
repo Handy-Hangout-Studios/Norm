@@ -169,17 +169,17 @@ namespace Norm.Database.Requests
 
         internal class GetRandomGuildMovieSuggestionsHandler : DbRequestHandler<GetRandomGuildMovieSuggestions, IEnumerable<GuildMovieSuggestion>>
         {
-            private readonly IClock clock;
+            private readonly IClock _clock;
             public GetRandomGuildMovieSuggestionsHandler(NormDbContext context, IClock clock) : base(context)
             {
-                this.clock = clock;
+                this._clock = clock;
             }
 
             public override async Task<DbResult<IEnumerable<GuildMovieSuggestion>>> Handle(GetRandomGuildMovieSuggestions request, CancellationToken cancellationToken)
             {
                 try
                 {
-                    Instant oneYearAgo = this.clock.GetCurrentInstant() - Duration.FromDays(365);
+                    Instant oneYearAgo = this._clock.GetCurrentInstant() - Duration.FromDays(365);
                     IEnumerable<GuildMovieSuggestion> movieNights = await this.DbContext
                         .GuildMovieSuggestions
                         .Include(gms => gms.MovieNightAndSuggestions)
@@ -262,6 +262,7 @@ namespace Norm.Database.Requests
             public GetUsersGuildMovieSuggestions(ulong guildId, ulong userId)
             {
                 this.GuildId = guildId;
+                this.UserId = userId;
             }
 
             public GetUsersGuildMovieSuggestions(DiscordGuild guild, DiscordUser user)

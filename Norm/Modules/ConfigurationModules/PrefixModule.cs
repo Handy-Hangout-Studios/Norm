@@ -1,4 +1,8 @@
-﻿using DSharpPlus;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -12,25 +16,21 @@ using Norm.Database.Entities;
 using Norm.Database.Requests;
 using Norm.Services;
 using Norm.Utilities;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Norm.Modules
+namespace Norm.Modules.ConfigurationModules
 {
     [Group("prefix")]
-    [BotCategory(BotCategory.ConfigAndInfo)]
+    [BotCategory(BotCategory.CONFIG_AND_INFO)]
     [Description("All of my functionalities associated with prefixes.\n\nWhen used alone, show all guild's prefixes separated by spaces")]
     public class PrefixModule : BaseCommandModule
     {
-        private readonly IMediator mediator;
-        private readonly BotService bot;
+        private readonly IMediator _mediator;
+        private readonly BotService _bot;
 
         public PrefixModule(IMediator mediator, BotService bot)
         {
-            this.mediator = mediator;
-            this.bot = bot;
+            this._mediator = mediator;
+            this._bot = bot;
         }
 
         [GroupCommand]
@@ -39,7 +39,7 @@ namespace Norm.Modules
             string prefixString;
             if (context.Channel.Guild != null)
             {
-                if (!(await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? guildPrefixes) || !guildPrefixes.Any())
+                if (!(await this._mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? guildPrefixes) || !guildPrefixes.Any())
                 {
                     prefixString = "My prefix is `^`";
                 }
@@ -67,18 +67,19 @@ namespace Norm.Modules
             [RemainingText]
             string newPrefix)
         {
-            if (!(await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? definedPrefixes))
+            if (!(await this._mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? definedPrefixes))
             {
                 definedPrefixes = new List<GuildPrefix>();
             }
 
-            if (definedPrefixes.Count() >= 5)
+            List<GuildPrefix> definedPrefixList = definedPrefixes.ToList();
+            if (definedPrefixList.Count() >= 5)
             {
                 await context.RespondAsync("I'm sorry, but guilds are only allowed to have a maximum of five custom defined prefixes");
                 return;
             }
 
-            if (definedPrefixes.Any(p => p.Prefix.Equals(newPrefix)))
+            if (definedPrefixList.Any(p => p.Prefix.Equals(newPrefix)))
             {
                 await context.RespondAsync("That prefix is already in your guild's custom defined prefixes.");
                 return;
@@ -102,7 +103,7 @@ namespace Norm.Modules
                 return;
             }
 
-            await this.mediator.Send(new GuildPrefixes.Add(context.Guild.Id, newPrefix));
+            await this._mediator.Send(new GuildPrefixes.Add(context.Guild.Id, newPrefix));
             await context.RespondAsync(
                 $"Congratulations, you have added the prefix {Formatter.InlineCode(Formatter.Sanitize(newPrefix))} to your server's prefixes for Handy Hansel.\nJust a reminder, this disables the default prefix for Handy Hansel unless you specifically add that prefix in again later or do not have any prefixes of your own.");
 
@@ -119,7 +120,7 @@ namespace Norm.Modules
             string prefixToRemove)
         {
 
-            if (!(await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? definedPrefixes))
+            if (!(await this._mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out IEnumerable<GuildPrefix>? definedPrefixes))
             {
                 definedPrefixes = new List<GuildPrefix>();
             }
@@ -132,7 +133,7 @@ namespace Norm.Modules
                 return;
             }
 
-            await this.mediator.Send(new GuildPrefixes.Delete(guildPrefix));
+            await this._mediator.Send(new GuildPrefixes.Delete(guildPrefix));
             await context.RespondAsync(
                 $"{context.User.Mention}, I have removed the prefix {Formatter.InlineCode(Formatter.Sanitize(guildPrefix.Prefix))} for this server.");
 
@@ -145,7 +146,7 @@ namespace Norm.Modules
         [RequireGuild]
         public async Task InteractiveRemovePrefix(CommandContext context)
         {
-            if (!(await this.mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out var guildPrefixes) || !guildPrefixes.Any())
+            if (!(await this._mediator.Send(new GuildPrefixes.GetGuildsPrefixes(context.Guild))).TryGetValue(out var guildPrefixes) || !guildPrefixes.Any())
             {
                 await context.RespondAsync("You don't have any custom prefixes to remove");
                 return;
@@ -164,7 +165,7 @@ namespace Norm.Modules
                 !interactivityResult.Result.Emoji.Equals(
                     DiscordEmoji.FromName(context.Client, ":regional_indicator_y:")))
             {
-                DiscordMessage snark = await context.RespondAsync("Well then why did you get my attention! Thanks for wasting my time.");
+                await context.RespondAsync("Well then why did you get my attention! Thanks for wasting my time.");
                 return;
             }
 
@@ -172,7 +173,7 @@ namespace Norm.Modules
                 .WithTitle("Select a prefix to remove by typing: <prefix number>")
                 .WithColor(context.Member.Color);
 
-            Task<(bool, int)> messageValidationAndReturn(MessageCreateEventArgs messageE)
+            Task<(bool, int)> MessageValidationAndReturn(MessageCreateEventArgs messageE)
             {
                 if (messageE.Author.Equals(context.User) && int.TryParse(messageE.Message.Content, out int eventToChoose))
                 {
@@ -188,18 +189,18 @@ namespace Norm.Modules
 
             CustomResult<int> result = await context.WaitForMessageAndPaginateOnMsg(
                 GetGuildPrefixPages(availablePrefixes, interactivity, removeEventEmbed),
-                messageValidationAndReturn,
+                MessageValidationAndReturn,
                 msg: msg);
 
             if (result.TimedOut || result.Cancelled)
             {
-                DiscordMessage snark = await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
+                await context.RespondAsync("You never gave me a valid input. Please try again if so desired.");
                 return;
             }
 
             GuildPrefix selectedPrefix = availablePrefixes[result.Result - 1];
 
-            await this.mediator.Send(new GuildPrefixes.Delete(selectedPrefix));
+            await this._mediator.Send(new GuildPrefixes.Delete(selectedPrefix));
 
             await context.RespondAsync(
                 $"You have deleted the prefix {Formatter.InlineCode(Formatter.Sanitize(selectedPrefix.Prefix))} from this guild's prefixes.", embed: null);
@@ -209,7 +210,7 @@ namespace Norm.Modules
 
         private void PurgeCache(DiscordGuild guild)
         {
-            this.bot.PrefixCache.Remove(guild.Id);
+            this._bot.PrefixCache.Remove(guild.Id);
         }
 
         private static IEnumerable<Page> GetGuildPrefixPages(List<GuildPrefix> guildPrefixes, InteractivityExtension interactivity, DiscordEmbedBuilder? pageEmbedBase = null)

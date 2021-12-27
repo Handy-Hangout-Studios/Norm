@@ -96,9 +96,9 @@ namespace Norm.Database.Requests
 
         public class GetNovelInfo : DbRequest<NovelInfo>
         {
-            public GetNovelInfo(int Id)
+            public GetNovelInfo(int id)
             {
-                this.Id = Id;
+                this.Id = id;
             }
 
             public GetNovelInfo(ulong fictionId)
@@ -127,10 +127,7 @@ namespace Norm.Database.Requests
             }
         }
 
-        public class GetAllNovelsInfo : DbRequest<IEnumerable<NovelInfo>>
-        {
-            public GetAllNovelsInfo() { }
-        }
+        public class GetAllNovelsInfo : DbRequest<IEnumerable<NovelInfo>> { }
 
         public class GetAllNovelsInfoHandler : DbRequestHandler<GetAllNovelsInfo, IEnumerable<NovelInfo>>
         {

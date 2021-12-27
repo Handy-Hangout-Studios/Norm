@@ -15,15 +15,15 @@ namespace Norm.Attributes
 
     public enum BotCategory
     {
-        General,
-        EventsAndAnnouncements,
-        ConfigAndInfo,
-        Moderation,
-        WebNovel,
-        Time,
-        Miscellaneous,
-        Scheduling,
-        Evaluation,
+        GENERAL,
+        EVENTS_AND_ANNOUNCEMENTS,
+        CONFIG_AND_INFO,
+        MODERATION,
+        WEB_NOVEL,
+        TIME,
+        MISCELLANEOUS,
+        SCHEDULING,
+        EVALUATION,
     }
 
     public static class BotCategoryExtensionMethods
@@ -32,15 +32,15 @@ namespace Norm.Attributes
         {
             return category switch
             {
-                BotCategory.General => "General",
-                BotCategory.EventsAndAnnouncements => "Events and Announcements",
-                BotCategory.ConfigAndInfo => "Configuration and Information",
-                BotCategory.Moderation => "Moderation",
-                BotCategory.WebNovel => "WebNovel",
-                BotCategory.Time => "Time",
-                BotCategory.Miscellaneous => "Miscellaneous",
-                BotCategory.Scheduling => "Scheduling sub-commands",
-                BotCategory.Evaluation => "Evaluation",
+                BotCategory.GENERAL => "General",
+                BotCategory.EVENTS_AND_ANNOUNCEMENTS => "Events and Announcements",
+                BotCategory.CONFIG_AND_INFO => "Configuration and Information",
+                BotCategory.MODERATION => "Moderation",
+                BotCategory.WEB_NOVEL => "WebNovel",
+                BotCategory.TIME => "Time",
+                BotCategory.MISCELLANEOUS => "Miscellaneous",
+                BotCategory.SCHEDULING => "Scheduling sub-commands",
+                BotCategory.EVALUATION => "Evaluation",
                 _ => throw new NotImplementedException(),
             };
         }

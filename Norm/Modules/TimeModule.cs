@@ -11,12 +11,13 @@ using Norm.Database.Requests;
 using Norm.Modules.Exceptions;
 using System;
 using System.Threading.Tasks;
+using Norm.Database.Requests.BaseClasses;
 
 namespace Norm.Modules
 {
     [Group("time")]
     [Description("All commands associated with current time functionality.\n\nWhen used alone, outputs the time of the user mentioned.")]
-    [BotCategory(BotCategory.Time)]
+    [BotCategory(BotCategory.TIME)]
     public class TimeModule : BaseCommandModule
     {
         private readonly IMediator mediator;

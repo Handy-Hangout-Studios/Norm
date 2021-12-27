@@ -12,12 +12,12 @@ namespace Norm.Omdb
 {
     public class OmdbClient
     {
-        private readonly RestClient restClient;
-        private readonly OmdbClientOptions options;
+        private readonly RestClient _restClient;
+        private readonly OmdbClientOptions _options;
 
         public OmdbClient(OmdbClientOptions options)
         {
-            this.restClient = new RestClient("http://www.omdbapi.com/");
+            this._restClient = new RestClient("http://www.omdbapi.com/");
 
             JsonSerializerOptions stjOptions = new()
             {
@@ -29,8 +29,8 @@ namespace Norm.Omdb
             stjOptions.Converters.Add(new Int32JsonConverter());
             stjOptions.Converters.Add(new BooleanJsonConverter());
 
-            this.restClient.UseSystemTextJson(stjOptions);
-            this.options = new OmdbClientOptions
+            this._restClient.UseSystemTextJson(stjOptions);
+            this._options = new OmdbClientOptions
             {
                 ApiKey = options.ApiKey ?? throw new Exception("A null api key was used in the config"),
                 Version = options.Version ?? 1,
@@ -74,7 +74,7 @@ namespace Norm.Omdb
 
             request.AddParameter("plot", omdbPlotOption.ToQueryValue());
 
-            return await this.restClient.GetAsync<OmdbMovie>(request);
+            return await this._restClient.GetAsync<OmdbMovie>(request);
         }
 
         public async Task<LazyOmdbList> SearchByTitleAsync(
@@ -104,14 +104,14 @@ namespace Norm.Omdb
             if (yearOfRelease is not null)
                 request.AddParameter("y", yearOfRelease);
 
-            return await this.restClient.GetAsync<OmdbSearchResults>(request);
+            return await this._restClient.GetAsync<OmdbSearchResults>(request);
         }
 
         private void AddDefaultParameters(RestRequest request)
         {
             request.AddParameter("r", "json");
-            request.AddParameter("v", this.options.Version!);
-            request.AddParameter("apikey", this.options.ApiKey!);
+            request.AddParameter("v", this._options.Version!);
+            request.AddParameter("apikey", this._options.ApiKey!);
         }
     }
 

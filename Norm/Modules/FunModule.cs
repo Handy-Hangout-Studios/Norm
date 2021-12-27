@@ -2,37 +2,35 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using Emzi0767.Utilities;
 using Microsoft.Extensions.Options;
 using Norm.Attributes;
-using Norm.Configuration;
 using Owoify;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Norm.ConfigOptions;
 
 namespace Norm.Modules
 {
     public class FunModule : BaseCommandModule
     {
-        private readonly IOptions<BotOptions> options;
+        private readonly IOptions<BotOptions> _options;
         public FunModule(IOptions<BotOptions> options)
         {
-            this.options = options;
+            this._options = options;
         }
 
         [Command("movie")]
         [Description("Plays a movie using emojis and a text file")]
-        [BotCategory(BotCategory.Miscellaneous)]
+        [BotCategory(BotCategory.MISCELLANEOUS)]
         public async Task OutputBeeMovie(CommandContext context)
         {
             StringBuilder contentBuilder = new();
 
-            DiscordGuild movieGuild = await context.Client.GetGuildAsync(this.options.Value.MovieEmojiGuildId);
+            DiscordGuild movieGuild = await context.Client.GetGuildAsync(this._options.Value.MovieEmojiGuildId);
             Dictionary<string, DiscordEmoji> movieEmojis = movieGuild.Emojis.Values.ToList().ToDictionary(emoji => emoji.Name);
 
             for (int row = 0; row < 5; row++)
@@ -44,7 +42,7 @@ namespace Norm.Modules
                 contentBuilder.AppendLine();
             }
 
-            using FileStream fs = new(this.options.Value.MovieFilePath, FileMode.Open);
+            using FileStream fs = new(this._options.Value.MovieFilePath, FileMode.Open);
             DiscordMessageBuilder messageBuilder = new DiscordMessageBuilder().WithContent(contentBuilder.ToString());
             messageBuilder.WithFile("movie", fs);
             await context.RespondAsync(messageBuilder);
@@ -108,7 +106,7 @@ namespace Norm.Modules
         [Command("me")]
         [RequireBotPermissions(Permissions.ManageWebhooks)]
         [Description("Say a message as yourself but with some extra formatting added.\n" + FormattingDescription)]
-        [BotCategory(BotCategory.Miscellaneous)]
+        [BotCategory(BotCategory.MISCELLANEOUS)]
         public async Task SayAsAuthorAsync(CommandContext context, [RemainingText][Description("The message to say as you as well as the options you want used in the message")] string message = "")
         {
             message = await CheckAndDeleteOnHide(context, message);
@@ -161,14 +159,14 @@ namespace Norm.Modules
                 owoLevel = Owoifier.OwoifyLevel.Uvu;
                 message = message.Replace(UvUIndicator, string.Empty);
             }
-            bool sarcasmify;
-            if (sarcasmify = message.Contains(SarcasmifyIndicator))
+            bool sarcasmify = message.Contains(SarcasmifyIndicator);
+            if (sarcasmify)
             {
                 message = message.Replace(SarcasmifyIndicator, string.Empty);
             }
 
-            bool clappify;
-            if (clappify = message.Contains(ClappifyIndicator))
+            bool clappify = message.Contains(ClappifyIndicator);
+            if (clappify)
             {
                 message = message.Replace(ClappifyIndicator, string.Empty);
             }

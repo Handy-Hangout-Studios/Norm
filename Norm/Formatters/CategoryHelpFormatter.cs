@@ -1,12 +1,12 @@
-﻿using DSharpPlus;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Entities;
 using DSharpPlus.Entities;
 using Norm.Attributes;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Norm.Formatters
 {
@@ -45,7 +45,7 @@ namespace Norm.Formatters
 
             if (command.Aliases?.Any() == true)
             {
-                this._embed.AddField("Aliases", string.Join(',', command.Aliases.Select(Formatter.InlineCode)), false);
+                this._embed.AddField("Aliases", string.Join(',', command.Aliases.Select(Formatter.InlineCode)));
             }
 
             if (command.Overloads?.Any() == true)
@@ -80,10 +80,10 @@ namespace Norm.Formatters
                     }
                     allUsageStrings.Append("`\n");
                 }
-                this._embed.AddField("Usage:", allUsageStrings.ToString(), false);
+                this._embed.AddField("Usage:", allUsageStrings.ToString());
                 if (command.Overloads.Any(co => co.Arguments.Any()))
                 {
-                    this._embed.AddField("Arguments:", allArguments.ToString(), false);
+                    this._embed.AddField("Arguments:", allArguments.ToString());
                 }
             }
 

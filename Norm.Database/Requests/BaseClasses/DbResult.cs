@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Norm.Database.Requests
+namespace Norm.Database.Requests.BaseClasses
 {
     public class DbResult
     {

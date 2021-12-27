@@ -1,4 +1,5 @@
-﻿using Norm.Omdb.Enums;
+﻿using System;
+using Norm.Omdb.Enums;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Norm.Omdb.Types
@@ -30,7 +31,7 @@ namespace Norm.Omdb.Types
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return HashCode.Combine(this.Title, this.Poster, this.Type, this.Year, this.ImdbId);
         }
     }
 }

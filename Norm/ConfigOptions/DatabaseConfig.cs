@@ -1,6 +1,6 @@
 ﻿using Npgsql;
 
-namespace Norm.Configuration
+namespace Norm.ConfigOptions
 {
 #nullable disable
     public class DatabaseConfig

@@ -27,17 +27,17 @@ namespace Norm.Modules
 {
     public class ModerationModule : BaseCommandModule
     {
-        private readonly IMediator mediator;
-        private readonly IClock clock;
+        private readonly IMediator _mediator;
+        private readonly IClock _clock;
 
         public ModerationModule(IMediator mediator, IClock clock)
         {
-            this.mediator = mediator;
-            this.clock = clock;
+            this._mediator = mediator;
+            this._clock = clock;
         }
 
         [Command("warn")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [Description("Warn a member and add a record to the guild moderation audit log with the reason for the warning.")]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
         [RequireGuild]
@@ -55,7 +55,7 @@ namespace Norm.Modules
 
             DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(successEmbed, member, context.Member, context.Guild);
 
-            await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.WARN, reason));
+            await this._mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.WARN, reason));
 
             if (logChannel == null)
             {
@@ -66,14 +66,14 @@ namespace Norm.Modules
                 .WithTitle($"{member.Username} has received a warning!")
                 .AddField("Moderator:", context.User.Username)
                 .AddField("Reason:", reason)
-                .WithFooter($"{this.clock.GetCurrentInstant():g}");
+                .WithFooter($"{this._clock.GetCurrentInstant():g}");
 
             await logChannel.SendMessageAsync(embed: successEmbed);
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
         }
 
         [Command("ban")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [Description("Permanently ban a member from the guild")]
         [RequirePermissions(Permissions.BanMembers)]
         [RequireGuild]
@@ -96,7 +96,7 @@ namespace Norm.Modules
             DiscordChannel? logChannel = await this.SendModerationEmbedAndGetLogChannel(messageEmbed, member, context.Member, context.Guild);
             await member.BanAsync(numDays, reason);
 
-            await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.BAN, reason));
+            await this._mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.BAN, reason));
 
             if (logChannel == null)
             {
@@ -106,7 +106,7 @@ namespace Norm.Modules
             DiscordEmbedBuilder successEmbed = new DiscordEmbedBuilder()
                 .WithTitle($"{member.Username} was banned")
                 .AddField("Moderator", context.User.Username)
-                .WithFooter($"{this.clock.GetCurrentInstant():g}");
+                .WithFooter($"{this._clock.GetCurrentInstant():g}");
 
             if (reason != null)
             {
@@ -126,7 +126,7 @@ namespace Norm.Modules
         }
 
         [Command("tempban")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [RequirePermissions(Permissions.BanMembers)]
         [RequireGuild]
         public async Task TempBanMemberAsync(CommandContext context,
@@ -173,7 +173,7 @@ namespace Norm.Modules
             await member.BanAsync(numDays, reason);
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
 
-            await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.TEMPBAN, reason));
+            await this._mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.TEMPBAN, reason));
 
             if (logChannel == null)
             {
@@ -184,7 +184,7 @@ namespace Norm.Modules
                 .WithTitle($"{member.Username} was temporarily banned")
                 .AddField("Moderator", context.User.Username)
                 .AddField("Time Banned", durationString)
-                .WithFooter($"{this.clock.GetCurrentInstant():g}");
+                .WithFooter($"{this._clock.GetCurrentInstant():g}");
 
             if (reason != null)
             {
@@ -198,11 +198,11 @@ namespace Norm.Modules
                 duration.ToTimeSpan()
             );
 
-            await this.mediator.Send(new GuildBackgroundJobs.Add(jobId, context.Guild.Id, $"Unban - {member.DisplayName}", this.clock.GetCurrentInstant() + duration, GuildJobType.TEMP_BAN));
+            await this._mediator.Send(new GuildBackgroundJobs.Add(jobId, context.Guild.Id, $"Unban - {member.DisplayName}", this._clock.GetCurrentInstant() + duration, GuildJobType.TEMP_BAN));
         }
 
         [Command("kick")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [Description("Kick a member from the server and send a message explaining why if possible.")]
         [RequirePermissions(Permissions.KickMembers)]
         [RequireGuild]
@@ -225,7 +225,7 @@ namespace Norm.Modules
 
             await member.RemoveAsync(reason);
 
-            await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.KICK, reason));
+            await this._mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.KICK, reason));
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
 
             if (logChannel == null)
@@ -236,7 +236,7 @@ namespace Norm.Modules
             successEmbed = new DiscordEmbedBuilder()
                 .WithTitle($"{member.DisplayName} was kicked")
                 .AddField("Moderator", context.Member.DisplayName)
-                .WithFooter($"{this.clock.GetCurrentInstant():g}");
+                .WithFooter($"{this._clock.GetCurrentInstant():g}");
 
             if (reason != null)
             {
@@ -247,7 +247,7 @@ namespace Norm.Modules
         }
 
         [Command("mute")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [Description("Mute a member in the server using the `Muted` role and send them a message explaining why if possible. \nCreates the `Muted` role if it doesn't exist.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
@@ -273,7 +273,7 @@ namespace Norm.Modules
 
             await member.GrantRoleAsync(mutedRole, reason);
 
-            await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.MUTE, reason));
+            await this._mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.MUTE, reason));
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
 
             if (logChannel == null)
@@ -284,7 +284,7 @@ namespace Norm.Modules
             successEmbed = new DiscordEmbedBuilder()
                 .WithTitle($"{member.DisplayName} was muted")
                 .AddField("Moderator", context.Member.DisplayName)
-                .WithFooter($"{this.clock.GetCurrentInstant():g}");
+                .WithFooter($"{this._clock.GetCurrentInstant():g}");
 
             if (reason != null)
             {
@@ -295,7 +295,7 @@ namespace Norm.Modules
         }
 
         [Command("tempmute")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [Description("Temporarily mute a member in the server using the `Muted` role and send them a message explaining why if possible. \n\nCreates the `Muted` role if it doesn't exist.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
@@ -339,12 +339,12 @@ namespace Norm.Modules
 
             await member.GrantRoleAsync(mutedRole, reason);
 
-            await this.mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.TEMPMUTE, reason));
+            await this._mediator.Send(new GuildModerationAuditRecords.Add(context.Guild.Id, context.User.Id, member.Id, ModerationActionType.TEMPMUTE, reason));
             await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
 
             string jobId = BackgroundJob.Schedule<ModerationService>(service => service.RemoveRole(context.Guild.Id, member.Id, mutedRole.Id), duration.ToTimeSpan());
 
-            await this.mediator.Send(new GuildBackgroundJobs.Add(jobId, context.Guild.Id, $"Unmute - {member.DisplayName}", this.clock.GetCurrentInstant() + duration, GuildJobType.TEMP_MUTE));
+            await this._mediator.Send(new GuildBackgroundJobs.Add(jobId, context.Guild.Id, $"Unmute - {member.DisplayName}", this._clock.GetCurrentInstant() + duration, GuildJobType.TEMP_MUTE));
 
             if (logChannel == null)
             {
@@ -355,7 +355,7 @@ namespace Norm.Modules
                 .WithTitle($"{member.DisplayName} was muted")
                 .AddField("Moderator", context.Member.DisplayName)
                 .AddField("Duration", durationString)
-                .WithFooter($"{this.clock.GetCurrentInstant():g}");
+                .WithFooter($"{this._clock.GetCurrentInstant():g}");
 
             if (reason != null)
             {
@@ -366,7 +366,7 @@ namespace Norm.Modules
         }
 
         [Command("unmute")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [Description("Unmute a member in the server and send them a message making them aware of the unmute if possible.")]
         [RequirePermissions(Permissions.ManageRoles)]
         [RequireBotPermissions(Permissions.ManageChannels)]
@@ -397,7 +397,7 @@ namespace Norm.Modules
         }
 
         [Command("audit")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [Description("View the audit log filtered on the information given")]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
         [RequireGuild]
@@ -427,7 +427,7 @@ namespace Norm.Modules
                 message.WithModerationActionType(action);
             }
 
-            if (!(await this.mediator.Send(message)).TryGetValue(out var dbAuditRecords))
+            if (!(await this._mediator.Send(message)).TryGetValue(out var dbAuditRecords))
             {
                 await context.RespondAsync("There was an error using the filters provided. For more details please contact the bot developer.");
                 return;
@@ -435,7 +435,7 @@ namespace Norm.Modules
 
             List<GuildModerationAuditRecord> auditRecords = dbAuditRecords.ToList();
             IReadOnlyCollection<DiscordMember> memberList = await context.Guild.GetAllMembersAsync();
-            IDictionary<ulong, DiscordMember> memberDict = memberList.ToDictionary(member => member.Id);
+            IDictionary<ulong, DiscordMember> memberDict = memberList.ToDictionary(m => m.Id);
 
             List<Page> auditPages = GenerateAuditPages(auditRecords, memberDict, context.Client.CurrentUser);
 
@@ -495,8 +495,7 @@ namespace Norm.Modules
                     break;
                 default:
                     throw new ArgumentException($"You attempted to filter on a {moderatorOrMember} which is not an option.");
-
-            };
+            }
         }
 
         [Command("audit")]
@@ -553,7 +552,7 @@ namespace Norm.Modules
 
         private async Task<DiscordChannel?> GetGuildLogChannelAsync(DiscordGuild guild)
         {
-            if (!(await this.mediator.Send(new GuildLogChannels.GetGuildLogChannel(guild))).TryGetValue(out GuildLogChannel? guildLogsChannel))
+            if (!(await this._mediator.Send(new GuildLogChannels.GetGuildLogChannel(guild))).TryGetValue(out GuildLogChannel? guildLogsChannel))
             {
                 return null;
             }
@@ -563,16 +562,16 @@ namespace Norm.Modules
 
         [Group("log")]
         [Description("Commands to manage the moderation logging channel")]
-        [BotCategory(BotCategory.Moderation)]
+        [BotCategory(BotCategory.MODERATION)]
         [RequireUserPermissions(Permissions.ViewAuditLog)]
         [RequireGuild]
         public class LogModule : BaseCommandModule
         {
-            private readonly IMediator mediator;
+            private readonly IMediator _mediator;
 
             public LogModule(IMediator mediator)
             {
-                this.mediator = mediator;
+                this._mediator = mediator;
             }
 
             [Command("set")]
@@ -581,7 +580,7 @@ namespace Norm.Modules
                 [Description("The channel to set as the log channel for moderation purposes")]
                 DiscordChannel channel)
             {
-                await this.mediator.Send(new GuildLogChannels.Upsert(context.Guild.Id, channel.Id));
+                await this._mediator.Send(new GuildLogChannels.Upsert(context.Guild.Id, channel.Id));
 
                 await channel.SendMessageAsync($"{context.User.Mention}, I have set {channel.Mention} as the logging channel for this guild.");
             }
@@ -590,7 +589,7 @@ namespace Norm.Modules
             [Description("Unset the log channel. This means that any use of moderation commands will not log for moderator usage.")]
             public async Task UnsetLogChannelAsync(CommandContext context)
             {
-                await this.mediator.Send(new GuildLogChannels.Delete(context.Guild));
+                await this._mediator.Send(new GuildLogChannels.Delete(context.Guild));
                 await context.RespondAsync($"{context.User.Mention}, I have unset the log channel for this guild.");
             }
         }

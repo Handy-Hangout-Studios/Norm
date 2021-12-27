@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NodaTime;
 using NodaTime.TimeZones;
-using Norm.Configuration;
 using Norm.Database.Contexts;
 using Norm.Database.TypeHandlers;
 using Norm.Omdb;
@@ -17,6 +16,7 @@ using Norm.Services;
 using Serilog;
 using Serilog.Formatting.Json;
 using System;
+using Norm.ConfigOptions;
 
 namespace Norm
 {
@@ -118,8 +118,9 @@ namespace Norm
                 {
                     DatabaseConfig db = s.GetRequiredService<IOptions<BotOptions>>().Value.Database;
                     ILoggerFactory lf = s.GetRequiredService<ILoggerFactory>();
-                    o.UseNpgsql(db.AsNpgsqlConnectionString(), o => o.UseNodaTime().MigrationsAssembly("Norm"))
-                     .UseLoggerFactory(lf);
+                    o.UseNpgsql(db.AsNpgsqlConnectionString(), 
+                        npgsqlOptions => npgsqlOptions.UseNodaTime().MigrationsAssembly("Norm")
+                    ).UseLoggerFactory(lf);
                 })
                 .AddOmdbClient((s, o) =>
                 {

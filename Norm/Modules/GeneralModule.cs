@@ -15,7 +15,7 @@ namespace Norm.Modules
     {
         [Command("invite")]
         [Description("Generate an invite link for this bot")]
-        [BotCategory(BotCategory.General)]
+        [BotCategory(BotCategory.GENERAL)]
         public async Task InviteAsync(CommandContext context)
         {
             DiscordEmbed embed = new DiscordEmbedBuilder()
@@ -28,13 +28,13 @@ namespace Norm.Modules
                 .AddField("Level 1", $"[Click this link]({context.Client.CurrentApplication.GenerateBotOAuth(Level1)})")
                 .AddField("Level 2", $"[Click this link]({context.Client.CurrentApplication.GenerateBotOAuth(Level2)})")
                 .AddField("Level 3", $"[Click this link]({context.Client.CurrentApplication.GenerateBotOAuth(Level3)})");
-
+            
             await context.RespondAsync(embed: embed);
         }
 
         [Command("hi")]
         [Description("A basic \"Hello, World!\" command for D#+")]
-        [BotCategory(BotCategory.General)]
+        [BotCategory(BotCategory.GENERAL)]
 #pragma warning disable CA1822 // Mark members as static
         public async Task Hi(CommandContext context)
 #pragma warning restore CA1822 // Mark members as static
@@ -52,7 +52,7 @@ namespace Norm.Modules
 
         [Command("tutorial")]
         [Description("A general high-level overview of my functionalites will be DM-ed to you.")]
-        [BotCategory(BotCategory.General)]
+        [BotCategory(BotCategory.GENERAL)]
         public async Task Tutorial(CommandContext context)
         {
             DiscordEmbed tutorial = new DiscordEmbedBuilder()
@@ -77,7 +77,7 @@ namespace Norm.Modules
         [Command("break")]
         [Description("Purposefully throw an error for testing purposes")]
         [RequireOwner]
-        [BotCategory(BotCategory.General)]
+        [BotCategory(BotCategory.GENERAL)]
 #pragma warning disable CA1822 // Mark members as static
         public async Task Break(CommandContext context)
 #pragma warning restore CA1822 // Mark members as static

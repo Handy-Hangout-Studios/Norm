@@ -8,11 +8,11 @@ namespace Norm.Omdb.JsonConverters
 {
     public class LocalDateJsonConverter : JsonConverter<LocalDate>
     {
-        private readonly LocalDatePattern pattern;
+        private readonly LocalDatePattern _pattern;
 
         public LocalDateJsonConverter()
         {
-            this.pattern = LocalDatePattern.CreateWithInvariantCulture("dd MMM yyyy");
+            this._pattern = LocalDatePattern.CreateWithInvariantCulture("dd MMM yyyy");
         }
 
         public override LocalDate Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -21,7 +21,7 @@ namespace Norm.Omdb.JsonConverters
                 throw new ArgumentException("the token type must be of type string");
 
             string dateToParse = reader.GetString()!;
-            ParseResult<LocalDate> pr = this.pattern.Parse(dateToParse);
+            ParseResult<LocalDate> pr = this._pattern.Parse(dateToParse);
             if (!pr.Success)
             {
                 throw new JsonException($"Failed to parse the date: {dateToParse}", pr.Exception);

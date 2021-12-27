@@ -19,19 +19,20 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
+using Norm.Database.Requests.BaseClasses;
 
 namespace Norm.Modules
 {
     [Group("royalroad")]
     [Aliases("rr")]
     [Description("Commands associated with RoyalRoad web novels")]
-    [BotCategory(BotCategory.WebNovel)]
+    [BotCategory(BotCategory.WEB_NOVEL)]
     public class RoyalRoadModule : BaseCommandModule
     {
-        private readonly IMediator mediator;
+        private readonly IMediator _mediator;
         public RoyalRoadModule(IMediator mediator)
         {
-            this.mediator = mediator;
+            this._mediator = mediator;
         }
 
         [Command("register")]
@@ -60,9 +61,9 @@ namespace Norm.Modules
             string whoToPing,
             [RemainingText]
             [Description("The RoyalRoad URL")]
-            string royalroadURL)
+            string royalroadUrl)
         {
-            await this.RegisterRoyalRoadFictionAsync(context, announcementChannel, null, whoToPing.ToLower().Equals("everyone"), whoToPing.ToLower().Equals("none"), royalroadURL);
+            await this.RegisterRoyalRoadFictionAsync(context, announcementChannel, null, whoToPing.ToLower().Equals("everyone"), whoToPing.ToLower().Equals("none"), royalroadUrl);
         }
 
         private async Task RegisterRoyalRoadFictionAsync(CommandContext context, DiscordChannel announcementChannel, DiscordRole? announcementRole, bool pingEveryone, bool pingNoOne, string royalroadUrl)
@@ -76,7 +77,7 @@ namespace Norm.Modules
             NovelInfo fictionInfo = await this.GetNovelInfoFromUrl(context, royalroadUrl);
 
             // Register the channel and role 
-            DbResult<GuildNovelRegistration> registerResult = await this.mediator.Send(
+            DbResult<GuildNovelRegistration> registerResult = await this._mediator.Send(
                 new GuildNovelRegistrations.Add(
                     context.Guild.Id,
                     announcementChannel.Id,
@@ -130,7 +131,7 @@ namespace Norm.Modules
         private async Task<NovelInfo> GetOrCreateNovelInfo(ulong fictionId)
         {
             // Get or create fiction info
-            DbResult<NovelInfo> fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
+            DbResult<NovelInfo> fictionInfoResult = await this._mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
 
             if (!fictionInfoResult.TryGetValue(out NovelInfo? fictionInfo))
             {
@@ -138,7 +139,7 @@ namespace Norm.Modules
                 string synUri = $"{SyndicationUri}/{fictionId}";
                 string fictionName = GetFictionName(fictionUri).WithHtmlDecoded();
                 ulong chapterId = await GetMostRecentChapterId(synUri);
-                if (!(await this.mediator.Send(new NovelInfos.Add(fictionId, fictionName, synUri, fictionUri, chapterId))).TryGetValue(out fictionInfo))
+                if (!(await this._mediator.Send(new NovelInfos.Add(fictionId, fictionName, synUri, fictionUri, chapterId))).TryGetValue(out fictionInfo))
                 {
                     throw new Exception("Error adding a new novel during GetOrCreateNovelInfo");
                 }
@@ -154,7 +155,7 @@ namespace Norm.Modules
         [RequireGuild]
         public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
         {
-            DbResult<IEnumerable<GuildNovelRegistration>> getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetGuildsNovelRegistrations(context.Guild));
+            DbResult<IEnumerable<GuildNovelRegistration>> getNovelRegistrationsResult = await this._mediator.Send(new GuildNovelRegistrations.GetGuildsNovelRegistrations(context.Guild));
             if (!getNovelRegistrationsResult.TryGetValue(out var novelRegistrations))
             {
                 await context.RespondAsync("There was an error getting the Guild's Novel Registrations. An error report has been sent to the developer. DM any extra details that you might find relevant.");
@@ -181,19 +182,19 @@ namespace Norm.Modules
             {
                 int index = int.Parse(result.Result.Content) - 1;
                 NovelInfo delete = allRegisteredFictions[index].NovelInfo;
-                await this.mediator.Send(new GuildNovelRegistrations.Delete(allRegisteredFictions[index]));
+                await this._mediator.Send(new GuildNovelRegistrations.Delete(allRegisteredFictions[index]));
                 await context.RespondAsync($"Unregistered {delete.Name}");
             }
         }
 
         [Group("dm")]
         [Description("The command module for DM based announcements. You must register the novel in a guild in which you are a member. However, you can deregister inside DMs.")]
-        public class DM : BaseCommandModule
+        public class DirectMessage : BaseCommandModule
         {
-            private readonly IMediator mediator;
-            public DM(IMediator mediator)
+            private readonly IMediator _mediator;
+            public DirectMessage(IMediator mediator)
             {
-                this.mediator = mediator;
+                this._mediator = mediator;
             }
 
             [Command("deregister")]
@@ -201,7 +202,7 @@ namespace Norm.Modules
             [Description("Begin the interactive deregistration process to remove a RoyalRoad webnovel announcement from your DMs")]
             public async Task UnregisterRoyalRoadFictionAsync(CommandContext context)
             {
-                DbResult<IEnumerable<GuildNovelRegistration>> getNovelRegistrationsResult = await this.mediator.Send(new GuildNovelRegistrations.GetMemberNovelRegistrations(context.Member));
+                DbResult<IEnumerable<GuildNovelRegistration>> getNovelRegistrationsResult = await this._mediator.Send(new GuildNovelRegistrations.GetMemberNovelRegistrations(context.Member));
                 if (!getNovelRegistrationsResult.TryGetValue(out var novelRegistrations))
                 {
                     await context.RespondAsync("There was an error getting your Novel Registrations. An error report has been sent to the developer. DM any extra details to the developer that you might find relevant.");
@@ -229,7 +230,7 @@ namespace Norm.Modules
                 {
                     int index = int.Parse(result.Result.Content) - 1;
                     NovelInfo delete = allRegisteredFictions[index].NovelInfo;
-                    await this.mediator.Send(new GuildNovelRegistrations.Delete(allRegisteredFictions[index]));
+                    await this._mediator.Send(new GuildNovelRegistrations.Delete(allRegisteredFictions[index]));
                     await context.RespondAsync($"Unregistered {delete.Name}");
                 }
             }
@@ -252,7 +253,7 @@ namespace Norm.Modules
                     return;
                 }
                 // Register the channel and role 
-                await this.mediator.Send(
+                await this._mediator.Send(
                     new GuildNovelRegistrations.Add(
                         context.Guild.Id,
                         context.Channel.Id,
@@ -288,7 +289,7 @@ namespace Norm.Modules
             private async Task<NovelInfo> GetOrCreateNovelInfo(ulong fictionId)
             {
                 // Get or create fiction info
-                DbResult<NovelInfo> fictionInfoResult = await this.mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
+                DbResult<NovelInfo> fictionInfoResult = await this._mediator.Send(new NovelInfos.GetNovelInfo(fictionId));
 
                 if (!fictionInfoResult.TryGetValue(out NovelInfo? fictionInfo))
                 {
@@ -296,7 +297,7 @@ namespace Norm.Modules
                     string synUri = $"{SyndicationUri}/{fictionId}";
                     string fictionName = GetFictionName(fictionUri).WithHtmlDecoded();
                     ulong chapterId = await GetMostRecentChapterId(synUri);
-                    if (!(await this.mediator.Send(new NovelInfos.Add(fictionId, fictionName, synUri, fictionUri, chapterId))).TryGetValue(out fictionInfo))
+                    if (!(await this._mediator.Send(new NovelInfos.Add(fictionId, fictionName, synUri, fictionUri, chapterId))).TryGetValue(out fictionInfo))
                     {
                         throw new Exception("Error adding a new novel during GetOrCreateNovelInfo");
                     }

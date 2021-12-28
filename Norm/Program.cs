@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using NodaTime;
 using NodaTime.TimeZones;
 using Norm.Database.Contexts;
-using Norm.Database.TypeHandlers;
 using Norm.Omdb;
 using Norm.Services;
 using Serilog;
@@ -82,7 +81,6 @@ namespace Norm
                             {
                                 DistributedLockTimeout = TimeSpan.FromMinutes(1),
                             });
-                        Dapper.SqlMapper.AddTypeHandler(new DapperDateTimeTypeHandler());
                     })
                 .AddHangfireServer(options =>
                     {

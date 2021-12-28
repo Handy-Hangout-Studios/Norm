@@ -2,22 +2,21 @@
 using System;
 using System.Data;
 
-namespace Norm.Database.TypeHandlers
+namespace Norm.DatabaseRewrite.TypeHandlers
 {
     // Needed because NodaTime Plugin overrides the default mappings and Dapper uses non-generic IDataReader.GetValue functions which return Instant instead of DateTime.
     public class DapperDateTimeTypeHandler : SqlMapper.TypeHandler<DateTime>
     {
         public override DateTime Parse(object value)
         {
-            if (value is DateTime dateTime)
+            return value switch
             {
-                return dateTime;
-            }
-            else if (value is NodaTime.Instant i)
-            {
-                return i.ToDateTimeUtc();
-            }
-            throw new ArgumentException($"Invalid value of type '{value.GetType().FullName}' given. DateTime or NodaTime.Instant values are supported.", nameof(value));
+                DateTime dateTime => dateTime,
+                NodaTime.Instant i => i.ToDateTimeUtc(),
+                _ => throw new ArgumentException(
+                    $"Invalid value of type '{value.GetType().FullName}' given. DateTime or NodaTime.Instant values are supported.",
+                    nameof(value))
+            };
         }
 
 #pragma warning disable CA1061 // Do not hide base class methods

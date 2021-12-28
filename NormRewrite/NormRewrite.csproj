@@ -14,12 +14,25 @@
         <PackageReference Include="DSharpPlus.Interactivity" Version="4.2.0-nightly-01054" />
         <PackageReference Include="DSharpPlus.SlashCommands" Version="4.2.0-nightly-01054" />
         <PackageReference Include="DSharpPlus.VoiceNext" Version="4.2.0-nightly-01054" />
+        <PackageReference Include="MediatR" Version="9.0.0" />
+        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.1.0-1.final" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.1.0-1.final" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.2" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.2" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="CommandOptionEnums" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Norm.DatabaseRewrite\Norm.DatabaseRewrite.csproj" />
     </ItemGroup>
 </Project>

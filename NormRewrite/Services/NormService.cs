@@ -10,33 +10,38 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Norm.DatabaseRewrite.Requests;
 using NormRewrite.OptionConfigs;
 
 namespace NormRewrite.Services;
 
-public class Norm : IHostedService
+public class NormService : IHostedService
 {
-    private readonly ILogger<Norm> _logger;
+    private readonly ILogger<NormService> _logger;
     private readonly DiscordShardedClient _client;
+    private readonly IMediator _mediator;
     private readonly CommandsNextConfiguration _commandsConfig;
     private readonly SlashCommandsConfiguration _slashCommandsConfig;
     private readonly InteractivityConfiguration _interactivityConfig;
     private readonly NormConfig _normConfig;
     private readonly IHostEnvironment _environment;
 
-    public Norm(
-        ILogger<Norm> logger, 
+    public NormService(
+        ILogger<NormService> logger, 
         ILoggerFactory loggerFactory,
         IServiceProvider serviceProvider,
         IOptions<NormConfig> options,
         IHostEnvironment environment,
-        IConfiguration config
+        IConfiguration config,
+        IMediator mediator
         )
     {
+        this._mediator = mediator;
         this._logger = logger;
         this._normConfig = options.Value;
         this._environment = environment;
@@ -72,6 +77,7 @@ public class Norm : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        await this._mediator.Send(new Database.Migrate(), cancellationToken);
         IReadOnlyDictionary<int, CommandsNextExtension> commandsExtensionsDictionary = 
             await this._client.UseCommandsNextAsync(this._commandsConfig);
         
@@ -89,8 +95,8 @@ public class Norm : IHostedService
         {
             if (this._environment.IsDevelopment())
                 commands.RegisterCommands(Assembly.GetExecutingAssembly(), this._normConfig.DevGuildId);
-            // else 
-            //     commands.RegisterCommands(Assembly.GetExecutingAssembly());
+            else 
+                commands.RegisterCommands(Assembly.GetExecutingAssembly());
         }
         
         this._client.ClientErrored += this.LogClientErrors;

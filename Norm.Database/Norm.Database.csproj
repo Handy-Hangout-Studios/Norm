@@ -18,4 +18,8 @@
     <ProjectReference Include="..\Norm.Omdb\Norm.Omdb.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TypeHandlers" />
+  </ItemGroup>
+
 </Project>

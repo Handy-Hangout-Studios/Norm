@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Norm.Database", "Norm.Datab
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NormRewrite", "NormRewrite\NormRewrite.csproj", "{92B71E47-1D25-41D2-BB01-29212B57DE81}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Norm.DatabaseRewrite", "Norm.DatabaseRewrite\Norm.DatabaseRewrite.csproj", "{CA378E6D-8696-495A-B80C-5F95CD1B6DDD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,10 @@ Global
 		{92B71E47-1D25-41D2-BB01-29212B57DE81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92B71E47-1D25-41D2-BB01-29212B57DE81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92B71E47-1D25-41D2-BB01-29212B57DE81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA378E6D-8696-495A-B80C-5F95CD1B6DDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA378E6D-8696-495A-B80C-5F95CD1B6DDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA378E6D-8696-495A-B80C-5F95CD1B6DDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA378E6D-8696-495A-B80C-5F95CD1B6DDD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
